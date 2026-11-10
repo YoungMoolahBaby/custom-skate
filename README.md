@@ -65,8 +65,9 @@ found a gain only in backward skating. Details and numbers are in `docs/RESEARCH
 ## Run
 
 ```
-cargo run --release -- check   # every tool used, against known results (10/10)
-cargo run --release -- pitch   # the pitch tables above
+cargo run --release -- check         # every tool used, against known results (15/15)
+cargo run --release -- pitch         # the pitch tables above
+cargo run --release -- scan <file>   # measure a foot scan (OBJ, STL, PLY)
 ```
 
 Builds go to `D:/cargo-target/custom-skate` (`.cargo/config.toml`, local only). The first

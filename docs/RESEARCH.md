@@ -201,6 +201,22 @@ disagree (one says laser, ±0.3 mm); the 0.05 mm figure is the Otter Lite. Infra
 light suits skin, but a live foot moves during a scan, and the sole can't be scanned while it
 bears weight (PLAN, B1). Our own `check` on a known object sets the real error.
 
+## 12. The stand-in foot scans: Schuster et al. 2024 (Dryad, CC0)
+
+"Foot shape-function model data", Robert Schuster (Griffith University), Dryad, published
+2023-12-11, doi:10.5061/dryad.g4f4qrfwt, **license CC0-1.0** (from the Dryad API). Paper: Schuster
+RW, Cresswell AG, Kelly LA (2024), "Human foot form and function: variable and versatile, yet
+sufficiently related to predict function from form", Proc R Soc B, doi:10.1098/rspb.2023.2543.
+- 100 healthy participants (IDs 001-103; 021, 030, 064 absent); each one's dominant foot scanned
+  bearing minimal weight (`mBW`) and full body weight (`fBW`). 200 PLY files of ~4.2-4.9 MB, named
+  `<id>_<mBW|fBW>_<foot>.ply`; left-dominant feet were mirrored to match right feet ("Lr").
+- `treadmill_data.mat` (281 MB) holds the participant table (sex, height, weight, leg dominance)
+  and walking/running joint angles and moments. Scanner and units aren't stated (`scan` detects
+  units).
+- The Dryad API wants a token to download, and the site returns 403 to scripted requests, so the
+  files are fetched by hand in a browser:
+  https://datadryad.org/dataset/doi:10.5061/dryad.g4f4qrfwt
+
 ## Still to find
 
 - How a hockey boot is built and what each part does: shell, toe cap, tendon guard, liner, tongue,

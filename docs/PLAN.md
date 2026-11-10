@@ -160,7 +160,21 @@ rigid shell), `mesh-printability`, `mesh-repair`, STL out.
   object of known size (a gauge block, a machined part) the same way and measure the error. Then
   tape and caliper measurements of the feet (length, ball width, ball / instep / heel girths) as
   a check on the scan. Scans stay in `scans/` (gitignored).
+  **Round 1 runs on a stand-in scan** (Jon, 2026-11-10: he can't scan his own feet alone yet):
+  Schuster, Cresswell & Kelly (2024), Dryad, **CC0**, 100 people, dominant foot at minimal and at
+  full body weight, PLY (RESEARCH.md 12). Scaled to Jon's foot length and width (ruler, MEASURE.md)
+  until his scans exist. Dryad blocks scripted downloads, so the files are fetched in a browser
+  into `scans/stand-in/` (gitignored).
 - **B2. Scan prep.** Clean, cap the ankle, align, measure; compare left and right.
+  **Started 2026-11-10: `scan <file>`** loads OBJ / STL / PLY, converts to mm, welds, and measures
+  length, width and height on the principal axes, the open edges (the cut above the ankle, which
+  also tells heel from toe), and a girth profile heel to toe. `check` (15/15): on a tilted
+  260 x 100 x 80 mm ellipsoid through a PLY round trip, extents exact, girths -0.002% / -0.003%
+  with exact areas; on the same with a leg stump cut flat, one open edge (219.90 mm vs a 219.91 mm
+  circle), heel and up found. Found and worked around a mesh-measure section bug
+  (docs/CORTENFORGE.md). **Next**: the stump tilts the principal axes ~12° (alignment 0.979 in
+  `check`), so align to the floor (fit the sole plane) before measuring length; then ball and
+  instep girths on their anatomical planes, not just perpendicular ones.
 - **B3. The last.** The foot plus fit allowances: toe room, a locked heel pocket, the ankle. True
   and Bauer (patent US 12,135,869 B2) both go scan → custom last → boot.
 - **B4. The shell.** Around the last: wall thickness by region, toe cap, eyelet rows, tendon guard,

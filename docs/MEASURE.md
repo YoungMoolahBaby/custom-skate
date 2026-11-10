@@ -11,6 +11,18 @@ Jon has both Marsblade roller frames in Medium, on different skates. The **O1 Me
 TF9 size 6 fits**: that's the design target. The R1 Medium (on a size 7 Tour boot) is the weight
 and rocker to beat.
 
+## Your feet, with a ruler (can be done alone)
+
+Until the scans exist, these scale the stand-in scan to your feet. Stand on a sheet of paper with
+your heel against a wall, weight on that foot, and mark the tip of your longest toe and both
+sides of the widest part (the ball). Both feet.
+
+| # | What | Left | Right |
+|---|---|---|---|
+| F1 | Length: wall to the longest-toe mark, mm | | |
+| F2 | Width: between the two ball marks, mm | | |
+| F3 | Ball girth (optional): a tape or string round the widest part, standing, mm | | |
+
 ## Both frames: weight
 
 | # | What | How | O1 | R1 |

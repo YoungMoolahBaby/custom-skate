@@ -39,7 +39,124 @@ pub fn run() -> Tally {
     pitch_checks(&mut t);
     println!("cf-design mass_properties vs exact volumes ({})", AL_7075_T6.name);
     mass_checks(&mut t);
+    println!("scan measuring (mesh-io, mesh-measure, scan-prep-core) on a tilted ellipsoid");
+    scan_checks(&mut t);
     t
+}
+
+/// Ramanujan's second approximation to an ellipse's perimeter (error ~1e-10 relative here).
+fn ellipse_perimeter(a: f64, b: f64) -> f64 {
+    let h = ((a - b) / (a + b)).powi(2);
+    PI * (a + b) * (1.0 + 3.0 * h / (10.0 + (4.0 - 3.0 * h).sqrt()))
+}
+
+/// A foot-sized ellipsoid (260 x 100 x 80 mm), meshed by cf-design, tilted and moved, written to
+/// PLY and read back the way a scan is, then measured: extents and girths have exact answers.
+fn scan_checks(t: &mut Tally) {
+    let (a, b, c) = (130.0, 50.0, 40.0);
+    let t0 = Instant::now();
+    let mut mesh = Solid::ellipsoid(Vector3::new(a, b, c)).mesh(1.0).geometry;
+    let tilt = UnitQuaternion::from_euler_angles(0.3, -0.5, 1.1);
+    let shift = Vector3::new(40.0, -25.0, 310.0);
+    for v in &mut mesh.vertices {
+        *v = tilt * *v + shift;
+    }
+    let path = std::env::temp_dir().join("custom-skate-check-ellipsoid.ply");
+    cortenforge::mesh::io::save_mesh(&mesh, &path).expect("save ply");
+    let raw = cortenforge::mesh::io::load_mesh(&path).expect("load ply");
+    let (back, scale, merged) = crate::scan::load(&path).expect("load ply");
+    let _ = std::fs::remove_file(&path);
+    let worst_move = raw
+        .vertices
+        .iter()
+        .zip(&mesh.vertices)
+        .map(|(a, b)| (a - b).norm())
+        .fold(0.0_f64, f64::max);
+    t.item(
+        "PLY round trip: same triangles, vertices within 1e-4 mm",
+        raw.faces.len() == mesh.faces.len() && raw.vertices.len() == mesh.vertices.len() && worst_move < 1e-4,
+        format!(
+            "{} triangles, worst vertex move {worst_move:.1e} mm (PLY stores f32); then units x{scale}, \
+             welding merged {merged} vertices, {} triangles left",
+            raw.faces.len(),
+            back.faces.len()
+        ),
+    );
+
+    let m = crate::scan::measure(&back, 20);
+    let err = |x: f64, exact: f64| (x - exact) / exact;
+    let (el, ew, eh) = (err(m.length, 2.0 * a), err(m.width, 2.0 * b), err(m.height, 2.0 * c));
+    t.item(
+        "principal-axis extents within 0.5%",
+        el.abs() < 0.005 && ew.abs() < 0.005 && eh.abs() < 0.005,
+        format!(
+            "{:.2} / {:.2} / {:.2} mm vs 260 / 100 / 80 ({:+.3}% / {:+.3}% / {:+.3}%)",
+            m.length,
+            m.width,
+            m.height,
+            el * 100.0,
+            ew * 100.0,
+            eh * 100.0
+        ),
+    );
+    // Stations at 1/4 and 1/2 of the length: ellipses with semi-axes scaled by sqrt(1 - (x/a)^2).
+    let mut worst: f64 = 0.0;
+    let mut line = String::new();
+    for frac in [0.25, 0.5] {
+        let s = m.stations.iter().find(|s| (s.frac - frac).abs() < 1e-9).expect("station");
+        let x = (frac - 0.5) * 2.0 * a;
+        let k = (1.0 - (x / a).powi(2)).sqrt();
+        let exact = ellipse_perimeter(b * k, c * k);
+        let e = err(s.perimeter, exact);
+        worst = worst.max(if s.contours == 1 { e.abs() } else { f64::INFINITY });
+        line += &format!(
+            "{frac}: {:.2} vs {:.2} mm ({:+.3}%), {} loop(s), area {:.0} vs {:.0} mm2; ",
+            s.perimeter,
+            exact,
+            e * 100.0,
+            s.contours,
+            s.area,
+            PI * b * c * k * k
+        );
+    }
+    t.item("girths: one loop each, perimeter within 0.5%", worst < 0.005, line);
+    t.item(
+        "closed mesh has no open edges",
+        m.open_loops.is_empty(),
+        format!("{} open loops, {:.2} s", m.open_loops.len(), t0.elapsed().as_secs_f64()),
+    );
+
+    // A foot with a leg stump: the ellipsoid plus a vertical cylinder over its -x end, cut flat
+    // at z = 100 (scan-prep-core's plane clip), then tilted. The cut is the only open edge; it
+    // must be found, and must point the heel to -x and up to +z.
+    let stump = Solid::cylinder(35.0, 70.0).translate(Vector3::new(-80.0, 0.0, 60.0));
+    let solid = Solid::ellipsoid(Vector3::new(a, b, c)).union(stump);
+    let mut leg = solid.mesh(1.0).geometry;
+    cortenforge::mesh::repair::weld_vertices(&mut leg, 1e-5);
+    let mut cut = cortenforge::cf_scan_prep_core::clip_mesh_against_plane(
+        &leg,
+        nalgebra::Point3::new(0.0, 0.0, 100.0),
+        -Vector3::z(),
+    );
+    let before = crate::scan::measure(&cut, 4).open_loops.len();
+    let merged = cortenforge::mesh::repair::weld_vertices(&mut cut, 1e-5);
+    for v in &mut cut.vertices {
+        *v = tilt * *v + shift;
+    }
+    let m = crate::scan::measure(&cut, 20);
+    let heel_to_toe = tilt * Vector3::x();
+    let up = tilt * Vector3::z();
+    let (d_along, d_up) = (m.along.dot(&heel_to_toe), m.up.dot(&up));
+    let ring = m.open_loops.iter().map(|l| l.length).fold(0.0_f64, f64::max);
+    t.item(
+        "leg stump: one open edge, heel and up found",
+        m.open_loops.len() == 1 && d_along > 0.95 && d_up > 0.95 && (ring - 2.0 * PI * 35.0).abs() < 1.0,
+        format!(
+            "{} open edge(s) after welding the clip ({before} before, {merged} vertices merged), the cut \
+             {ring:.2} mm round (circle 219.91); heel-to-toe . true {d_along:.3}, up . true {d_up:.3}",
+            m.open_loops.len()
+        ),
+    );
 }
 
 fn pitch_checks(t: &mut Tally) {

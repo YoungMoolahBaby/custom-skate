@@ -2,9 +2,11 @@
 //!
 //! - `check` (default): the tools this project builds on, against known results.
 //! - `pitch`: how a rocker turns weight shift into foot pitch, ice vs roller.
+//! - `scan <file>`: load a foot scan (OBJ, STL, PLY) and measure it.
 
 use custom_skate::check;
 use custom_skate::pitch::{FT, Rocker, fixed_alpha, passive_rocking_stiffness, roller_alpha};
+use custom_skate::scan;
 
 fn main() {
     let mode = std::env::args().nth(1).unwrap_or_else(|| "check".into());
@@ -17,8 +19,18 @@ fn main() {
             }
         }
         "pitch" => pitch(),
+        "scan" => {
+            let Some(path) = std::env::args().nth(2) else {
+                eprintln!("usage: scan <file.ply|stl|obj>");
+                std::process::exit(2);
+            };
+            if let Err(e) = scan::run(std::path::Path::new(&path)) {
+                eprintln!("{e}");
+                std::process::exit(1);
+            }
+        }
         other => {
-            eprintln!("unknown mode {other:?}; modes: check, pitch");
+            eprintln!("unknown mode {other:?}; modes: check, pitch, scan");
             std::process::exit(2);
         }
     }

@@ -18,6 +18,36 @@ type (bug, docs, API, perf, setup, works), date, file:line under
   rates (pure shear, closed form) and leaves out the radial rate on purpose. A Marsblade-style
   coupling bushing is squeezed as the frame rocks, which is the case it leaves out. Planned:
   sim-soft (phase 4).
+- **bug, minor** (2026-11-10): `Solid::ellipsoid(130, 50, 40).mesh(1.0)` (solid/query.rs:82)
+  gives a closed 2-manifold (every edge in 2 faces) that still has 24 vertices doubled within
+  1e-6 mm and 48 sliver faces between them; `weld_vertices(1e-6)` removes them. Harmless for
+  rendering, but it breaks mesh-measure's section chaining (below). Probe:
+  `examples/probe_section.rs`.
+
+## mesh (measure, io, repair)
+
+- **bug** (2026-11-10): `mesh_measure::cross_section` (cross_section.rs:156) returns broken
+  loops when the plane passes through or within ~1e-5 mm of vertices. A vertex on the plane
+  gives `d_a * d_b == 0`, which counts as a crossing (line 459), so a triangle can yield the same
+  point twice or three hits, and only exactly-two-hit triangles make a segment (line 180).
+  Near-vertex planes give segments shorter than the chaining tolerance, an absolute `1e-6`
+  (line 493), so `chain_segments` (line 472) joins or reverses them wrongly. Then
+  `contour_perimeter` (line 316) closes each open chain back to its start, so the perimeter
+  comes out near 2x and the area near 0. Measured on a cf-design ellipsoid section through its
+  centre (grid vertices on the plane): 199 loops, perimeter 1021.47 vs 283.62 mm, area 0.
+  Through a PLY round trip (f32 coordinates scatter on-plane vertices by ~1e-5 mm) at 1/4 and
+  1/2 length: 8 and 26 loops, perimeters +95% and +99%. Off-vertex, welded: 1 loop, -0.007%.
+  Workaround in `scan::section`: weld on load, and nudge the plane 3.3 um until no vertex is
+  within 1 um of it. Then 1 loop, perimeter -0.002% / -0.003%, area exact (`check`).
+- **works** (2026-11-10): `mesh_measure::oriented_bounding_box` gives a tilted ellipsoid's
+  extents exactly (260.00 / 100.00 / 80.00 mm). `cf_scan_prep_core::detect_boundary_loops` finds a
+  scan's cut edge exactly (219.90 mm vs a 219.91 mm circle).
+- **works, note** (2026-11-10): `mesh_io` PLY stores f32: a 300 mm-scale mesh moves up to
+  1.6e-5 mm on a round trip. Fine for scans; it matters only for exact-plane tests like the bug
+  above.
+- **note** (2026-11-10): `cf_scan_prep_core::clip_mesh_against_plane` (clip.rs:132) leaves the
+  new cut vertices unshared between neighbouring triangles: the clipped leg stump had 147 open
+  edges until `weld_vertices(1e-5)` merged 1,096 vertices, then 1 (the cut). Weld after clipping.
 
 ## sim-soft
 
@@ -43,3 +73,10 @@ Nice-to-haves for CortenForge, with what this project built instead.
   rate for a bonded rubber block (shape factor corrections) would cover rocker couplings and
   suspension mounts. Instead: sim-soft on the bushing's tet mesh.
 - **Re-export `mass_properties`** at the cf-design root next to `MassProperties`.
+- **Robust plane sections** (2026-11-10): classify vertices against the plane with a tolerance
+  (on-plane vertices shared, not duplicated), chain segments by mesh edge identity instead of by
+  position, scale the tolerance to the mesh, and report open chains as open (with their length)
+  instead of closing them. Foot girths are the core measurement of a boot last. Instead:
+  `scan::section` (weld + nudge).
+- **Weld in the clip** (2026-11-10): `clip_mesh_against_plane` could share the cut vertices, so
+  the cut is one boundary loop straight away.
