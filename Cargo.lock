@@ -890,6 +890,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "custom-skate"
+version = "0.1.0"
+dependencies = [
+ "cortenforge",
+ "nalgebra 0.34.2",
+]
+
+[[package]]
 name = "defer"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3001,14 +3009,6 @@ name = "robust"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4e27ee8bb91ca0adcf0ecb116293afa12d393f9c2b9b9cd54d33e8078fe19839"
-
-[[package]]
-name = "rocker-chassis"
-version = "0.1.0"
-dependencies = [
- "cortenforge",
- "nalgebra 0.34.2",
-]
 
 [[package]]
 name = "rstar"

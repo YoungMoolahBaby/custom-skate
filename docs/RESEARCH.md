@@ -191,12 +191,23 @@ Jon's own experience differs on the O1: he has no complaints about his O1s (2026
   (Footwear Science 2020, doi:10.1080/19424280.2020.1734867). Live feet move during capture; casts
   don't.
 
+## 11. The scanner: Creality CR-Scan Otter (Jon's)
+
+Retailer spec sheets (MatterHackers, 3DJake, B&H, 2026-11-10): handheld, four-lens stereo vision
+with infrared structured light, 8 infrared LEDs for marker tracking; accuracy up to 0.02 mm (at a
+60 mm working distance), 3D resolution 0.05-2 mm, up to 20 fps, working distance 110-1000 mm,
+objects 10 mm to 2 m; exports OBJ, STL, PLY. No body-specific mode is listed. Some listings
+disagree (one says laser, ±0.3 mm); the 0.05 mm figure is the Otter Lite. Infrared structured
+light suits skin, but a live foot moves during a scan, and the sole can't be scanned while it
+bears weight (PLAN, B1). Our own `check` on a known object sets the real error.
+
 ## Still to find
 
 - How a hockey boot is built and what each part does: shell, toe cap, tendon guard, liner, tongue,
-  footbed, eyelets; materials, wall thicknesses, weights; any puck-protection standard.
+  footbed, eyelets; materials, wall thicknesses, weights; any puck-protection standard. Ice vs
+  roller boots: what differs.
 - Foot soft-tissue moduli for sim-soft, and plantar pressure-pain thresholds.
-- Which scan app suits Jon's phone.
+- How to scan a foot well with a handheld scanner (markers, stance, foam boxes, casts).
 
 - Real one-piece dimensions: axle spacing, mount spacing, rail height and wall thickness (measure
   one, or find drawings).

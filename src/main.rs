@@ -3,8 +3,8 @@
 //! - `check` (default): the tools this project builds on, against known results.
 //! - `pitch`: how a rocker turns weight shift into foot pitch, ice vs roller.
 
-use rocker_chassis::check;
-use rocker_chassis::pitch::{FT, Rocker, fixed_alpha, passive_rocking_stiffness, roller_alpha};
+use custom_skate::check;
+use custom_skate::pitch::{FT, Rocker, fixed_alpha, passive_rocking_stiffness, roller_alpha};
 
 fn main() {
     let mode = std::env::args().nth(1).unwrap_or_else(|| "check".into());

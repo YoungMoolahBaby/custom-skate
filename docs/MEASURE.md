@@ -4,7 +4,7 @@ Phase 1 needs real numbers. A kitchen scale (grams) and a ruler or calipers (mm)
 Write each number in the table; leave a blank if it isn't easy to get.
 
 **Photos work too.** Put a ruler or tape measure right next to the part, shoot straight on (not at
-an angle), and drop the photos in `C:\dev\rocker-chassis\measure\`. Claude can read lengths off
+an angle), and drop the photos in `C:\dev\custom-skate\measure\`. Claude can read lengths off
 them. Calipers are better for anything under ~5 mm (wall thickness).
 
 Jon has both Marsblade roller frames in Medium, on different skates. The **O1 Medium on his True
@@ -43,6 +43,7 @@ and rocker to beat.
 |---|---|---|---|
 | 11 | Boot | Which boot is the i2 on (make, size)? | |
 | 12 | Stack height | Skate on a table: table to the bottom of the sole, heel and toe. | |
+| 12b | i2 mount pattern | Rivets in the front and rear groups, and the centre-to-centre distance between the groups. The custom ice boot's sole must match it. A photo from below with a ruler is ideal. | |
 
 ## Optional
 

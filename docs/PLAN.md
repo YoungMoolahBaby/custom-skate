@@ -1,15 +1,17 @@
 # Plan
 
-**Scope (Jon, 2026-11-10): the full skate.** A custom boot made from a scan of Jon's feet, on an
-aluminium rocking chassis, designed together. Two tracks that meet in the sole:
+**Scope (Jon, 2026-11-10): the full skates, "one ice skate, one roller skate".** Custom boots made
+from a 3D scan of Jon's feet; the roller skate on an aluminium rocking chassis designed with its
+boot, the ice skate on a dynamic (rocking) blade holder. Three tracks that meet in the sole:
 
 - **Track A, the chassis**: an aluminium rocking roller chassis (rounded upper chassis on a flat
   lower chassis, sprung coupling) in the 170-185 g class of premium one-piece 7075 chassis, strong
   and stiff enough to play on. The Marsblade R1 is 282-302 g. Phases 0-7 below.
 - **Track B, the boot**: scan → last → shell → liner → fit simulation → test shells → a real boot.
   Phases B1-B7 below.
-- **Track C, the skate**: the boot's sole becomes the chassis's upper (the part that rocks), so a
-  whole part, the rivets and the mount plate go away. That is the biggest weight lever we have.
+- **Track C, the skates**: roller, the boot's sole becomes the chassis's upper (the part that
+  rocks), so a whole part, the rivets and the mount plate go away; that is the biggest weight
+  lever we have. Ice, the boot takes a dynamic holder (his Marsblade i2 254 to start).
 
 Everything is modelled in CortenForge and checked against known results first (CLAUDE.md).
 
@@ -149,18 +151,22 @@ cf-design `offset`/`shell` (fit allowance, boot walls), `mesh-shell` (printable 
 `mesh-lattice` (padding: gyroid, octet), `sim-soft` (soft tissue and padding pressed against a
 rigid shell), `mesh-printability`, `mesh-repair`, STL out.
 
-- **B1. The scan.** Both feet, weight-bearing (as True scans), maybe also in a skating crouch
-  (ankle bent forward), which changes the heel and instep. Methods: phone photogrammetry of the
-  bare foot (the foot moves during capture, so less accurate), or a foam impression → plaster cast
-  → photogrammetry (casts measured to ~0.9 mm, Ellis et al. 2026), or a depth-camera phone app.
-  `check` first: scan an object of known size the same way and measure the error. Then tape and
-  caliper measurements of the feet (length, ball width, ball / instep / heel girths) as a check
-  on the scan.
+- **B1. The scan.** Jon's scanner: a **Creality CR-Scan Otter** (handheld, infrared structured
+  light, up to 0.02 mm at 60 mm per the spec sheet, 0.05-2 mm resolution, exports OBJ / STL / PLY,
+  all of which CortenForge's `mesh-io` reads). Both feet, weight-bearing (as True scans), maybe
+  also in a skating crouch (ankle bent forward), which changes the heel and instep. The sole can't
+  be scanned while standing on it, so: scan the top standing, and the sole from a foam impression
+  box (or a plaster cast of it). A cast also holds still, unlike a foot. `check` first: scan an
+  object of known size (a gauge block, a machined part) the same way and measure the error. Then
+  tape and caliper measurements of the feet (length, ball width, ball / instep / heel girths) as
+  a check on the scan. Scans stay in `scans/` (gitignored).
 - **B2. Scan prep.** Clean, cap the ankle, align, measure; compare left and right.
 - **B3. The last.** The foot plus fit allowances: toe room, a locked heel pocket, the ankle. True
   and Bauer (patent US 12,135,869 B2) both go scan → custom last → boot.
 - **B4. The shell.** Around the last: wall thickness by region, toe cap, eyelet rows, tendon guard,
-  and the sole, which carries the chassis (track C). Weight by part.
+  and the sole, which carries the chassis or the holder (track C). Weight by part. One last, two
+  boots: the ice boot needs more puck protection and stands in cold and wet; the roller boot gets
+  the rocking sole.
 - **B5. The fit simulation.** sim-soft: the foot's soft tissue (Neo-Hookean, moduli from the
   literature) and the liner in the shell, under standing and push-off loads. Output: a pressure
   map, compared with pressure-pain thresholds and with the Brock poster's insole pressures. Check
@@ -172,19 +178,25 @@ rigid shell), `mesh-printability`, `mesh-repair`, STL out.
   A heat-mouldable liner, tongue, laces. Safety: it must stop a puck and hold at speed, so it is
   tested standing, then skating slowly, before it is played in.
 
-## Track C: the skate
+## Track C: the skates
 
-The sole is the rocker's upper chassis: one part instead of boot sole + mount plate + rivets +
-upper chassis. Weigh the whole skate, like for like: a TF9 7W + R1 with 80/76 wheels is 1396 g a
-skate; Mako 8EE + Sprung 1231-1334 g (Coast Hockey Shop). Jon's two skates, weighed, are the real
-baselines.
+**Roller.** The sole is the rocker's upper chassis: one part instead of boot sole + mount plate +
+rivets + upper chassis. Weigh the whole skate, like for like: a TF9 7W + R1 with 80/76 wheels is
+1396 g a skate; Mako 8EE + Sprung 1231-1334 g (Coast Hockey Shop). Jon's skates, weighed, are the
+real baselines.
+
+**Ice.** The boot takes his Marsblade i2 (254) to start, so the ice skate keeps a rocker it already
+has and the work is the boot. The sole carries the i2's mounting pattern (measure it). Later,
+possibly our own dynamic holder, with the GIH model (`src/pitch.rs`) setting the rocker radius.
 
 ## Open questions for Jon
 
-- Answered 2026-11-10: the name (rocker-chassis); size (True 6, Marsblade M a bit big, S too
+- Answered 2026-11-10: the name (rocker-chassis, renamed custom-skate for the full skate); size (True 6, Marsblade M a bit big, S too
   small, i2 254).
 - Answered 2026-11-10: he has both R1 and O1 in Medium; the O1 M fits, the R1 M is a bit big.
   O1 on a True TF9 size 6 with 72s; R1 on a Tour size 7.
-- The measurements in `docs/MEASURE.md`.
-- Manufacturing route: CNC 7075 or metal printing.
-- GitHub: public or private.
+- Answered 2026-11-10: the full skates, one ice and one roller; scanner = Creality CR-Scan Otter;
+  the repo is public (MIT OR Apache-2.0); renamed custom-skate.
+- The measurements in `docs/MEASURE.md`, and the first scans.
+- Manufacturing route: CNC 7075 or metal printing (chassis); printed shell or carbon over a
+  printed last (boots).

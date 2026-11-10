@@ -1,8 +1,9 @@
-# rocker-chassis
+# custom-skate
 
-A custom roller hockey skate: a boot made from a scan of the skater's feet, on an aluminium
-chassis that rocks like Marsblade's but weighs the same as a premium one-piece chassis. Boot and
-chassis are designed together: the boot's sole is the part that rocks. Modelled with
+Two custom hockey skates, one for ice and one for roller, on boots made from a 3D scan of the
+skater's feet. The roller skate rides an aluminium chassis that rocks like Marsblade's but weighs
+the same as a premium one-piece chassis; boot and chassis are designed together, so the boot's sole
+is the part that rocks. The ice skate takes a dynamic (rocking) blade holder. Modelled with
 [CortenForge](https://crates.io/crates/cortenforge). The chassis came first, so most of this page
 is about it; the boot plan is in `docs/PLAN.md` (track B).
 
@@ -68,7 +69,7 @@ cargo run --release -- check   # every tool used, against known results (10/10)
 cargo run --release -- pitch   # the pitch tables above
 ```
 
-Builds go to `D:/cargo-target/rocker-chassis` (`.cargo/config.toml`, local only). The first
+Builds go to `D:/cargo-target/custom-skate` (`.cargo/config.toml`, local only). The first
 release build takes about 3 minutes.
 
 ## Status
@@ -76,8 +77,17 @@ release build takes about 3 minutes.
 Phase 0 (the science, the pitch model, the mass tool checked) is done. See `docs/PLAN.md` for
 what comes next and `docs/CORTENFORGE.md` for what CortenForge did well and where it fell short.
 
-## Patent
+## Patents
 
 Marsblade's split rocking frame is patented: US 9,782,665 B2 (Flow Motion Technology AB, active;
-Google Patents estimates expiry 2031-02-02). Modelling and studying it is research. Check the
-patent before making one to sell.
+Google Patents estimates expiry 2031-02-02). Bauer holds a scan-to-last patent, US 12,135,869 B2.
+Modelling and studying them is research. Check the patents before making anything to sell.
+
+## Privacy
+
+Foot scans and photos stay out of git (`scans/` and `measure/` are ignored). Only measurements
+written into the docs are published.
+
+## License
+
+Code and docs: MIT or Apache-2.0, at your option (`LICENSE-MIT`, `LICENSE-APACHE`).

@@ -1,7 +1,8 @@
-# rocker-chassis
+# custom-skate
 
-A Marsblade-style rocking aluminium roller hockey chassis, as light as a one-piece chassis,
-modelled with CortenForge. Read first:
+Two custom skates for Jon, one ice and one roller, on boots from a 3D scan of his feet (Creality
+CR-Scan Otter). The roller skate rides a Marsblade-style rocking aluminium chassis as light as a
+one-piece chassis. Modelled with CortenForge. Public on GitHub. Read first:
 - `README.md`: the goal, the science, the weight targets.
 - `docs/PLAN.md`: phases and status. **Start here.**
 - `docs/RESEARCH.md`: the sources, with their numbers and their limits.
@@ -21,6 +22,9 @@ modelled with CortenForge. Read first:
   feature, with what we built instead.
 - Weights are compared like for like: same size (MD unless stated), and say what is included
   (axles, spacers, hardware).
+- The repo is public. Foot scans and photos are personal: keep them in `scans/` and `measure/`
+  (gitignored). Publish one only if Jon says so.
+- Keep Jon's own experience separate from reviewers' opinions in the docs.
 
 ## Working with Jon
 
