@@ -1,0 +1,14 @@
+[package]
+name = "rocker-chassis"
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+description = "A Marsblade-style rocking aluminium roller hockey chassis, modelled with CortenForge"
+publish = false
+
+[dependencies]
+cortenforge = "0.9.0"
+nalgebra = "0.34"
+
+[profile.release]
+debug = false
