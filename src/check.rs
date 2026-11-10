@@ -41,7 +41,40 @@ pub fn run() -> Tally {
     mass_checks(&mut t);
     println!("scan measuring (mesh-io, mesh-measure, scan-prep-core) on a tilted ellipsoid");
     scan_checks(&mut t);
+    println!("scan frame on real stand-in scans (Schuster et al. 2024, pre-aligned: x heel to toe, z up)");
+    stand_in_checks(&mut t);
     t
+}
+
+/// The three stand-in scans that broke earlier versions of `scan::measure`: a loaded foot with a
+/// flat sole, a light one whose bands flipped at a 7 deg tilt, and one whose toes lift off the
+/// floor. Skipped (not failed) when the dataset isn't on this machine (it isn't in git).
+fn stand_in_checks(t: &mut Tally) {
+    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("scans").join("stand-in");
+    for name in ["001_fBW_L.ply", "002_mBW_R.ply", "051_mBW_R.ply"] {
+        let path = dir.join(name);
+        if !path.exists() {
+            println!("  [skip] {name}: not here (fetch it, see docs/RESEARCH.md 12)");
+            continue;
+        }
+        let (mesh, _, _) = crate::scan::load(&path).expect("load scan");
+        let m = crate::scan::measure(&mesh, 20);
+        let (xmin, xmax) = mesh.vertices.iter().fold((f64::MAX, f64::MIN), |a, v| (a.0.min(v.x), a.1.max(v.x)));
+        let ax = m.along.dot(&Vector3::x());
+        let uz = m.up.dot(&Vector3::z());
+        let e = (m.length - (xmax - xmin)) / (xmax - xmin);
+        t.item(
+            &format!("{name}: up within 3 deg, heel right, length within 1.5%"),
+            uz > 3f64.to_radians().cos() && ax > 0.98 && e.abs() < 0.015,
+            format!(
+                "up.z {uz:.4}, heel-to-toe.x {ax:+.4}, length {:.1} vs {:.1} mm ({:+.2}%), up from {}",
+                m.length,
+                xmax - xmin,
+                e * 100.0,
+                m.up_from
+            ),
+        );
+    }
 }
 
 /// Ramanujan's second approximation to an ellipse's perimeter (error ~1e-10 relative here).
@@ -150,7 +183,7 @@ fn scan_checks(t: &mut Tally) {
     let ring = m.open_loops.iter().map(|l| l.length).fold(0.0_f64, f64::max);
     t.item(
         "leg stump: one open edge, heel and up found",
-        m.open_loops.len() == 1 && d_along > 0.95 && d_up > 0.95 && (ring - 2.0 * PI * 35.0).abs() < 1.0,
+        m.open_loops.len() == 1 && d_along > 0.999 && d_up > 0.999 && (ring - 2.0 * PI * 35.0).abs() < 1.0,
         format!(
             "{} open edge(s) after welding the clip ({before} before, {merged} vertices merged), the cut \
              {ring:.2} mm round (circle 219.91); heel-to-toe . true {d_along:.3}, up . true {d_up:.3}",

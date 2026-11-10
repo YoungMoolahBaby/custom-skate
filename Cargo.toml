@@ -3,12 +3,16 @@ name = "custom-skate"
 version = "0.1.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
-description = "A Marsblade-style rocking aluminium roller hockey chassis, modelled with CortenForge"
+description = "Custom ice and roller hockey skates from a foot scan, with a light rocking aluminium chassis, modelled with CortenForge"
 publish = false
 
 [dependencies]
 cortenforge = "0.9.0"
 nalgebra = "0.34"
+
+[dev-dependencies]
+# Examples only: write PNG views of scans to look at.
+png = "0.18"
 
 [profile.release]
 debug = false

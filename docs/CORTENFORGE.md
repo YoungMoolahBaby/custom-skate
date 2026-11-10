@@ -42,6 +42,10 @@ type (bug, docs, API, perf, setup, works), date, file:line under
 - **works** (2026-11-10): `mesh_measure::oriented_bounding_box` gives a tilted ellipsoid's
   extents exactly (260.00 / 100.00 / 80.00 mm). `cf_scan_prep_core::detect_boundary_loops` finds a
   scan's cut edge exactly (219.90 mm vs a 219.91 mm circle).
+- **works** (2026-11-10): `mesh_io::load_mesh` reads the stand-in scans (ASCII PLY from Meshmixer,
+  with normals and colours, ~4.5 MB) without fuss: 200 files load and measure in ~100 s, about
+  0.5 s each. `cf_scan_prep_core::fit_plane_to_points` gives the cut's plane on the leg-stump case
+  exactly (alignment 1.000).
 - **works, note** (2026-11-10): `mesh_io` PLY stores f32: a 300 mm-scale mesh moves up to
   1.6e-5 mm on a round trip. Fine for scans; it matters only for exact-plane tests like the bug
   above.

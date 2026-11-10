@@ -65,7 +65,7 @@ found a gain only in backward skating. Details and numbers are in `docs/RESEARCH
 ## Run
 
 ```
-cargo run --release -- check         # every tool used, against known results (15/15)
+cargo run --release -- check         # every tool used, against known results (18/18)
 cargo run --release -- pitch         # the pitch tables above
 cargo run --release -- scan <file>   # measure a foot scan (OBJ, STL, PLY)
 ```

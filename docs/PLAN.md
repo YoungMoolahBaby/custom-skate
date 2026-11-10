@@ -163,18 +163,30 @@ rigid shell), `mesh-printability`, `mesh-repair`, STL out.
   **Round 1 runs on a stand-in scan** (Jon, 2026-11-10: he can't scan his own feet alone yet):
   Schuster, Cresswell & Kelly (2024), Dryad, **CC0**, 100 people, dominant foot at minimal and at
   full body weight, PLY (RESEARCH.md 12). Scaled to Jon's foot length and width (ruler, MEASURE.md)
-  until his scans exist. Dryad blocks scripted downloads, so the files are fetched in a browser
-  into `scans/stand-in/` (gitignored).
+  until his scans exist. Dryad blocks scripted downloads, so Jon fetched the whole dataset in a
+  browser (2026-11-10). It lives on D: (`D:\custom-skate-data\dryad-g4f4qrfwt`, 1.2 GB) and
+  `scans/stand-in` is a junction to it (gitignored).
 - **B2. Scan prep.** Clean, cap the ankle, align, measure; compare left and right.
-  **Started 2026-11-10: `scan <file>`** loads OBJ / STL / PLY, converts to mm, welds, and measures
-  length, width and height on the principal axes, the open edges (the cut above the ankle, which
-  also tells heel from toe), and a girth profile heel to toe. `check` (15/15): on a tilted
-  260 x 100 x 80 mm ellipsoid through a PLY round trip, extents exact, girths -0.002% / -0.003%
-  with exact areas; on the same with a leg stump cut flat, one open edge (219.90 mm vs a 219.91 mm
-  circle), heel and up found. Found and worked around a mesh-measure section bug
-  (docs/CORTENFORGE.md). **Next**: the stump tilts the principal axes ~12° (alignment 0.979 in
-  `check`), so align to the floor (fit the sole plane) before measuring length; then ball and
-  instep girths on their anatomical planes, not just perpendicular ones.
+  **`scan <file>` (2026-11-10)** loads OBJ / STL / PLY, converts to mm, welds, finds the foot's
+  frame, and measures length, width, height, the open edges, and a girth profile heel to toe.
+  - The frame comes from the surface, not principal axes (a 125 mm leg stump tilts those ~12°):
+    up from the open cut's plane, else from the most near-level surface (10° cone) signed so the
+    lower half is the long one, snapped to the flat sole; heel to toe from the lower 35% of the
+    scan; the heel is the taller end (`scan::measure` docs). Three earlier rules failed on real
+    scans and are recorded there: principal axes (8 of 200 wrong), a 30° cone (tilted 14°), thin
+    bands for the sign (flipped at 7° of tilt).
+  - **On all 200 stand-in scans** (`examples/batch_scan.rs`), against the dataset's own
+    alignment: up within 2.7° on every scan, heel never swapped, length -0.48% to +1.45%
+    (median -0.03%). 192 found up from a flat sole, 8 from the level surfaces.
+  - `check` 18/18: the synthetic cases (ellipsoid extents exact, girths -0.002% / -0.003%,
+    leg stump cut and frame exact) plus three real scans that broke earlier versions (skipped
+    where the data isn't present). Found and worked around a mesh-measure section bug
+    (docs/CORTENFORGE.md).
+  - Stand-in choice: the participant table (read with mat-io; RESEARCH.md 12) joined to the
+    measurements. Men within 5 cm of Jon's 173 cm: loaded foot 243-286 mm, ball width 91-113 mm,
+    so the stand-in is picked by Jon's foot length and width (MEASURE.md F1-F2), not his height.
+  - **Next**: pick and scale the stand-in; ball and instep girths on their anatomical planes, not
+    just perpendicular ones; then B3, the last.
 - **B3. The last.** The foot plus fit allowances: toe room, a locked heel pocket, the ankle. True
   and Bauer (patent US 12,135,869 B2) both go scan → custom last → boot.
 - **B4. The shell.** Around the last: wall thickness by region, toe cap, eyelet rows, tendon guard,

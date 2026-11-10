@@ -212,7 +212,16 @@ sufficiently related to predict function from form", Proc R Soc B, doi:10.1098/r
   `<id>_<mBW|fBW>_<foot>.ply`; left-dominant feet were mirrored to match right feet ("Lr").
 - `treadmill_data.mat` (281 MB) holds the participant table (sex, height, weight, leg dominance)
   and walking/running joint angles and moments. Scanner and units aren't stated (`scan` detects
-  units).
+  units: mm).
+- Seen in the files (2026-11-10): ASCII PLY exported from Meshmixer, ~33-35k vertices with
+  normals and colours; closed (the cut above the ankle is capped, flat on some scans and sagging
+  on others); already aligned: x heel to toe, y across, z up, floor at z = 0, cut at z = 125 mm.
+  Loaded (`fBW`) soles are flat at z = 0; lightly loaded (`mBW`) soles curve, and on some the toes
+  lift off.
+- The participant table is a MATLAB `table` inside a v7.3 (HDF5) file, which h5py can't decode
+  (an MCOS object); the `mat-io` Python package reads it (`uv run --with mat-io --with pandas`).
+  50 men, 50 women. Saved as `D:\custom-skate-data\info-clean.csv` (ID, M/F, height cm, weight kg,
+  leg), next to the data, not in git.
 - The Dryad API wants a token to download, and the site returns 403 to scripted requests, so the
   files are fetched by hand in a browser:
   https://datadryad.org/dataset/doi:10.5061/dryad.g4f4qrfwt

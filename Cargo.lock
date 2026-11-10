@@ -895,6 +895,7 @@ version = "0.1.0"
 dependencies = [
  "cortenforge",
  "nalgebra 0.34.2",
+ "png",
 ]
 
 [[package]]
