@@ -280,6 +280,81 @@ repeated (fatigue); impact 3 BW once (static); lateral / normal 0.45 in the skat
   The round-2 roller rocker (7.5 ft on a flat lower) gives 0.251 deg/cm, within 1% of the 23 ft
   insert.
 
+## 15. Foot volume over a game: exercise and standing (2026-11-11)
+
+For the fit before and after a game (Jon: "factor in the blood in feet, sweat in socks"). Found
+by web search; **only abstracts or summaries read, not the full papers**, so the figures are
+approximate:
+- Short treadmill bouts (10 min): foot fluid volume up ~2% after walking and ~3% after running
+  ([PubMed 8535472](https://pubmed.ncbi.nlm.nih.gov/8535472/); same group: "The effects of
+  walking, running, and shoe size on foot volumetrics").
+- A 30 min endurance run: foot volume up 2.2% in men; 30 min of standing: up 1.4% in women
+  ([German Journal of Sports Medicine, 2009](https://www.germanjournalsportsmedicine.com/archive/archive-2009/heft-4/der-einsatz-von-koerperkomposition-und-sportlicher-aktivitaet-auf-die-fussdimension/)).
+- Before and after exercise, a volleyball study found no significant change
+  ([NAU, "Variations in foot volume before and after exercise"](https://experts.nau.edu/en/publications/variations-in-foot-volume-before-and-after-exercise/)).
+- Within-day and between-day changes of foot shape, separated from load: Ballester et al.,
+  Footwear Science 2019 ([UPV repository](https://riunet.upv.es/bitstream/10251/165795/3/Ballester%3bPIEROLA%3bSolves%20-%20Study%20on%20controllable%20and%20uncontrollable%20factors%20affectng%20foot%20shape.pdf));
+  results not read yet. Moholkar & Fenelon (2001), "Diurnal variations in volume of the foot
+  and ankle", is the older source; not retrieved.
+
+So ~1.4-3% after standing or exercise, sometimes none. On stand-in 022 (1.05 L, 734 cm2 of
+skin to the scan's top) that's 0.2-0.4 mm if spread evenly; in fact it gathers in the soft
+tissue over the top and front of the foot.
+
+**Sweat and friction** (Jon: "sweat in socks"):
+- **Friction rises with moisture, about twofold wet.** Gerhardt et al. 2008, *J R Soc
+  Interface* 5:1317 ([PMC2607440](https://pmc.ncbi.nlm.nih.gov/articles/PMC2607440), full text
+  read): forearm skin on a plain-weave 50/50 cotton/polyester fabric, 14.8 N normal load,
+  22 people. Median friction coefficient 0.42 for very dry skin, 0.53 (men) and 0.61 (women) for
+  normally moist skin, and 0.88 +- 0.08 (men) and 0.95 +- 0.04 (women) against the fabric
+  soaked through. Forearm, not foot; a sock on a liner is fabric on fabric, not measured here.
+  A review cites a factor of 1.5-7 for moisture at the skin-textile interface (Ke et al. 2015,
+  *Tribology Letters*, [RERO](https://doc.rero.ch/record/331602); secondhand there).
+- **How much a foot sweats in exercise** (abstracts and a review; conditions vary widely):
+  ~30 ml/h from one foot, peaking at ~50 ml/h, in exercise-induced hyperthermia (Taylor et al.
+  2006, [PubMed 17042246](https://www.pubmed.gov/17042246/)); 68 ml/h from one foot in heated
+  exercise, 22-33 ml/h at rest with a modest core temperature rise (review, *Eur J Appl
+  Physiol* 2014, [PDF](https://springerlink.bibliotecabuap.elogim.com/content/pdf/10.1007/s00421-014-2940-8.pdf));
+  most from the top of the foot and the medial ankle, least from the toes (West et al. 2019,
+  *Ergonomics*, [link](https://informahealthcare.com/doi/full/10.1080/00140139.2019.1657185)).
+  An older military march study weighed socks: 2.0-8.5 g/h a foot
+  ([NLM](https://collections.nlm.nih.gov/ocr/nlm:nlmuid-101679654-bk), rough OCR).
+- So over a game a sock can take on grams to tens of grams of sweat, and the friction going in
+  and out roughly doubles from dry to soaked.
+
+
+## 16. Skates Jon pointed to: CCM Jetspeed FT6 Pro, Bauer Konekt (2026-11-11)
+
+Mostly retailer copy; no published dimensions or lab data found.
+- **CCM Jetspeed FT6 Pro** (Jon's reference for a wide throat): a one-piece boot, "molded
+  around a foot form before leaving the factory" and heat-mouldable; mid-stiffness composite,
+  with a carbon insert and a carbon "flex tendon"; a replaceable tongue buckled into the boot
+  (ADPT Comfort, FlexMotion), said to improve wrap and forward flex; an injected outsole; three
+  widths (tapered, regular, wide); one owner: snug from the forefoot to the top of the ankle,
+  the heel never moves. ([Inline Warehouse](https://www.inlinewarehouse.com/CCM_Jetspeed_FT6_Pro/descpage-FT6P.html),
+  [Hockey World](https://www.hockeyworld.com/CCM-Jetspeed-FT6-Pro-Hockey-Skates-Sr),
+  [Hockey Monkey](https://www.hockeymonkey.com/ccm-hockey-skates-jetspeed-ft6-pro-sr.html),
+  [Ice Warehouse](https://www.icewarehouse.com:443/CCM_Jetspeed_FT6_Pro/descpage-FT6P.html)).
+  Nothing verified on the throat's width or on any player's own pair.
+- **Stiffness across the FT6 Pro's boot** (Jon: "if they have varying stiffness throughout
+  their boot"): no zone-by-zone figures are published. A single boot rating, CCM's "stiffness
+  performance index" 195 on most listings (180 on one); a one-piece composite boot whose sole
+  wraps under it; a reviewer: "the rest of the boot is stiff apart from the tendon guard", and
+  a few weeks' break-in. The give is put in parts, not soft shell zones: the carbon "flex
+  tendon" guard for extension at the end of the stride (a reviewer: it still stops a skate to
+  the heel but has "just enough give"), the removable buckled-in tongue for forward flex, and
+  multi-density memory foam round the ankle. On the heel, only a roller Jetspeed review: a
+  tighter heel pocket "to keep your feet locked in place for better energy transfer".
+  ([Hockey World](https://www.hockeyworld.com/CCM-Jetspeed-FT6-Pro-Hockey-Skates-Sr),
+  [Source for Sports](https://sourceforsports.ca/products/ccm-jetspeed-ft6-pro-senior-hockey-skates-2023),
+  [Outside Bozeman (FT6)](https://outsidebozeman.com/gear/product-reviews/misc/review-ccm-jetspeed-ft6-skates),
+  [Hockey World Blog, roller JetSpeed](https://hockeyworldblog.com/?p=19559)).
+- **Bauer Konekt2 goalie skate:** a two-piece Grilamid shell "with a hinge on the ankle",
+  up to 22° of forward flex (a limiter cuts it to 5-10°), upper and lower buckles, shell and
+  liner heat-moulded ([The Hockey Shop review](https://www.thehockeyshop.com/blogs/the-hockey-blog/bauer-konekt2-goalie-skate-review)).
+- **True's custom goalie boots** are a one-piece (monocoque) shell, and more NHL goalies are
+  moving to them ([NHL.com](https://nhl.com/news/unmasked-evolving-skates-give-goalies-edge-304203896)).
+
 ## Still to find
 
 - Frame design loads for hockey: Stidwill's thesis numbers; the EN 13843 test loads (paid).

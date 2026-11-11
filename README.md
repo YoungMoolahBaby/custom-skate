@@ -151,8 +151,8 @@ Pictures and numbers: `docs/round2/`, and `docs/PLAN.md` (Round 2).
 
 ![The hockey boot: black carbon, three-quarter views from the outside front and the inside back](docs/boot/boot_hero.png)
 
-*The ice boot on the stand-in foot: carbon shell, black thermoplastic toe cap, outsole and
-tendon guard, black tongue. The roller boot is the same, vented (`docs/boot/roller/`).
+*The ice boot on the stand-in foot: carbon shell, black thermoplastic toe cap, mount pads and
+tendon guard, black tongue, white laces. The roller boot is the same, vented (`docs/boot/roller/`).
 `cargo run --release -- boot <scan> [out] [ice|roller]`.*
 
 - **Tight from heel to toe, open at the top**, as Jon skates. The cuff stops just above the
@@ -170,12 +170,20 @@ tendon guard, black tongue. The roller boot is the same, vented (`docs/boot/roll
   line over the top of the foot and up the shin sets the throat, the tongue, the eyelets and the
   laces. The shell's inside follows the foot; its outside is smoothed over the hollows. So the
   same code fits Jon's foot once it's scanned.
-- **387 g (ice), 384 g (roller)**, weighed with the shell, toe cap and outsole in printed nylon
-  (PA 12): shell 215 g, outsole 68 g, toe cap 21 g, liner, ankle pads and footbed 43 g, tongue
-  15 g, tendon guard 12 g, eyelets and laces 13 g. The foam, TPU and lace densities are assumed.
+- **The sole is two flat mount pads**, heel and forefoot, where the holder or chassis attaches;
+  between them the shell's own rounded underside. **The tendon guard is a shield**, narrow where
+  it rivets on, flaring at the top, ribbed.
+- **342 g (ice), 339 g (roller)**, weighed with the shell, toe cap and mount pads in printed nylon
+  (PA 12): shell 215 g, mount pads 15 g, toe cap 21 g, liner, ankle pads and footbed 43 g, tongue
+  15 g, tendon guard 20 g, eyelets and laces 13 g. The foam, TPU and lace densities are assumed.
 - **Estimates until measured:** the heights of the cuff, tongue and tendon guard, the lean, and
   the eyelet spacing (`docs/MEASURE.md`, B1-B7, on the TF9).
-- **Next for the boot:** panels and character lines, then the holder under it. Jon's own scans,
+- **Getting it on and off:** checked with the foot unloaded, as it is then. With the whole shell
+  rigid the forefoot can't pass the ankle collar: unlaced, the quarters have to open ~30 mm at
+  the throat, as on any laced boot. The heel cup, tight like True's, costs the heel ~7 mm of
+  squeeze past the hollows beside the Achilles (`docs/PLAN.md`).
+- **Next for the boot:** the quarters opening unlaced, panels and character lines, then the
+  holder under it. Jon's own scans,
   puck protection (an air-gapped shield) and the fit simulation after. The sole becomes the
   roller chassis's upper, and the ice skate's one-piece holder takes our own runner and rocker
   insert; nothing proprietary.

@@ -97,6 +97,15 @@ type (bug, docs, API, perf, setup, works), date, file:line under
 
 ## mesh (measure, io, repair)
 
+- **API** (2026-11-11, the boot): no rigid registration (ICP or similar) for scans. The
+  stand-in set has each foot loaded and unloaded (full and minimal body weight), and checking
+  that a foot can get into and out of a near-rigid boot needs the unloaded foot in the loaded
+  foot's frame; Jon's own scans will need the same (and left against right, and a re-scan
+  against the first). Each scan's standard frame (`foot::canonical`: heel at x 0, floor at z 0,
+  centred on the footprint) moves with the load, since the sole spreads. Instead:
+  `hockey_boot::align_to`, point-to-surface ICP on the target's distance grid (each point moved
+  to its projection, then Kabsch's SVD), over a band of the foot that load and posture change
+  least (20-70 mm up): stand-in 022 unloaded onto loaded, RMS 1.3 mm.
 - **note** (2026-11-11, the boot): `weld_vertices` (repair.rs:310) merges duplicates by
   remapping the faces but leaves the merged-away copies in the vertex list, unreferenced (1,284
   of 85,104 on a meshed 2 mm shell). Harmless for STL and volumes; but anything that walks the
@@ -242,6 +251,11 @@ Nice-to-haves for CortenForge, with what this project built instead.
   value +- l x half-diagonal, so adaptive meshing prunes scan-derived parts. Instead:
   `hockey_boot::cluster_decimate`.
 - **`weld_vertices` that compacts** (2026-11-11), or a flag for it.
+- **Rigid registration of scans** (2026-11-11, the boot): `align(source, target, region) ->
+  (Isometry3, rms)` in mesh-measure or scan-prep-core: ICP (point-to-plane), with a region
+  mask, a trimmed-outlier option for scans whose shapes differ in places (a loaded and an
+  unloaded foot), and the residual per point to see where they differ. Instead:
+  `hockey_boot::align_to`.
 - **Section properties and interference** (2026-11-10, round 2): `Solid::section(plane)` (area,
   centroid, second moments) for beam checks, and `Solid::overlap_volume(&other)` that ignores the
   partial-cell band, for clash checks. Instead: `strength::section`, `round2::overlap_mm3`.

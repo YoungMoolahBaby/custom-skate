@@ -63,6 +63,13 @@ pub struct HockeyParams {
     pub sole: f64,
     /// The outsole sits this far inside the shell's outline, tucked under its rounded bottom edge.
     pub sole_inset: f64,
+    /// The sole is only two flat mount pads, heel and forefoot, where the holder or chassis
+    /// attaches (Jon, 2026-11-11: "we only need that flat piece where the skate meets the blade
+    /// holder"): centred on the chassis's mounts (`sizing::MOUNT_SPACING` apart about
+    /// `FrameParams::center`), `pad_len` long and `pad_w` wide. Estimates until the holder is
+    /// designed and the TF9's rivet pattern measured.
+    pub pad_len: f64,
+    pub pad_w: f64,
     /// The cuff's top at the sides: this far above the outer (lateral) ankle bone, just above
     /// the ankle pocket (Jon, 2026-11-11: skates "usually go just above that exterior ankle
     /// bulge. to protect the ankles just enough, but the offer max mobility"). Estimate.
@@ -127,6 +134,14 @@ pub struct HockeyParams {
     pub guard_above_cuff: f64,
     pub guard_t: f64,
     pub guard_kick: f64,
+    /// The tendon guard is a shield (Jon, 2026-11-11, from two pro skates' guards): `guard_w0`
+    /// wide where it rivets over the shell's back, flaring to `guard_w1` at the top, whose edge
+    /// has rounded shoulders and a `guard_notch` dip in the middle; a raised rim and a centre
+    /// spine `guard_rib` proud (stiffness, and the look). Estimates.
+    pub guard_w0: f64,
+    pub guard_w1: f64,
+    pub guard_notch: f64,
+    pub guard_rib: f64,
     /// Toe cap thickness over the shell.
     pub toe_cap_t: f64,
     /// Lace radius (drawn round).
@@ -145,6 +160,8 @@ impl Default for HockeyParams {
             fair_closing: 18.0,
             sole: 3.0,
             sole_inset: 2.0,
+            pad_len: 46.0,
+            pad_w: 48.0,
             cuff_above_ankle: 40.0,
             trim_front_rise: 28.0,
             trim_back_rise: 18.0,
@@ -175,6 +192,10 @@ impl Default for HockeyParams {
             guard_above_cuff: 70.0,
             guard_t: 2.5,
             guard_kick: 20.0,
+            guard_w0: 34.0,
+            guard_w1: 64.0,
+            guard_notch: 4.0,
+            guard_rib: 1.0,
             toe_cap_t: 1.5,
             lace_r: 1.6,
             vented: false,
@@ -392,6 +413,12 @@ fn dorsal_profile(base: &dyn Fn(Point3<f64>) -> f64, c: (f64, f64), z_max: f64, 
         .collect()
 }
 
+/// Smooth maximum (polynomial, blend width `k`): rounds the corner where two fields meet.
+fn smax(a: f64, b: f64, k: f64) -> f64 {
+    let h = (0.5 + 0.5 * (a - b) / k).clamp(0.0, 1.0);
+    b + (a - b) * h + k * h * (1.0 - h)
+}
+
 fn smoothstep(e0: f64, e1: f64, x: f64) -> f64 {
     let t = ((x - e0) / (e1 - e0)).clamp(0.0, 1.0);
     t * t * (3.0 - 2.0 * t)
@@ -430,9 +457,9 @@ pub struct PartSpec {
     pub cell: f64,
 }
 
-/// The eyelets (gunmetal) and laces (black) in the look.
+/// The eyelets (gunmetal) and laces (white hockey laces: Jon, 2026-11-11) in the look.
 pub const EYELET_LOOK: [f64; 3] = [0.42, 0.43, 0.46];
-pub const LACE_LOOK: [f64; 3] = [0.08, 0.08, 0.09];
+pub const LACE_LOOK: [f64; 3] = [0.94, 0.94, 0.92];
 
 /// Sheen in the renders, by finish.
 pub fn finish_spec(finish: &str) -> f64 {
@@ -451,7 +478,7 @@ pub fn part_specs() -> Vec<PartSpec> {
     vec![
         PartSpec { kind: Shell, name: "shell", material: PA12_MJF, color: [0.16, 0.25, 0.42], look: [0.16, 0.16, 0.18], finish: "carbon", cell: 0.75 },
         PartSpec { kind: ToeCap, name: "toe cap", material: PA12_MJF, color: [0.13, 0.13, 0.15], look: [0.09, 0.09, 0.10], finish: "gloss", cell: 0.3 },
-        PartSpec { kind: Outsole, name: "outsole", material: PA12_MJF, color: [0.09, 0.09, 0.10], look: [0.07, 0.07, 0.075], finish: "matte", cell: 0.75 },
+        PartSpec { kind: Outsole, name: "mount pads", material: PA12_MJF, color: [0.09, 0.09, 0.10], look: [0.07, 0.07, 0.075], finish: "matte", cell: 0.75 },
         PartSpec { kind: Liner, name: "liner", material: LINER_FOAM, color: [0.42, 0.44, 0.48], look: [0.23, 0.23, 0.25], finish: "fabric", cell: 1.0 },
         PartSpec { kind: AnklePads, name: "ankle pads", material: LINER_FOAM, color: [0.78, 0.36, 0.22], look: [0.27, 0.27, 0.29], finish: "fabric", cell: 1.0 },
         PartSpec { kind: Footbed, name: "footbed", material: LINER_FOAM, color: [0.22, 0.55, 0.45], look: [0.19, 0.19, 0.21], finish: "fabric", cell: 1.0 },
@@ -494,6 +521,8 @@ pub struct BootGeom {
     /// The toe cap's back edge at the dorsal line: x, and the ridge y there.
     pub toe_cap_x: f64,
     pub toe_cap_y: f64,
+    /// The mount pads' centres (x, y): heel and forefoot.
+    pub mounts: [(f64, f64); 2],
     /// Eyelet centres on the facing's outer surface and their outward axes, in pairs from the
     /// toe end: [2k] on the -y side, [2k + 1] on the +y side.
     pub eyelets: Vec<(Point3<f64>, Vector3<f64>)>,
@@ -504,6 +533,8 @@ pub struct BootGeom {
     /// The heel-lock eyelet pair (level from the toe end), and the ankle crease's height.
     pub lock: Option<usize>,
     pub z_crease: f64,
+    /// The ankle crease on the dorsal line.
+    pub crease: Point3<f64>,
     /// The tongue's top, z.
     pub z_tongue_top: f64,
     pub bounds: Aabb,
@@ -537,11 +568,13 @@ impl BootGeom {
             z_trim_back,
             toe_cap_x: 0.0,
             toe_cap_y: 0.0,
+            mounts: [(0.0, 0.0); 2],
             eyelets: Vec::new(),
             lace_paths: Vec::new(),
             vents: Vec::new(),
             lock: None,
             z_crease: 0.0,
+            crease: Point3::origin(),
             z_tongue_top: 0.0,
             bounds,
             sole_bottom,
@@ -588,6 +621,19 @@ impl BootGeom {
         let (front, _) = g.prof.at(g.s_front);
         g.toe_cap_x = front.x + 2.0;
         g.toe_cap_y = front.y;
+        // The mounts: the chassis's, centred across the footprint there (at z 3).
+        let xc = crate::frame::FrameParams::default().center * lm.length;
+        for (i, side) in [-1.0, 1.0].into_iter().enumerate() {
+            let x = xc + side * 0.5 * crate::sizing::MOUNT_SPACING;
+            let edge = |dir: f64| {
+                let mut y = 0.0;
+                while g.d(Point3::new(x, y + dir * 0.5, 3.0)) < 0.0 && y.abs() < 150.0 {
+                    y += dir * 0.5;
+                }
+                y
+            };
+            g.mounts[i] = (x, 0.5 * (edge(-1.0) + edge(1.0)));
+        }
         g.place_eyelets();
         g.place_lock();
         g.place_vents();
@@ -737,18 +783,35 @@ impl BootGeom {
         self.inner_off(q) + self.p.wall + self.facing(n, th)
     }
 
-    /// The tendon guard's band: from the shell's outer surface, kicking back at the top.
+    /// The tendon guard's outline in (y, z) on the back of the leg: a shield, narrow at the
+    /// bottom, flaring (as v^1.5) to the top, the top edge dipping `guard_notch` in the middle,
+    /// the corners rounded (smooth max). Negative inside.
+    fn guard_outline(&self, q: Point3<f64>) -> f64 {
+        let p = &self.p;
+        let (z0, z1) = (self.z_trim_back - 30.0, self.z_trim_back + p.guard_above_cuff);
+        let v = ((q.z - z0) / (z1 - z0)).clamp(0.0, 1.0);
+        let a = (q.y - self.lm.leg_c.1).abs();
+        let hw = 0.5 * p.guard_w0 + 0.5 * (p.guard_w1 - p.guard_w0) * v.powf(1.5);
+        let side = a - hw;
+        let top = q.z - (z1 - p.guard_notch * (1.0 - smoothstep(0.0, 14.0, a)));
+        let bottom = z0 - q.z;
+        smax(smax(side, top, 10.0), bottom, 5.0)
+    }
+
+    /// The tendon guard's band: from the shell's outer surface, kicking back at the top, with a
+    /// raised rim and centre spine.
     fn guard(&self, q: Point3<f64>, d: f64) -> f64 {
         let p = &self.p;
         let (zb, z1) = (self.z_trim_back, self.z_trim_back + p.guard_above_cuff);
-        let z0 = zb - 30.0;
         let u = ((q.z - zb) / (z1 - zb)).clamp(0.0, 1.0);
         let off = self.inner_off(q) + p.wall + p.guard_kick * u * u;
-        let band = (d - (off + p.guard_t)).max(off - d);
-        let hw = 22.0 - 9.0 * ((q.z - z0) / (z1 - z0)).clamp(0.0, 1.0);
-        let rect = rounded_rect(q.z - 0.5 * (z0 + z1), q.y - self.lm.leg_c.1, 0.5 * (z1 - z0), hw, 8.0);
+        let outline = self.guard_outline(q);
+        let rim = 1.0 - smoothstep(-4.5, -3.0, outline);
+        let spine = (1.0 - smoothstep(2.0, 3.5, (q.y - self.lm.leg_c.1).abs())) * smoothstep(zb - 20.0, zb - 5.0, q.z);
+        let t = p.guard_t + p.guard_rib * rim.max(spine);
+        let band = (d - (off + t)).max(off - d);
         let back = q.x - (self.lm.leg_c.0 - 10.0);
-        band.max(rect).max(back)
+        band.max(outline).max(back)
     }
 
     /// Signed distance of one part (negative inside), mm; approximate away from the surface.
@@ -802,12 +865,18 @@ impl BootGeom {
                 band.max(edge).max(low).max(-throat).max(-self.vent_cut(q))
             }
             PartKind::Outsole => {
+                // Two flat pads under the shell, filling up to its rounded underside.
                 let oo_c = p.ease + p.liner + p.wall;
                 let outline = self.d_out(Point3::new(q.x, q.y, 3.0)) - (oo_c - p.sole_inset);
-                let slab = (self.sole_bottom - q.z).max(q.z - (-oo_c + 0.5));
+                let pads = self
+                    .mounts
+                    .iter()
+                    .map(|&(xm, ym)| rounded_rect(q.x - xm, q.y - ym, 0.5 * p.pad_len, 0.5 * p.pad_w, 8.0))
+                    .fold(f64::MAX, f64::min);
+                let slab = (self.sole_bottom - q.z).max(q.z - (-oo_c + 3.0));
                 let n = self.prof.closest(q.x, q.z);
                 let outside_shell = self.outer_off(q, &n) - self.d_out(q);
-                outline.max(slab).max(outside_shell)
+                pads.max(outline).max(slab).max(outside_shell)
             }
             PartKind::Liner | PartKind::AnklePads | PartKind::Footbed => {
                 // Up to the shell's top edge the liner fills [li, io]; above it the collar rises
@@ -856,7 +925,7 @@ impl BootGeom {
         match k {
             PartKind::Shell | PartKind::Liner => mk(b.min.x, b.min.y, -oo_c - 2.0, b.max.x, b.max.y, self.z_trim_back + 6.0),
             PartKind::ToeCap => mk(self.toe_cap_x - 3.0, b.min.y, -oo_c - 2.0, self.lm.length + 14.0, b.max.y, 75.0),
-            PartKind::Outsole => mk(b.min.x, b.min.y, self.sole_bottom - 1.5, b.max.x, b.max.y, -oo_c + 3.0),
+            PartKind::Outsole => mk(b.min.x, b.min.y, self.sole_bottom - 1.5, b.max.x, b.max.y, -oo_c + 4.0),
             PartKind::Footbed => mk(b.min.x, b.min.y, -oo_c - 1.0, b.max.x, b.max.y, -p.ease + 1.0),
             PartKind::AnklePads => {
                 let r = p.ankle_pad_r + 2.0;
@@ -875,8 +944,8 @@ impl BootGeom {
                 mk(lo.x - 30.0, lo.y - m, lo.z - 30.0, hi.x + 30.0, hi.y + m, hi.z + 30.0)
             }
             PartKind::TendonGuard => {
-                let (yc, xc) = (lm.leg_c.1, lm.leg_c.0);
-                mk(b.min.x, yc - 26.0, self.z_trim_back - 33.0, xc - 8.0, yc + 26.0, self.z_trim_back + p.guard_above_cuff + 3.0)
+                let (yc, xc, hw) = (lm.leg_c.1, lm.leg_c.0, 0.5 * p.guard_w1 + 4.0);
+                mk(b.min.x, yc - hw, self.z_trim_back - 33.0, xc - 8.0, yc + hw, self.z_trim_back + p.guard_above_cuff + 3.0)
             }
         }
     }
@@ -906,13 +975,14 @@ impl BootGeom {
         while s < self.prof.len() {
             let (pt, t) = self.prof.at(s);
             if t.z.atan2(-t.x).to_degrees() >= 60.0 {
-                crease = Some((s, pt.z));
+                crease = Some((s, pt));
                 break;
             }
             s += 0.5;
         }
-        let Some((sc, zc)) = crease else { return };
-        self.z_crease = zc;
+        let Some((sc, pc)) = crease else { return };
+        self.z_crease = pc.z;
+        self.crease = pc;
         let n = self.eyelets.len() / 2;
         let k = (0..n)
             .min_by(|&a, &b| {
@@ -1256,6 +1326,302 @@ pub fn base64(data: &[u8]) -> String {
     out
 }
 
+/// Girth of a solid's section by the plane through `a` and `b` that contains the y direction
+/// (across the foot), mm: rays fanned from the midpoint in the plane, 0.5 degree apart, each to
+/// where `f` turns positive, the polygon's perimeter. Assumes the section is star-shaped about the
+/// midpoint (true for a loop round the heel and instep). NaN if the midpoint is outside.
+pub fn plane_girth(f: &dyn Fn(Point3<f64>) -> f64, a: Point3<f64>, b: Point3<f64>) -> f64 {
+    let mut e2 = b - a;
+    e2.y = 0.0;
+    let e2 = e2.normalize();
+    let c = Point3::from((a.coords + b.coords) * 0.5);
+    if f(c) >= 0.0 {
+        return f64::NAN;
+    }
+    let pts: Vec<Point3<f64>> = (0..720)
+        .map(|i| {
+            let th = i as f64 * std::f64::consts::PI / 360.0;
+            let dir = Vector3::y() * th.cos() + e2 * th.sin();
+            let mut t = 0.0;
+            while t < 300.0 && f(c + dir * (t + 0.5)) < 0.0 {
+                t += 0.5;
+            }
+            let (mut lo, mut hi) = (t, t + 0.5);
+            for _ in 0..30 {
+                let m = 0.5 * (lo + hi);
+                if f(c + dir * m) < 0.0 {
+                    lo = m;
+                } else {
+                    hi = m;
+                }
+            }
+            c + dir * (0.5 * (lo + hi))
+        })
+        .collect();
+    (0..pts.len()).map(|i| (pts[(i + 1) % pts.len()] - pts[i]).norm()).sum()
+}
+
+/// Taking the foot out (going in is the same path backwards), Jon, 2026-11-11: the heel locked by
+/// the shell itself, tolerances as tight as they can be ("scott van horn appears to do it with
+/// the boot around the heel ... way more responsive"), and the boot "almost rigid", unlike a shoe.
+/// So the question is the tightest heel cup the foot still gets past.
+///
+/// The foot below the ankle bones is rigid, hinged at the ball (the toes stay flat as the heel
+/// lifts). Poses: the heel lifted by `beta` about the ball, then the foot moved up `h` and back
+/// `b` (upright frame: up along the leg). At each pose, a foot point's push is how far it gets
+/// into the shell, past the liner squeezed to `liner_min`; points above the cuff's top line or
+/// out through the open throat (laces loose, tongue pulled forward) are free.
+///
+/// The shell isn't equally rigid everywhere, so the pushes are kept by zone of the foot: the heel
+/// (the rigid heel cup: only the heel's soft tissue gives), the midfoot (the quarters, which
+/// spread when unlaced), the forefoot (the toe box: the forefoot compresses a little). The way
+/// out is the path over the pose grid whose worst push, each zone's divided by its budget, is
+/// least (a bottleneck search). The budgets only steer the path; the pushes are reported as is.
+#[derive(Debug, Clone, Copy)]
+pub struct Removal {
+    /// Along the way out: the worst push in each zone (heel cup, quarters, toe box), mm, and where
+    /// on the foot (foot frame).
+    pub push: [f64; 3],
+    pub at: [Point3<f64>; 3],
+    /// The budgets that steered the path, mm (assumptions, to calibrate on test shells).
+    pub budget: [f64; 3],
+    /// The liner's squeezed thickness assumed, the foot points checked, the push in place (0: the
+    /// foot fits its own boot), and the worst pose on the path (heel lift deg, up mm, back mm).
+    pub liner_min: f64,
+    pub points: usize,
+    pub in_place: f64,
+    pub pose: (f64, f64, f64),
+}
+
+pub const ZONES: [&str; 3] = ["heel cup", "quarters", "toe box"];
+
+impl BootGeom {
+    /// How far a foot point (upright boot frame) pushes into the rigid shell, mm (0 if free).
+    /// The barrier is the band from the squeezed liner to 25 mm past the shell's outside: a point
+    /// further out is outside the boot (free), and the band is thicker than any one step of the
+    /// search (at most ~9 mm at the heel), so no point can jump it.
+    fn push(&self, v: Point3<f64>, liner_min: f64) -> f64 {
+        let d = self.d(v);
+        let io = self.inner_off(v);
+        let pen = d - (io - liner_min);
+        if pen <= 0.0 || d > io + self.p.wall + 25.0 || v.z > self.z_trim(v) {
+            return 0.0;
+        }
+        // Out through the open throat: in its band, and no deeper than 12 mm under the dorsal
+        // line (below that the shell's quarters and sole are there).
+        let n = self.prof.closest(v.x, v.z);
+        if self.throat(&n, v.y) < 0.0 {
+            let (pt, _) = self.prof.at(n.s);
+            let nn = self.prof.normal(n.s);
+            if (v.x - pt.x) * nn.x + (v.z - pt.z) * nn.z > -12.0 {
+                return 0.0;
+            }
+        }
+        pen
+    }
+}
+
+pub fn removal_check(g: &BootGeom, foot: &IndexedMesh, liner_min: f64, budget: [f64; 3]) -> Removal {
+    // The foot below the ankle bones (the leg above moves with the knee), every 6th scan point,
+    // and its zone by length: heel to 30%, midfoot to 68%, forefoot beyond.
+    let l = g.lm.length;
+    let z_cut = g.lm.medial.z.max(g.lm.lateral.z) + 5.0;
+    let pts: Vec<Point3<f64>> = foot.vertices.iter().filter(|v| v.z < z_cut).step_by(6).copied().collect();
+    let zone = |v: &Point3<f64>| if v.x < 0.30 * l { 0 } else if v.x < 0.68 * l { 1 } else { 2 };
+    let ball = Point3::new(0.72 * l, 0.0, 15.0);
+    let (nb, nh, nk) = (29usize, 51usize, 31usize);
+    let (db, dh, dk) = (2.5f64, 4.0f64, 4.0f64);
+    let place = |v: &Point3<f64>, beta: f64, h: f64, back: f64| {
+        let (mut x, mut z) = (v.x, v.z);
+        if v.x < ball.x {
+            let (sn, cs) = beta.to_radians().sin_cos();
+            let (rx, rz) = (v.x - ball.x, v.z - ball.z);
+            x = ball.x + rx * cs + rz * sn;
+            z = ball.z + rz * cs - rx * sn;
+        }
+        Point3::new(x - back, v.y, z + h)
+    };
+    // The worst push per zone, and its point, at every pose; in parallel over the heel lift.
+    type Cell = ([f64; 3], [usize; 3]);
+    let grid: Vec<Cell> = std::thread::scope(|sc| {
+        let hs: Vec<_> = (0..nb)
+            .map(|i| {
+                let (pts, place, zone) = (&pts, &place, &zone);
+                sc.spawn(move || {
+                    let mut out = Vec::with_capacity(nh * nk);
+                    for j in 0..nh {
+                        for k in 0..nk {
+                            let (beta, h, back) = (i as f64 * db, j as f64 * dh, k as f64 * dk);
+                            let mut cell: Cell = ([0.0; 3], [0; 3]);
+                            for (pi, v) in pts.iter().enumerate() {
+                                let push = g.push(place(v, beta, h, back), liner_min);
+                                let z = zone(v);
+                                if push > cell.0[z] {
+                                    cell.0[z] = push;
+                                    cell.1[z] = pi;
+                                }
+                            }
+                            out.push(cell);
+                        }
+                    }
+                    out
+                })
+            })
+            .collect();
+        hs.into_iter().flat_map(|h| h.join().unwrap()).collect()
+    });
+    let cost = |c: &Cell| (0..3).map(|z| c.0[z] / budget[z]).fold(0.0, f64::max);
+    let idx = |i: usize, j: usize, k: usize| (i * nh + j) * nk + k;
+    // Bottleneck search from the foot in place (0, 0, 0) to any pose at the top of the grid.
+    let mut best = vec![f64::INFINITY; grid.len()];
+    let mut from = vec![usize::MAX; grid.len()];
+    let mut heap = std::collections::BinaryHeap::new();
+    best[0] = cost(&grid[0]);
+    heap.push((std::cmp::Reverse(OrdF(best[0])), 0usize));
+    let mut goal = None;
+    while let Some((std::cmp::Reverse(OrdF(c)), n)) = heap.pop() {
+        if c > best[n] {
+            continue;
+        }
+        let (i, rest) = (n / (nh * nk), n % (nh * nk));
+        let (j, k) = (rest / nk, rest % nk);
+        if j == nh - 1 {
+            goal = Some(n);
+            break;
+        }
+        let mut step = |m: usize| {
+            let cm = c.max(cost(&grid[m]));
+            if cm < best[m] {
+                best[m] = cm;
+                from[m] = n;
+                heap.push((std::cmp::Reverse(OrdF(cm)), m));
+            }
+        };
+        if i + 1 < nb {
+            step(idx(i + 1, j, k));
+        }
+        if i > 0 {
+            step(idx(i - 1, j, k));
+        }
+        if j + 1 < nh {
+            step(idx(i, j + 1, k));
+        }
+        if j > 0 {
+            step(idx(i, j - 1, k));
+        }
+        if k + 1 < nk {
+            step(idx(i, j, k + 1));
+        }
+        if k > 0 {
+            step(idx(i, j, k - 1));
+        }
+    }
+    // Along that path: each zone's worst push, and the worst pose overall.
+    let (mut push, mut at) = ([0.0f64; 3], [Point3::origin(); 3]);
+    let mut worst = (f64::MIN, 0usize);
+    let mut n = goal.unwrap_or(0);
+    while n != usize::MAX {
+        let c = &grid[n];
+        for z in 0..3 {
+            if c.0[z] > push[z] {
+                push[z] = c.0[z];
+                at[z] = pts[c.1[z]];
+            }
+        }
+        if cost(c) > worst.0 {
+            worst = (cost(c), n);
+        }
+        n = from[n];
+    }
+    let (i, rest) = (worst.1 / (nh * nk), worst.1 % (nh * nk));
+    let (j, k) = (rest / nk, rest % nk);
+    if std::env::var("BOOT_DEBUG").as_deref() == Ok("removal") {
+        let (beta, h, back) = (i as f64 * db, j as f64 * dh, k as f64 * dk);
+        let mut v: Vec<(f64, Point3<f64>, Point3<f64>)> =
+            pts.iter().map(|p| { let q = place(p, beta, h, back); (g.push(q, liner_min), *p, q) }).filter(|x| x.0 > 0.0).collect();
+        v.sort_by(|a, b| b.0.total_cmp(&a.0));
+        println!("  removal debug: pose {beta} deg, up {h}, back {back}: {} points pushing", v.len());
+        for (push, p, q) in v.iter().step_by((v.len() / 12).max(1)).take(12) {
+            println!(
+                "    push {push:5.1}: foot ({:5.0},{:5.0},{:5.0}) -> ({:5.0},{:5.0},{:5.0}); d {:5.1}, inner {:4.1}, trim z {:4.0}",
+                p.x, p.y, p.z, q.x, q.y, q.z, g.d(*q), g.inner_off(*q), g.z_trim(*q)
+            );
+        }
+    }
+    Removal {
+        push,
+        at,
+        budget,
+        liner_min,
+        points: pts.len(),
+        in_place: grid[0].0.iter().copied().fold(0.0, f64::max),
+        pose: (i as f64 * db, j as f64 * dh, k as f64 * dk),
+    }
+}
+
+/// f64 with a total order, for the search's heap.
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct OrdF(f64);
+impl Eq for OrdF {}
+impl PartialOrd for OrdF {
+    fn partial_cmp(&self, o: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(o))
+    }
+}
+impl Ord for OrdF {
+    fn cmp(&self, o: &Self) -> std::cmp::Ordering {
+        self.0.total_cmp(&o.0)
+    }
+}
+
+/// Rigidly align `src` onto the `target` foot: point-to-surface ICP on the target's distance
+/// field (each sample moved to its projection on the surface, then the best rotation and shift by
+/// Kabsch's SVD), using only `src`'s points with z in `band` (the top of the foot, its sides and
+/// the back of the heel: what load and posture change least). Returns the aligned mesh and the
+/// final RMS distance of the band's points to the target, mm.
+pub fn align_to(src: &IndexedMesh, target: &Foot, band: (f64, f64)) -> (IndexedMesh, f64) {
+    let mut out = src.clone();
+    let mut rms = f64::NAN;
+    for _ in 0..40 {
+        let sample: Vec<Point3<f64>> = out.vertices.iter().filter(|v| v.z > band.0 && v.z < band.1).step_by(4).copied().collect();
+        if sample.len() < 10 {
+            break;
+        }
+        let proj: Vec<Point3<f64>> = sample
+            .iter()
+            .map(|p| {
+                let gr = target.sdf.gradient(*p);
+                let gn = gr.norm().max(1e-9);
+                p - gr / gn * target.eval(*p)
+            })
+            .collect();
+        rms = (sample.iter().zip(&proj).map(|(a, b)| (a - b).norm_squared()).sum::<f64>() / sample.len() as f64).sqrt();
+        let n = sample.len() as f64;
+        let ca = sample.iter().fold(Vector3::zeros(), |s, p| s + p.coords) / n;
+        let cb = proj.iter().fold(Vector3::zeros(), |s, p| s + p.coords) / n;
+        let mut h = nalgebra::Matrix3::zeros();
+        for (a, b) in sample.iter().zip(&proj) {
+            h += (a.coords - ca) * (b.coords - cb).transpose();
+        }
+        let svd = h.svd(true, true);
+        let (u, vt) = (svd.u.unwrap(), svd.v_t.unwrap());
+        let mut r = vt.transpose() * u.transpose();
+        if r.determinant() < 0.0 {
+            let mut v = vt.transpose();
+            v.column_mut(2).neg_mut();
+            r = v * u.transpose();
+        }
+        let t = cb - r * ca;
+        for v in &mut out.vertices {
+            *v = Point3::from(r * v.coords + t);
+        }
+        if (r - nalgebra::Matrix3::identity()).norm() < 1e-6 && t.norm() < 1e-4 {
+            break;
+        }
+    }
+    (out, rms)
+}
+
 fn merge(meshes: &[IndexedMesh]) -> IndexedMesh {
     let mut out = IndexedMesh::default();
     for m in meshes {
@@ -1312,6 +1678,7 @@ pub fn run(scan_path: &Path, out: &Path, vented: bool) -> Result<(), String> {
     // The fair base for the shell's outside: the closed foot closed again, plus the toe box.
     let fair = lb.closed.closed_with_margin(p.fair_closing, 1.5, 20.0)?;
     let base_fair = fair.solid().smooth_union(lb.toe.clone(), foot::BLEND);
+    let (base, base_fair_c) = (lb.solid.clone(), base_fair.clone());
     let g = BootGeom::new(lb.solid, base_fair, lb.bounds, lm, p);
     let (front, _) = g.prof.at(g.s_front);
     let (cuff, _) = g.prof.at(g.s_cuff);
@@ -1364,6 +1731,57 @@ pub fn run(scan_path: &Path, out: &Path, vented: bool) -> Result<(), String> {
         g.z_crease
     );
     println!("{shape_line}");
+    let t = Instant::now();
+    // Off and on, the foot carries no weight, so it's checked with the unloaded scan when there
+    // is one (the stand-in set has each foot at full and at minimal body weight: fBW, mBW),
+    // aligned onto the loaded one. The loaded scan stays the shape the boot fits.
+    let unloaded_path = scan_path.file_name().and_then(|n| n.to_str()).filter(|n| n.contains("fBW")).map(|n| scan_path.with_file_name(n.replace("fBW", "mBW")));
+    let (out_foot, out_note) = match unloaded_path.filter(|p| p.exists()) {
+        Some(up) => {
+            let (raw_u, _, _) = scan::load(&up)?;
+            let mu = scan::measure(&raw_u, 20);
+            let (aligned, rms) = align_to(&foot::canonical(&raw_u, &mu), &foot, (20.0, 70.0));
+            (aligned, format!("the unloaded scan {}, aligned to the loaded one (RMS {rms:.1} mm over 20-70 mm up)", up.display()))
+        }
+        None => (foot.mesh.clone(), "the loaded scan (no unloaded one found): a strict check, the sole spreads under load".to_string()),
+    };
+    let rm = removal_check(&g, &out_foot, 1.5, [2.0, 8.0, 3.0]);
+    let removal_line = format!(
+        "taking it off, with {out_note} (liner squeezed to {} mm, {} foot points, in place {:.2} mm): the way out needs {} (budgets steering the path {:.0}/{:.0}/{:.0} mm, assumed); worst pose: heel lifted {:.1} deg, up {:.0} mm, back {:.0} mm ({:.1} s)",
+        rm.liner_min,
+        rm.points,
+        rm.in_place,
+        (0..3)
+            .map(|z| format!("{} {:.1} mm at ({:.0}, {:.0}, {:.0})", ZONES[z], rm.push[z], rm.at[z].x, rm.at[z].y, rm.at[z].z))
+            .collect::<Vec<_>>()
+            .join(", "),
+        rm.budget[0],
+        rm.budget[1],
+        rm.budget[2],
+        rm.pose.0,
+        rm.pose.1,
+        rm.pose.2,
+        t.elapsed().as_secs_f64()
+    );
+    println!("{removal_line}");
+    // BOOT_SWEEP=throat: the same rigid shell with the throat wider at the front (w0) and at the
+    // top (w1), the on/off check for each; the narrowest throat that lets the foot out is the
+    // design value (Jon, 2026-11-11: a wide throat like the CCM Jetspeed FT6 Pro's, the shell
+    // still low tolerance round the foot, no flexible bands).
+    if std::env::var("BOOT_SWEEP").as_deref() == Ok("throat") {
+        println!("throat sweep (rigid shell; pushes in mm: heel cup / quarters / toe box):");
+        for w0 in [26.0, 38.0, 50.0, 62.0] {
+            for w1 in [48.0, 64.0, 80.0] {
+                let ps = HockeyParams { throat_w0: w0, throat_w1: w1, ..p };
+                let gs = BootGeom::new(base.clone(), base_fair_c.clone(), lb.bounds, lm, ps);
+                let r = removal_check(&gs, &out_foot, 1.5, [2.0, 8.0, 3.0]);
+                println!(
+                    "  throat {w0:3.0} -> {w1:3.0} mm: {:5.1} / {:5.1} / {:5.1}  (worst pose {:.1} deg, up {:.0}, back {:.0})",
+                    r.push[0], r.push[1], r.push[2], r.pose.0, r.pose.1, r.pose.2
+                );
+            }
+        }
+    }
     if std::env::var_os("BOOT_DEBUG").is_some() {
         for (i, (c, a)) in g.eyelets.iter().enumerate() {
             let near = g.prof.closest(c.x, c.z);
@@ -1432,6 +1850,7 @@ pub fn run(scan_path: &Path, out: &Path, vented: bool) -> Result<(), String> {
     );
     let _ = writeln!(summary, "{room_line}");
     let _ = writeln!(summary, "{shape_line}");
+    let _ = writeln!(summary, "{removal_line}");
     let _ = writeln!(summary, "parts (mass from each mesh's enclosed volume):");
     let mut total = 0.0;
     let save = |name: &str, mesh: &IndexedMesh| -> Result<(), String> {
@@ -1507,6 +1926,7 @@ pub fn run(scan_path: &Path, out: &Path, vented: bool) -> Result<(), String> {
     let hero = vec![
         View::looking(Vector3::new(-0.62, 0.62 * ms, -0.40), Vector3::z()),
         View::looking(Vector3::new(0.60, -0.62 * ms, -0.38), Vector3::z()),
+        View::looking(Vector3::new(1.0, 0.0, -0.22), Vector3::z()),
     ];
     render_styled(&layers, &hero, 3.0, &out.join("boot_hero.png"), pretty).map_err(e)?;
 

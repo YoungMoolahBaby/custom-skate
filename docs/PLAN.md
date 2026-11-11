@@ -550,12 +550,17 @@ Our own look, not a copy: a brand's skate shapes are part of its identity.
   toe is unchanged; the shell is thicker over the hollows.
 - **Forward lean** 6° (a shear above the ankle bones, ramped in over 40 mm; it keeps volumes).
 - **A padded collar:** the liner rises 4 mm above the shell's top edge and covers it.
-- **The tendon guard** 70 mm above the cuff at the back, kicking 20 mm back at its top,
-  narrowing from 44 to 26 mm wide. **The tongue's top** curls 8 mm forward. **The outsole** is
-  tucked 2 mm inside the shell's outline.
-- **The look:** carbon shell, black thermoplastic toe cap, outsole and tendon guard, black
-  leather-look tongue, gunmetal eyelets, black laces (renders with sheen by finish; the viewer
-  draws a twill weave on the shell). Sections keep the diagram colours.
+- **The tendon guard** (from two pro skates' guards Jon showed): a shield, 34 mm wide where it
+  rivets over the shell's back, flaring to 64 mm at the top, whose edge has rounded shoulders
+  and a 4 mm dip in the middle; a raised rim and a centre spine (1 mm); 70 mm above the cuff at
+  the back, kicking 20 mm back at its top. **The tongue's top** curls 8 mm forward.
+- **The sole: two mount pads** (Jon: "we only need that flat piece where the skate meets the
+  blade holder. the rest can be removed"): 46 x 48 mm, flat, heel and forefoot, centred on the
+  chassis's mounts (165 mm apart about 47% of the length, `sizing::MOUNT_SPACING`, an assumption
+  until the TF9's rivets are measured); between them the shell's own rounded underside.
+- **The look:** carbon shell, black thermoplastic toe cap, mount pads and tendon guard, black
+  leather-look tongue, gunmetal eyelets, white hockey laces (Jon) (renders with sheen by finish;
+  the viewer draws a twill weave on the shell). Sections keep the diagram colours.
 - **Vents (roller):** four slots across the toe box and three a side low on the quarters, cut
   through the liner too: 10 in all.
 
@@ -563,22 +568,112 @@ Our own look, not a copy: a brand's skate shapes are part of its identity.
 |---|---|---|
 | shell | 215.0 | 213.1 |
 | toe cap | 21.0 | 20.6 |
-| outsole | 68.0 | 68.0 |
+| mount pads | 14.6 | 14.6 |
 | liner | 31.4 | 30.9 |
 | ankle pads | 3.0 | 3.0 |
 | footbed | 8.1 | 8.1 |
 | tongue | 15.0 | 15.0 |
-| tendon guard | 11.8 | 11.8 |
+| tendon guard | 20.4 | 20.4 |
 | eyelets | 6.9 | 6.9 |
 | laces | 6.5 | 6.5 |
-| **total** | **387** | **384** |
+| **total** | **342** | **339** |
 
 Lighter than round 2 (422 g) although the taut shell is thicker over the hollows: the lower
-cuff takes more shell away than the fairing adds. Shell, toe cap and outsole weighed in PA 12;
+cuff takes more shell away than the fairing adds, and the mount pads replace a 68 g outsole.
+The shield guard weighs 20 g against the strip's 12. Shell, toe cap and pads weighed in PA 12;
 in carbon/epoxy at the same 2.5 mm the ice shell would be 330 g (a laid-up shell would be
 thinner). The shell converges (+0.0% at 0.5 mm cells), the tendon guard within 0.4%.
 
-**Next:** step 2, panels and character lines; the holder under it (track C); then Jon's scans.
+**Next:** getting it on and off (below), step 2 (panels and character lines), the holder under
+it (track C); then Jon's scans.
+
+### Getting it on and off (2026-11-11)
+
+Jon: "we are going to have to make sure the foot can actually fit in the skate. like putting it
+on and taking it off", and "whats different about this vs a shoe also is how the boot is almost
+rigid". And on the heel: True "appears to do it with the boot around the heel. they just get
+the tolerances like perfect basically. it feels way more responsive than bauer who basically
+just lets the foam to the fit work". So the heel is locked by the shell, as tight as it can be,
+and the question is the tightest cup the foot still gets past.
+
+**The check** (`hockey_boot::removal_check`, in every `boot` run; going in is the same path
+backwards):
+- **The foot's shape off and on is the unloaded one:** the stand-in set has each foot at full
+  and at minimal body weight. The loaded scan is the shape the boot fits; the unloaded one,
+  aligned onto it (`align_to`, point-to-surface ICP over 20-70 mm up, RMS 1.3 mm on 022), is
+  the shape that has to get out. (CortenForge has no registration: CORTENFORGE.md.) The loaded
+  scan's sole spreads under weight, which first made the foot look 14 mm too wide at the floor.
+- **Motion:** the foot below the ankle bones as a rigid body hinged at the ball (the toes stay
+  flat), the heel lifted about the ball, then the foot moved up and back; a grid of poses (heel
+  lift to 70°, up to 200 mm, back to 120 mm) and a bottleneck search for the way out whose
+  worst push is least.
+- **Push:** how far a foot point gets into the shell past the liner squeezed to 1.5 mm; free
+  above the cuff's top line and out through the open throat (laces loose, tongue forward).
+  Kept by zone (heel cup, quarters, toe box), since they give differently.
+
+**What it shows on stand-in 022, with the whole shell held rigid:**
+- In place the push is 0.7 mm (the unloaded foot against the loaded fit): it fits its boot.
+- **The forefoot is the real constraint:** the ball, the foot's widest part (~100 mm here), has
+  to pass the ankle collar (~60-70 mm inside). With the quarters held rigid that takes a push
+  of ~29 mm: the foot can't come out. That's how every laced boot works: unlaced, the quarters
+  open at the throat and let the forefoot past. So "rigid" is right laced (skating) but the
+  quarters must open ~30 mm at the throat unlaced.
+- **The heel cup:** on the way up the heel has to pass the hollows either side of the Achilles,
+  which the tight cup follows. In a first run (barrier band to 10 mm), at the worst pose the
+  heel's underside pushed ~7 mm into the shell there; the heel zone's worst, 12 mm, was at its
+  front edge (x 74 mm, where the midfoot starts). That's the cost of locking the heel with the
+  shell; to set against what the heel's soft tissue gives (to calibrate on test shells, B6), or
+  relieved where it bites. To be rerun once the quarters open.
+
+**Jon's fit spec (2026-11-11):** "the toes should be touching the front of the toe box, heel
+locked in. like no laces, you should be able to skate. but its the area cut out for the tongue,
+that you slide your foot into, thats the tricky part with near rigid stiff skates. like if we
+somehow got these to feel like 0 tolerance, but we able to have them be able to be easy-ish to
+put on and take off, and factor in the blood in feet, sweat in socks, etc and how that changes
+your foot post and pre game. the fit is insanely important." So:
+- **Toes at the cap, heel locked, holds untied:** the heel cup and the toe box are closed shapes
+  that hold by themselves; they wrap past the foot's widest points (undercuts). Those same
+  undercuts are what a rigid foot can't pass going in (the check above): holding untied and
+  getting in easily pull against each other, and the throat is where every boot settles it.
+- **Rigid laced, openable unlaced:** unlaced, the quarters round the instep are an open C, which
+  bends open easily; laced, the throat closes the ring, and a closed section is far stiffer than
+  an open one. That's how a laced boot can be both: the stiffness the skater feels is the closed
+  ring's. So the shell's quarters can be designed to open the ~30 mm the forefoot needs unlaced
+  (a flex zone along them), while the heel cup and toe box stay rigid. To size with sim-soft.
+- **Pre- and post-game:** foot volume rises about 1.4-3% with standing and exercise in the
+  studies found (abstracts only: 2% after 10 min walking and 3% after running; 2.2% after a
+  30 min run in men; 1.4% after 30 min standing in women; one volleyball study found none). On
+  stand-in 022 (1.05 L, 734 cm2 to the scan's top) that's 0.2-0.4 mm spread evenly; really more
+  over the top and front of the foot. Against a 1 mm fit allowance that's a third of it: the
+  boot should be designed for the swollen foot (off post-game is the hardest case) and the
+  liner's foam take up the difference before, with the laces.
+- **Wet socks:** skin-on-fabric friction goes from ~0.42 dry to ~0.53-0.61 normally moist and
+  ~0.9 soaked (Gerhardt 2008, forearm on cotton/polyester; RESEARCH.md 15), and a foot sweats
+  ~30-68 ml/h in hard or hot exercise. So post-game the force to slide the foot out roughly
+  doubles for the same squeeze. Two consequences: the way out must not depend on sliding the
+  foot through a tight spot (the throat must open enough that the foot isn't pressed while it
+  moves), and the liner's lining should be chosen for low wet friction and wicking. Ventilation
+  helps the roller boot dry (Jon's point); the ice boot stays sealed.
+
+**Jon's decision (2026-11-11): a wide throat, not flexible bands or a hinge.** "the hinge cuff
+sounds good for flexion but not y angle (ankle roll). i think just making the tongue area
+winder, like in those ccm jetspeed skated i showed you is the move. that way its not messing
+with flexible composites between rigid composites ... so like the boot is still low tolerance
+around your foot, but the tongue negative/area you put your foot into makes it easy to get in
+and out of, and makes the skate feel manueverable instead of overfitted. i think the ccm
+jetspeed got this probably almost perfect." (His reference: the Jetspeed FT6 Pro.) Ski-boot
+options considered and set aside: overlap shells; a three-piece shell with a stiff instep panel;
+a hinged cuff (as in Bauer's Konekt goalie skates: a two-piece Grilamid shell hinged at the
+ankle, up to 22° forward flex, buckles; RESEARCH.md 16), good for flexion but it locks out
+ankle roll. So: the shell stays rigid and low tolerance; the throat (the cut-out the tongue
+fills) is sized wide enough that the foot gets in and out. `BOOT_SWEEP=throat` reruns the on/off
+check over throat widths to find the narrowest that works.
+
+**Next for this:** the quarters as plates that open: how far the throat opens unlaced, the force
+it takes (sim-soft, B5), and the check rerun with them open, pre-game (unloaded) and post-game
+(swollen); then the heel cup's hollows tuned to
+the squeeze the heel can take. Jon's own scans: each foot standing (loaded) and sitting
+(unloaded), for the same reason.
 
 ## Phase 0: the science and the tools (DONE 2026-11-10)
 
@@ -759,6 +854,28 @@ rigid shell), `mesh-printability`, `mesh-repair`, STL out.
   done for a hockey boot as far as we found, or a carbon layup over a printed last, as True does.
   A heat-mouldable liner, tongue, laces. Safety: it must stop a puck and hold at speed, so it is
   tested standing, then skating slowly, before it is played in.
+  **How to make the carbon shell (Jon, 2026-11-11: "would the best way to 3d print these be like
+  how they 3d print composite fighter jets?").** Fighter-jet composite skins aren't printed:
+  F-35 wing skins are built by automated fibre placement (a robot lays narrow strips of carbon
+  prepreg onto a mould, ply by ply, fibres along the loads), cured, then CNC-machined to
+  thickness; some skins are laid up by hand (CompositesWorld). Printing continuous carbon
+  (robotic CF3D, desktop continuous-fibre printers) exists, but fibre damage in printing,
+  routing limits and weak layer-to-layer bonds keep it out of stress-critical parts so far (a
+  2023 review). So the jet-like route for the boot is: **scan -> printed last / mould -> carbon
+  prepreg laid over it (by hand at this scale) -> vacuum-bagged and oven-cured -> trimmed**
+  (throat, top line, eyelet holes). Stiffness varies by ply count and fibre direction (more in
+  the heel cup and round the eyelet strips and mount pads), continuous across the shell, with
+  no soft bands. A thermoplastic matrix (carbon with nylon or similar) would also allow heat
+  moulding afterwards, as skates are tuned today. Printing's jobs: the mould, the test shells
+  (B6, PA 12 or TPU), and parts like the toe cap, tendon guard and pads.
+  **Later, steered fibres** (Jon saw a plane's composite structure printed in a woven pattern
+  and "immediately thought of hockey skates"): fibre placement or robotic continuous-fibre
+  printing can lay each strand on its own path, not in flat fabric sheets. For a boot: fibres
+  cradling the heel cup, running from the sole up the quarters to the eyelets (lace and
+  sideways loads straight into the sole), ringing the ankle (stiff side to side), fewer where it
+  should give. The paths would come from the shell's principal stress directions under skating
+  loads (sim-soft). First boots by hand over a printed mould; steered fibres once the shape and
+  fit are proven.
 
 ## Track C: the skates
 

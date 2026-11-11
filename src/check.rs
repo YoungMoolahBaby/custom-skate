@@ -107,6 +107,20 @@ fn boot_checks(t: &mut Tally) {
         err.abs() < 0.03 && off < 0.05 && edge < 8.0,
         format!("{} -> {} triangles, volume {:+.2}%, worst vertex {off:.3} mm off, longest edge {edge:.1} mm", fine.faces.len(), coarse.faces.len(), err * 100.0),
     );
+    // The plane-section girth (for girths of the foot and boot): a sphere r 20 cut through its
+    // centre, level and tilted 30 deg,
+    // is a great circle (2 pi r = 125.66 mm); off-centre by 12 mm, a circle of radius 16.
+    let ball = Solid::sphere(20.0);
+    let fb = |q: nalgebra::Point3<f64>| ball.evaluate(&q);
+    let level = crate::hockey_boot::plane_girth(&fb, Point3::new(-10.0, 0.0, 0.0), Point3::new(10.0, 0.0, 0.0));
+    let tilted = crate::hockey_boot::plane_girth(&fb, Point3::new(-10.0, 0.0, -5.77), Point3::new(10.0, 0.0, 5.77));
+    let off = crate::hockey_boot::plane_girth(&fb, Point3::new(-10.0, 0.0, 12.0), Point3::new(10.0, 0.0, 12.0));
+    let (gc, sc) = (2.0 * PI * 20.0, 2.0 * PI * 16.0);
+    t.item(
+        "plane-section girth: a sphere, through the centre and off it",
+        (level / gc - 1.0).abs() < 1e-3 && (tilted / gc - 1.0).abs() < 1e-3 && (off / sc - 1.0).abs() < 1e-3,
+        format!("{level:.2} / {tilted:.2} vs {gc:.2}; {off:.2} vs {sc:.2} mm"),
+    );
     // The viewer's mesh file: base64 against RFC 4648's test vectors.
     let vectors = [("", ""), ("f", "Zg=="), ("fo", "Zm8="), ("foo", "Zm9v"), ("foob", "Zm9vYg=="), ("fooba", "Zm9vYmE="), ("foobar", "Zm9vYmFy")];
     let bad: Vec<&str> = vectors.iter().filter(|(i, o)| crate::hockey_boot::base64(i.as_bytes()) != *o).map(|(i, _)| *i).collect();
