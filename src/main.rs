@@ -29,8 +29,19 @@ fn main() {
                 std::process::exit(1);
             }
         }
+        "round1" => {
+            let Some(path) = std::env::args().nth(2) else {
+                eprintln!("usage: round1 <scan> [out dir]");
+                std::process::exit(2);
+            };
+            let out = std::env::args().nth(3).unwrap_or_else(|| "out/round1".into());
+            if let Err(e) = custom_skate::round1::run(std::path::Path::new(&path), std::path::Path::new(&out)) {
+                eprintln!("{e}");
+                std::process::exit(1);
+            }
+        }
         other => {
-            eprintln!("unknown mode {other:?}; modes: check, pitch, scan");
+            eprintln!("unknown mode {other:?}; modes: check, pitch, scan, round1");
             std::process::exit(2);
         }
     }

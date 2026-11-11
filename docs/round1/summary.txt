@@ -1,0 +1,23 @@
+round 1, scans/stand-in/022_fBW_R.ply
+foot 252.4 x 104.5 mm (length x width), up from the flat sole
+boot shell 277 g in PA 12 (MJF) or 425 g in carbon/epoxy; liner 44 g (foam density assumed)
+fit, gap from the foot to the last (mm): region, n, min / p10 / median / p90
+  heel, sole                  1826    0.9 /   0.9 /   1.0 /   1.0
+  heel, upper                 6872    0.9 /   1.0 /   1.0 /   1.0
+  midfoot, sole (arch)        3173    0.9 /   1.0 /   1.0 /   1.0
+  midfoot, upper (instep)     9229    0.9 /   1.0 /   1.0 /   1.0
+  forefoot, sole (ball)       2853    0.9 /   1.0 /   1.0 /   1.6
+  forefoot, upper             3935    0.9 /   1.0 /   1.0 /   4.4
+  toes, sole                  1533    1.3 /   1.4 /   2.0 /   4.1
+  toes, upper                 1753    1.3 /   1.5 /   2.9 /   8.1
+roller chassis, round-1 layout (weights at 0.25 mm cells):
+  rocker (upper)     47.9 g  (7075-T6)
+  lower frame       208.0 g  (7075-T6)
+  axles x4           19.8 g  (7075-T6)
+  bolt                3.0 g  (Ti-6Al-4V)
+  bushing             2.7 g  (polyurethane (assumed))
+  total 281.4 g (one-piece 7075 frames: 170-184 g with axles and spacers; Marsblade R1 282-302 g) (11.6 s)
+  clash wheels x lower frame: 0.0 mm3
+  clash wheels x bushing: 0.0 mm3
+  clash wheels x bolt: 0.0 mm3
+ice skate: the same boot on a 254 mm holder PLACEHOLDER (the i2's mounting pattern and weight not measured yet)

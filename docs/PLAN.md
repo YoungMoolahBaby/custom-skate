@@ -24,6 +24,40 @@ What CortenForge brings:
 - **sim-opt**: optimisers (simulated annealing, CEM) for the mass search.
 - **mesh**: printability checks, repair, STL out.
 
+## Round 1: the whole skate on an example foot (DONE 2026-11-10)
+
+Jon: "before we do anything on my side i think we should just do the full thing on an example
+foot". `cargo run --release -- round1 scans/stand-in/022_fBW_R.ply` (~2.5 min) runs every stage
+at round-1 quality on stand-in 022 (man, 175 cm, loaded foot 252 x 104 mm). Renders and the
+summary are in `docs/round1/`; STLs go to `out/round1/` (not in git).
+
+- **Foot** (`foot.rs`): the scan in a standard frame (heel at x = 0, toes +x, floor z = 0), with a
+  mesh-sdf distance grid (1.5 mm, ~26 s).
+- **Last** (`round1.rs`, `foot.rs`): the foot closed by 12 mm (arch and small hollows filled) +
+  the convex hull of the forefoot from 62% of the length (cf-geometry Quickhull) as the toe box,
+  faded in over 60 mm, + 1 mm ease. Closing alone can't make a toe box (toes are ~20 mm cylinders
+  side by side; closing by r leaves a groove ~a^2/2r deep; 7 and 18 mm both left visible grooves).
+- **Boot** (`boot.rs`): liner 4 mm, shell wall 2.5 mm, trimmed at 110 mm, throat 40 mm wide from
+  32% to 70% of the length, flat 3 mm sole plate. **Shell 277 g in printed PA 12, 425 g in
+  carbon/epoxy; liner 44 g** (foam density assumed).
+- **Fit** (`fit.rs`): gap from the real foot to the last. Heel, midfoot, instep and ball sit at
+  ~1.0 mm (the ease); room only between and over the toes (p90 4-8 mm). Round 1's last never
+  cuts in, so this is a room map, not pressure.
+- **Roller chassis** (`chassis.rs`), a first layout, not a design: 4 x 72 mm wheels on a 76 mm
+  pitch, a 7075 rocker under the sole (7.5 ft radius, 6 mm, pocketed), two 2.5 mm 7075 rails with
+  scallops and a 4 mm bridge it rolls on, a Ti M6 bolt through an 18 x 10 mm PU bushing hung in the
+  V between the middle wheels; ground 85 mm below the boot sole. **281 g: rocker 48, lower frame
+  208, axles 20, bolt 3, bushing 3.** No clashes between the wheels and the frame, bolt or
+  bushing. So the naive layout weighs what the R1 does (282-302 g); the job is ~100 g out, and
+  the lower frame (208 g) is where it is.
+- **Ice skate**: the same boot on a 254 mm holder **placeholder** (i2 not measured yet).
+- Not in round 1: strength (phase 3), the spring rate (phase 4), dynamics (phase 5), heel lock,
+  tendon guard, eyelets, tongue, variable wall thickness, the i2's real mounting pattern.
+
+**Round 2** (next): the chassis to the weight target (pocket the rails, lighten the bridge and
+rocker, then sim-opt), a first strength check of the rails and rocker, the last shaped tighter at
+the heel and midfoot with sim-soft pressures, then Jon's own foot (ruler first, scans later).
+
 ## Phase 0: the science and the tools (DONE 2026-11-10)
 
 - Sources found and read (docs/RESEARCH.md): the Brock / George Brown poster (2023), the GIH model

@@ -23,6 +23,30 @@ type (bug, docs, API, perf, setup, works), date, file:line under
   1e-6 mm and 48 sliver faces between them; `weld_vertices(1e-6)` removes them. Harmless for
   rendering, but it breaks mesh-measure's section chaining (below). Probe:
   `examples/probe_section.rs`.
+- **works** (2026-11-10, round 1): scan-to-boot in cf-design works as hoped. A scan's mesh-sdf
+  grid goes into `Solid::from_sdf` (solid/ops.rs:576); `offset`, `subtract`, `intersect`,
+  `smooth_union`, `Solid::plane` and `Solid::user_fn` (a sole plate extruded from the foot's
+  outline, a toe box faded in along x, both evaluating other `Solid`s inside the closure) compose
+  into a last, liner and trimmed shell; `mesh(1.0)` gives a 438k-triangle shell in ~10 s;
+  `mass_properties` weighs it. The roller chassis is plain primitives and booleans.
+- **note** (2026-11-10): `Solid::offset` and `shell` "require exact SDF input" (ops.rs:351-358,
+  306-312), so a scan's offsets must come from a real distance field (mesh-sdf), and growing then
+  shrinking one field is a no-op: a morphological closing needs the grown surface meshed and
+  re-distanced (`foot::Foot::closed`).
+
+## cf-geometry
+
+- **works** (2026-11-10): `convex_hull` (convex_hull.rs:167, Quickhull) takes 10,074 forefoot
+  points to a 1,287-vertex, 2,570-face hull instantly; it makes the toe box of a last.
+
+## mesh-sdf
+
+- **perf** (2026-11-10): `CachedGridSdf::build` (flood_fill.rs:592) spends ~11 us a node on a 33k-
+  vertex foot: 8.4M nodes at 1 mm took 89 s, 2.3M at 1.5 mm ~26 s. It is the slowest step of
+  round 1 (three grids: the foot, the grown foot, the toe box).
+- **note** (2026-11-10): out-of-bounds queries return the clamped edge value (documented at
+  flood_fill.rs:625), so an offset surface beyond the grid's margin comes out silently wrong, not
+  as an error. Keep the margin larger than the largest offset taken from the grid.
 
 ## mesh (measure, io, repair)
 
@@ -82,5 +106,10 @@ Nice-to-haves for CortenForge, with what this project built instead.
   position, scale the tolerance to the mesh, and report open chains as open (with their length)
   instead of closing them. Foot girths are the core measurement of a boot last. Instead:
   `scan::section` (weld + nudge).
+- **Faster scan distance grids** (2026-11-10): a narrow-band or fast-marching build for
+  `CachedGridSdf` (exact distances only near the surface, propagated outward) would cut round 1's
+  ~80 s of grid building. Or an error, not a clamped value, for queries outside the grid.
+- **A morphological closing** (2026-11-10): `Solid::close(r)` (grow, re-distance, shrink) for
+  scan-derived solids. Instead: `foot::Foot::closed` meshes and re-grids the grown surface.
 - **Weld in the clip** (2026-11-10): `clip_mesh_against_plane` could share the cut vertices, so
   the cut is one boundary loop straight away.

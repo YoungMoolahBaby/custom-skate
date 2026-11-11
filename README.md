@@ -68,15 +68,32 @@ found a gain only in backward skating. Details and numbers are in `docs/RESEARCH
 cargo run --release -- check         # every tool used, against known results (18/18)
 cargo run --release -- pitch         # the pitch tables above
 cargo run --release -- scan <file>   # measure a foot scan (OBJ, STL, PLY)
+cargo run --release -- round1 <scan> # the whole skate on one foot -> out/round1 (STL, PNG)
 ```
 
 Builds go to `D:/cargo-target/custom-skate` (`.cargo/config.toml`, local only). The first
 release build takes about 3 minutes.
 
+## Round 1: the whole skate on an example foot
+
+Every stage, end to end, on a stand-in foot (a CC0 research scan): the foot, a last with a toe
+box, the boot shell and liner, a fit map, a roller chassis with the rocker under the sole, and an
+ice holder placeholder. Round-1 quality: a first layout, not a design.
+
+![Roller skate, round 1](docs/round1/roller_skate.png)
+
+- Boot shell 277 g printed in PA 12 (425 g in carbon/epoxy), liner 44 g.
+- Fit: snug (~1 mm) at the heel, midfoot, instep and ball; room only round the toes.
+- Roller chassis, first layout: 281 g, the same as a Marsblade R1. The lower frame is 208 g of
+  it, so that is where the ~100 g to the one-piece class (170-184 g) has to come from.
+
+More pictures and the numbers: `docs/round1/`, and `docs/PLAN.md` (Round 1).
+
 ## Status
 
-Phase 0 (the science, the pitch model, the mass tool checked) is done. See `docs/PLAN.md` for
-what comes next and `docs/CORTENFORGE.md` for what CortenForge did well and where it fell short.
+Phase 0 (the science, the pitch model, the mass tool checked) and round 1 (the whole skate on an
+example foot) are done. See `docs/PLAN.md` for what comes next and `docs/CORTENFORGE.md` for what
+CortenForge did well and where it fell short.
 
 ## Patents
 
