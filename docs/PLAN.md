@@ -669,6 +669,46 @@ ankle roll. So: the shell stays rigid and low tolerance; the throat (the cut-out
 fills) is sized wide enough that the foot gets in and out. `BOOT_SWEEP=throat` reruns the on/off
 check over throat widths to find the narrowest that works.
 
+**The sweep's answer: in a fully rigid model the throat doesn't matter.** Throat 26-62 mm at the
+front by 48-80 mm at the top, starting at 0.70, 0.76 or 0.82 of the length: every one gives
+the same pushes (heel cup 16.6, quarters 29.0, toe box 28.9 mm), worst along the forefoot's
+lower outer edge. With the foot and the shell both rigid and close-fitting, the forefoot is
+boxed in: the toes can't rise under the closed toe cap, so the foot must slide back first,
+which drives the ball (the widest part) into the narrower midfoot; and beside the ball the
+walls lean in above its widest point wherever the throat is. Real skates come off because
+things give: the toes curl, the ball narrows under side pressure, the liner squashes, the thin
+composite quarters bend a little. The throat's job is to let those give in the right places, so
+sizing it needs them in the model: the fit simulation (B5, sim-soft: the foot's soft tissue and
+the liner against an elastic shell), calibrated on printed test shells (B6).
+
+**The outline throat (Jon, 2026-11-11):** "i think the vamp could maybe lessen, but also i think
+the tongue opening, with wise, could mirror the top geometry - or maybe even the sole geometry?
+of the foot, to help you be able to get your foot in". The moulding rule: a part comes out of a
+mould only if nothing overhangs it in the direction of pull. So over the forefoot and instep the
+opening now follows the foot's outline seen from above (the base's widest extent each side, per
+mm of length, and the height of that widest line), less a `wrap` the shell keeps over the widest
+line (10 mm at the ball, 18 at the ankle crease), cut down to the widest line; the vamp is short
+(the opening starts at 0.78 of the length, just behind the toe cap); up the shin the V as before.
+The eyelets run along the outline's edges over the forefoot (8 a side), then the V. A first
+version measured the opening along the dorsal line and came out ragged (that parametrisation
+jumps 30-40 mm out at the sides); it's now defined in plan view (`ff_open`), clean.
+- **The rigid check still can't rank it:** with the corrected check (each foot point tracked as
+  inside, outside, in an opening or in the wall, and no move allowed to jump a point through
+  the wall) every wrap from 0 to 25 mm at the ball still needs the full wall somewhere: the
+  toes under the toe cap must slide back, which drives the ball into the narrower midfoot, and
+  the heel can't rise past the hollows beside the Achilles. So the opening's real benefit, how
+  much less the foot has to squash, needs the fit simulation. (Two earlier versions of the
+  check were wrong: their "pushes" of 29 and then 7 mm were the measuring band's edge, points
+  outside the boot or through the wall; both fixed.)
+
+**The printed tongue (Jon: "the tongue can be 3d printed, like how true does it"):** True sells
+3D-printed lattice tongues (RESEARCH.md 16). Ours: TPU, a solid plate (a 1.0 mm outer skin the
+laces bear on, a 2 mm rim, a 0.6 mm inner skin against the sock) round a gyroid lattice core
+(11 mm period, 0.8 mm sheets) that breathes and squashes; it covers the wide opening and tucks
+10 mm under the shell's edges. 58 g (plate 38, lattice 20), against 15 g for the old foam
+tongue: the opening it covers is much bigger, and TPU is dense. A first try with thicker skins
+and a finer lattice was 107 g.
+
 **Next for this:** the quarters as plates that open: how far the throat opens unlaced, the force
 it takes (sim-soft, B5), and the check rerun with them open, pre-game (unloaded) and post-game
 (swollen); then the heel cup's hollows tuned to

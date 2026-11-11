@@ -113,6 +113,15 @@ pub struct HockeyParams {
     pub throat_w0: f64,
     pub throat_w1: f64,
     pub throat_splay: f64,
+    /// The outline throat (Jon, 2026-11-11: "the tongue opening, with wise, could mirror the top
+    /// geometry ... of the foot, to help you be able to get your foot in"): over the forefoot and
+    /// instep the opening follows the foot's outline seen from above, so nothing of the shell
+    /// overhangs the foot there except a `wrap` (mm, measured across) over its widest line:
+    /// `wrap_ball` at the ball, growing to `wrap_instep` at the ankle crease. Up the shin, the
+    /// V above. The tongue covers the opening and carries the laces.
+    pub throat_outline: bool,
+    pub wrap_ball: f64,
+    pub wrap_instep: f64,
     /// How far from the dorsal line (in the side view) the throat and tongue reach.
     pub reach: f64,
     /// Eyelet facing: width beyond the throat's edge, and the extra thickness. Estimate.
@@ -129,6 +138,16 @@ pub struct HockeyParams {
     /// How far the tongue's top flares out (forward) beyond its thickness, growing over the part
     /// above the cuff. Estimate.
     pub tongue_curl: f64,
+    /// The printed tongue (Jon, 2026-11-11: "the tongue can be 3d printed, like how true does
+    /// it"; True sells printed lattice tongues, RESEARCH.md 16): a solid TPU plate (an outer skin
+    /// `tongue_skin` thick that the laces bear on, a rim `tongue_rim` wide, an inner skin
+    /// `tongue_inner` against the sock) round a gyroid lattice core, period `lattice_period`,
+    /// sheets `lattice_sheet` thick: it breathes and squashes. Estimates.
+    pub tongue_skin: f64,
+    pub tongue_rim: f64,
+    pub tongue_inner: f64,
+    pub lattice_period: f64,
+    pub lattice_sheet: f64,
     /// Tendon guard: height above the cuff at the back, thickness, how far its top kicks back
     /// off the leg. Estimate.
     pub guard_above_cuff: f64,
@@ -176,10 +195,13 @@ impl Default for HockeyParams {
             ankle_pocket: 3.0,
             ankle_sigma: 12.0,
             ankle_pad_r: 24.0,
-            throat_front: 0.70,
+            throat_front: 0.78,
             throat_w0: 26.0,
             throat_w1: 48.0,
             throat_splay: 2.2,
+            throat_outline: true,
+            wrap_ball: 10.0,
+            wrap_instep: 18.0,
             reach: 32.0,
             facing_w: 18.0,
             facing_t: 1.5,
@@ -189,6 +211,11 @@ impl Default for HockeyParams {
             tongue_above_cuff: 40.0,
             tongue_proud: 1.5,
             tongue_curl: 8.0,
+            tongue_skin: 1.0,
+            tongue_rim: 2.0,
+            tongue_inner: 0.6,
+            lattice_period: 11.0,
+            lattice_sheet: 0.8,
             guard_above_cuff: 70.0,
             guard_t: 2.5,
             guard_kick: 20.0,
@@ -441,6 +468,7 @@ pub enum PartKind {
     Footbed,
     Tongue,
     TendonGuard,
+    TongueLattice,
 }
 
 /// A part: what it is, what it's made of, how it's drawn, the mesh cell it needs.
@@ -482,8 +510,9 @@ pub fn part_specs() -> Vec<PartSpec> {
         PartSpec { kind: Liner, name: "liner", material: LINER_FOAM, color: [0.42, 0.44, 0.48], look: [0.23, 0.23, 0.25], finish: "fabric", cell: 1.0 },
         PartSpec { kind: AnklePads, name: "ankle pads", material: LINER_FOAM, color: [0.78, 0.36, 0.22], look: [0.27, 0.27, 0.29], finish: "fabric", cell: 1.0 },
         PartSpec { kind: Footbed, name: "footbed", material: LINER_FOAM, color: [0.22, 0.55, 0.45], look: [0.19, 0.19, 0.21], finish: "fabric", cell: 1.0 },
-        PartSpec { kind: Tongue, name: "tongue", material: LINER_FOAM, color: [0.90, 0.90, 0.87], look: [0.12, 0.12, 0.13], finish: "leather", cell: 1.0 },
+        PartSpec { kind: Tongue, name: "tongue plate", material: TPU, color: [0.90, 0.90, 0.87], look: [0.12, 0.12, 0.13], finish: "matte", cell: 0.6 },
         PartSpec { kind: TendonGuard, name: "tendon guard", material: TPU, color: [0.22, 0.22, 0.25], look: [0.10, 0.10, 0.11], finish: "gloss", cell: 0.6 },
+        PartSpec { kind: TongueLattice, name: "tongue lattice", material: TPU, color: [0.70, 0.70, 0.66], look: [0.22, 0.22, 0.24], finish: "matte", cell: 0.4 },
     ]
 }
 
@@ -533,8 +562,14 @@ pub struct BootGeom {
     /// The heel-lock eyelet pair (level from the toe end), and the ankle crease's height.
     pub lock: Option<usize>,
     pub z_crease: f64,
-    /// The ankle crease on the dorsal line.
+    /// The ankle crease on the dorsal line, and its arc length.
     pub crease: Point3<f64>,
+    pub s_crease: f64,
+    /// The foot's outline seen from above, per mm of length from `ol_x0` (outline throat): the
+    /// base's widest extent each side and the height of that widest line. And the throat's front.
+    ol_x0: f64,
+    ol: Vec<(f64, f64, f64)>,
+    x_front: f64,
     /// The tongue's top, z.
     pub z_tongue_top: f64,
     pub bounds: Aabb,
@@ -575,6 +610,10 @@ impl BootGeom {
             lock: None,
             z_crease: 0.0,
             crease: Point3::origin(),
+            s_crease: 0.0,
+            ol_x0: 0.0,
+            ol: Vec::new(),
+            x_front: 0.0,
             z_tongue_top: 0.0,
             bounds,
             sole_bottom,
@@ -634,6 +673,8 @@ impl BootGeom {
             };
             g.mounts[i] = (x, 0.5 * (edge(-1.0) + edge(1.0)));
         }
+        g.find_crease();
+        g.shape_throat();
         g.place_eyelets();
         g.place_lock();
         g.place_vents();
@@ -750,37 +791,181 @@ impl BootGeom {
         self.liner_in(q) + self.p.liner + self.pocket(q)
     }
 
-    fn throat_w(&self, s: f64) -> f64 {
+    /// The V throat's width at `s`: `throat_w0` at the front to `throat_w1` at the cuff top.
+    fn throat_w_v(&self, s: f64) -> f64 {
         let t = ((s - self.s_front) / (self.s_cuff - self.s_front).max(1.0)).clamp(0.0, 1.0);
         self.p.throat_w0 + (self.p.throat_w1 - self.p.throat_w0) * t.powf(self.p.throat_splay)
     }
 
-    /// The throat's outline in (arc length, y): negative inside; a round front end, open at the
-    /// top. Only meaningful near the dorsal line (`n.d < reach`).
+    fn throat_w(&self, s: f64) -> f64 {
+        self.throat_w_v(s)
+    }
+
+    /// The throat's centre across the foot (the V's): on the dorsal line.
+    fn throat_c(&self, n: &Near) -> f64 {
+        n.y
+    }
+
+    /// The ankle crease: where the dorsal line, climbing from the instep, turns past 60 degrees
+    /// from horizontal toward the shin.
+    fn find_crease(&mut self) {
+        let mut s = self.s_front.min(self.prof.len());
+        while s > 0.0 && s < self.prof.len() {
+            let (pt, t) = self.prof.at(s);
+            if t.z.atan2(-t.x).to_degrees() >= 60.0 {
+                self.s_crease = s;
+                self.crease = pt;
+                self.z_crease = pt.z;
+                return;
+            }
+            s += 0.5;
+        }
+    }
+
+    /// The foot's outline seen from above, for the outline throat: for each mm of length from just
+    /// behind the crease to the toes, the base's widest extent each side over heights 2-100 mm
+    /// and the height of that widest line (smoothed over +-3 mm of length).
+    fn shape_throat(&mut self) {
+        self.x_front = self.prof.at(self.s_front).0.x;
+        if !self.p.throat_outline || self.s_crease <= 0.0 {
+            return;
+        }
+        let x0 = self.crease.x - 20.0;
+        let x1 = self.lm.length + 5.0;
+        let mut raw = Vec::new();
+        let mut x = x0;
+        while x <= x1 {
+            let (mut lo, mut hi, mut z_lo, mut z_hi) = (f64::MAX, f64::MIN, 0.0, 0.0);
+            let mut z = 2.0;
+            while z <= 100.0 {
+                let start = (-60..=60).step_by(2).map(|y| y as f64).find(|&y| self.d(Point3::new(x, y, z)) < 0.0);
+                if let Some(y0) = start {
+                    let edge = |dir: f64| {
+                        let mut y = y0;
+                        while self.d(Point3::new(x, y + dir * 0.5, z)) < 0.0 && (y - y0).abs() < 150.0 {
+                            y += dir * 0.5;
+                        }
+                        y
+                    };
+                    let (a, b) = (edge(-1.0), edge(1.0));
+                    if a < lo {
+                        lo = a;
+                        z_lo = z;
+                    }
+                    if b > hi {
+                        hi = b;
+                        z_hi = z;
+                    }
+                }
+                z += 2.0;
+            }
+            raw.push(if lo < hi { (lo, hi, 0.5 * (z_lo + z_hi)) } else { (0.0, 0.0, 0.0) });
+            x += 1.0;
+        }
+        let h = 3usize;
+        self.ol = (0..raw.len())
+            .map(|i| {
+                let k = h.min(i).min(raw.len() - 1 - i);
+                let w = &raw[i - k..=i + k];
+                let m = w.len() as f64;
+                (w.iter().map(|r| r.0).sum::<f64>() / m, w.iter().map(|r| r.1).sum::<f64>() / m, w.iter().map(|r| r.2).sum::<f64>() / m)
+            })
+            .collect();
+        self.ol_x0 = x0;
+    }
+
+    /// The outline at `x`: (left edge, right edge, the widest line's height).
+    fn outline_at(&self, x: f64) -> (f64, f64, f64) {
+        if self.ol.is_empty() {
+            return (0.0, 0.0, 0.0);
+        }
+        let f = ((x - self.ol_x0).max(0.0)).min((self.ol.len() - 1) as f64);
+        let i = (f.floor() as usize).min(self.ol.len() - 2);
+        let t = f - i as f64;
+        let (a, b) = (self.ol[i], self.ol[i + 1]);
+        (a.0 + (b.0 - a.0) * t, a.1 + (b.1 - a.1) * t, a.2 + (b.2 - a.2) * t)
+    }
+
+    /// How far the shell wraps over the widest line at `x`: `wrap_instep` at the crease to
+    /// `wrap_ball` at the ball (73% of the length).
+    fn wrap_at(&self, x: f64) -> f64 {
+        let x_ball = 0.73 * self.lm.length;
+        let t = ((x - self.crease.x) / (x_ball - self.crease.x).max(1.0)).clamp(0.0, 1.0);
+        self.p.wrap_instep + (self.p.wrap_ball - self.p.wrap_instep) * t
+    }
+
+    fn outlined(&self) -> bool {
+        self.p.throat_outline && !self.ol.is_empty()
+    }
+
+    /// The forefoot opening in plan view: (distance across to its side edges, the plan outline
+    /// with its ends, how far below the widest line); negative inside. Between the outline's edges
+    /// less the wrap, from 12 mm behind the crease to the throat's front, corners rounded.
+    fn ff_open(&self, q: Point3<f64>, grow: f64, front_extra: f64) -> (f64, f64, f64) {
+        let (lo, hi, zw) = self.outline_at(q.x);
+        let w = self.wrap_at(q.x) - grow;
+        let band = (lo + w - q.y).max(q.y - (hi - w));
+        let ends = (q.x - (self.x_front + front_extra)).max((self.crease.x - 12.0) - q.x);
+        (band, smax(band, ends, 8.0), zw - q.z)
+    }
+
+    /// The opening the foot goes in through (negative inside): the V up the shin, and with the
+    /// outline throat, the plan-view opening over the forefoot and instep down to the widest line.
+    fn opening(&self, q: Point3<f64>, n: &Near) -> f64 {
+        let v = self.throat(n, q.y).max(n.d - self.p.reach);
+        if !self.outlined() {
+            return v;
+        }
+        let v = v.max((self.s_crease - 25.0) - n.s);
+        let (_, plan, depth) = self.ff_open(q, 0.0, 0.0);
+        v.min(plan.max(depth))
+    }
+
+    /// The thicker eyelet facing along the opening's edges (mm of extra wall).
+    fn facing_at(&self, q: Point3<f64>, n: &Near) -> f64 {
+        let fw = self.p.facing_w;
+        let mut v = (1.0 - smoothstep(fw - 3.0, fw, self.throat(n, q.y))) * (1.0 - smoothstep(self.p.reach - 6.0, self.p.reach, n.d));
+        if self.outlined() {
+            v *= smoothstep(self.s_crease - 30.0, self.s_crease - 20.0, n.s);
+            let (_, plan, depth) = self.ff_open(q, 0.0, 0.0);
+            let ff = (1.0 - smoothstep(fw - 3.0, fw, plan)) * (1.0 - smoothstep(12.0, 18.0, depth));
+            v = v.max(ff);
+        }
+        self.p.facing_t * v
+    }
+
+    /// Where the tongue is (negative inside): along the throat with `tongue_overlap` under the
+    /// shell's edges, and over the forefoot opening likewise, from under the toe cap's edge.
+    fn tongue_region(&self, q: Point3<f64>, n: &Near) -> f64 {
+        let v = self.tongue_outline(n, q.y).max(n.d - self.p.reach);
+        if !self.outlined() {
+            return v;
+        }
+        let v = v.max((self.s_crease - 25.0) - n.s);
+        let (_, plan, depth) = self.ff_open(q, self.p.tongue_overlap, 12.0);
+        v.min(plan.max(depth - 6.0))
+    }
+
+    /// The throat's outline in (arc length, y): negative inside; a front end with rounded
+    /// corners, open at the top. Only meaningful near the dorsal line (`n.d < reach_at`).
     fn throat(&self, n: &Near, y: f64) -> f64 {
         let hw = 0.5 * self.throat_w(n.s);
-        let a = (y - n.y).abs();
-        let s0 = self.s_front + hw;
-        if n.s >= s0 { a - hw } else { ((s0 - n.s).powi(2) + a * a).sqrt() - hw }
+        let r = hw.min(14.0);
+        let qs = self.s_front + r - n.s;
+        let qy = (y - self.throat_c(n)).abs() - (hw - r);
+        (qs.max(0.0).powi(2) + qy.max(0.0).powi(2)).sqrt() + qs.max(qy).min(0.0) - r
     }
 
-    fn facing(&self, n: &Near, throat: f64) -> f64 {
-        let a = 1.0 - smoothstep(self.p.facing_w - 3.0, self.p.facing_w, throat);
-        let b = 1.0 - smoothstep(self.p.reach - 6.0, self.p.reach, n.d);
-        self.p.facing_t * a * b
-    }
-
-    /// The tongue's outline in (arc length, y): a rounded rectangle.
+    /// The tongue's outline in (arc length, y): a rounded rectangle along the throat.
     fn tongue_outline(&self, n: &Near, y: f64) -> f64 {
         let hw = 0.5 * self.throat_w(n.s) + self.p.tongue_overlap;
         let (s0, s1) = (self.s_front - 15.0, self.s_tongue_top);
-        rounded_rect(n.s - 0.5 * (s0 + s1), y - n.y, 0.5 * (s1 - s0), hw, 12.0)
+        rounded_rect(n.s - 0.5 * (s0 + s1), y - self.throat_c(n), 0.5 * (s1 - s0), hw, 12.0)
     }
 
     /// The shell's outer surface offset (with the facing).
     fn outer_off(&self, q: Point3<f64>, n: &Near) -> f64 {
-        let th = self.throat(n, q.y);
-        self.inner_off(q) + self.p.wall + self.facing(n, th)
+        self.inner_off(q) + self.p.wall + self.facing_at(q, n)
     }
 
     /// The tendon guard's outline in (y, z) on the back of the leg: a shield, narrow at the
@@ -816,6 +1001,15 @@ impl BootGeom {
 
     /// Signed distance of one part (negative inside), mm; approximate away from the surface.
     pub fn sdf(&self, k: PartKind, q: Point3<f64>) -> f64 {
+        self.sdf_inner(k, q, false)
+    }
+
+    /// The whole tongue's volume, plate and lattice together (what a lace must clear).
+    fn tongue_body(&self, q: Point3<f64>) -> f64 {
+        self.sdf_inner(PartKind::Tongue, q, true)
+    }
+
+    fn sdf_inner(&self, k: PartKind, q: Point3<f64>, body_only: bool) -> f64 {
         let p = &self.p;
         let d = self.d(q);
         // Every part lies between ease and ~35 mm out from the base.
@@ -831,8 +1025,7 @@ impl BootGeom {
         match k {
             PartKind::Shell => {
                 let n = self.prof.closest(q.x, q.z);
-                let th = self.throat(&n, q.y);
-                let mut oo = io + p.wall + self.facing(&n, th);
+                let mut oo = io + p.wall + self.facing_at(q, &n);
                 if let Some(k) = self.lock {
                     for i in [2 * k, 2 * k + 1] {
                         let r = (q - self.eyelets[i].0).norm();
@@ -843,7 +1036,7 @@ impl BootGeom {
                 if s > 3.0 {
                     return s;
                 }
-                s = s.max(-(th.max(n.d - p.reach)));
+                s = s.max(-self.opening(q, &n));
                 for (i, (c, a)) in self.eyelets.iter().enumerate() {
                     let v = q - c;
                     if v.norm_squared() < 196.0 {
@@ -861,7 +1054,7 @@ impl BootGeom {
                 let band = (dout - (oo + p.toe_cap_t)).max(oo - dout);
                 let edge = self.toe_cap_x + 25.0 * ((q.y - self.toe_cap_y) / 45.0).powi(2) - q.x;
                 let low = -(p.ease + p.liner + p.wall) - q.z;
-                let throat = self.throat(&n, q.y).max(n.d - p.reach);
+                let throat = self.opening(q, &n);
                 band.max(edge).max(low).max(-throat).max(-self.vent_cut(q))
             }
             PartKind::Outsole => {
@@ -892,22 +1085,43 @@ impl BootGeom {
                             return band;
                         }
                         let n = self.prof.closest(q.x, q.z);
-                        let tongue = self.tongue_outline(&n, q.y).max(n.d - p.reach);
+                        let tongue = self.tongue_region(q, &n);
                         band.max(-pad).max(-below).max(-tongue).max(-self.vent_cut(q))
                     }
                 }
             }
-            PartKind::Tongue => {
+            PartKind::Tongue | PartKind::TongueLattice => {
                 let n = self.prof.closest(q.x, q.z);
-                let outline = self.tongue_outline(&n, q.y).max(n.d - p.reach);
+                let outline = self.tongue_region(q, &n);
                 if outline > 3.0 {
                     return outline;
                 }
                 let pad = (d - io).max(li - d);
                 let curl = p.tongue_curl * ((q.z - zt) / (self.z_tongue_top - zt).max(1.0)).clamp(0.0, 1.0).powi(2);
-                let raised = (d - (io + p.wall + p.tongue_proud + curl)).max(li - d);
-                let open = (self.throat(&n, q.y) + 1.0).min(zt + 0.5 - q.z);
-                pad.min(raised.max(open)).max(outline)
+                let top_raised = io + p.wall + p.tongue_proud + curl;
+                let raised = (d - top_raised).max(li - d);
+                let open = (self.opening(q, &n) + 1.0).min(zt + 0.5 - q.z);
+                let body = pad.min(raised.max(open)).max(outline);
+                if body_only {
+                    return body;
+                }
+                // The solid zones: the outer skin (under the raised top where it's raised, under
+                // the pad's top under the quarters), the rim, the inner skin.
+                let top = if open < 0.0 { top_raised } else { io };
+                let skin = (top - p.tongue_skin) - d;
+                let rim = -(outline + p.tongue_rim);
+                let inner = d - (li + p.tongue_inner);
+                let solid = skin.min(rim).min(inner);
+                if k == PartKind::Tongue {
+                    body.max(solid)
+                } else {
+                    // A gyroid sheet: |G| over its gradient's typical size (~1.4 k) is about a
+                    // distance; the sheet is the set within half its thickness.
+                    let kk = std::f64::consts::TAU / p.lattice_period;
+                    let gy = (kk * q.x).sin() * (kk * q.y).cos() + (kk * q.y).sin() * (kk * q.z).cos() + (kk * q.z).sin() * (kk * q.x).cos();
+                    let sheet = gy.abs() / (1.4 * kk) - 0.5 * p.lattice_sheet;
+                    body.max(-solid).max(sheet)
+                }
             }
             PartKind::TendonGuard => self.guard(q, self.d_out(q)),
         }
@@ -932,7 +1146,7 @@ impl BootGeom {
                 let (lo, hi) = (lm.medial.coords.inf(&lm.lateral.coords), lm.medial.coords.sup(&lm.lateral.coords));
                 mk(lo.x - r, lo.y - r, lo.z - r, hi.x + r, hi.y + r, hi.z + r)
             }
-            PartKind::Tongue => {
+            PartKind::Tongue | PartKind::TongueLattice => {
                 let (mut lo, mut hi) = (Vector3::repeat(f64::MAX), Vector3::repeat(f64::MIN));
                 for (pt, s) in self.prof.pts.iter().zip(&self.prof.s) {
                     if *s >= self.s_front - 20.0 && *s <= self.s_tongue_top + 5.0 {
@@ -941,7 +1155,17 @@ impl BootGeom {
                     }
                 }
                 let m = 0.5 * p.throat_w1 + p.tongue_overlap + 4.0;
-                mk(lo.x - 30.0, lo.y - m, lo.z - 30.0, hi.x + 30.0, hi.y + m, hi.z + 30.0)
+                let (mut x0, mut y0, mut z0, mut x1, mut y1, z1) = (lo.x - 30.0, lo.y - m, lo.z - 30.0, hi.x + 30.0, hi.y + m, hi.z + 30.0);
+                for o in &self.ol {
+                    y0 = y0.min(o.0 - 6.0);
+                    y1 = y1.max(o.1 + 6.0);
+                    z0 = z0.min(o.2 - 12.0);
+                }
+                if !self.ol.is_empty() {
+                    x1 = x1.max(self.x_front + 25.0);
+                    x0 = x0.min(self.crease.x - 30.0);
+                }
+                mk(x0, y0, z0, x1, y1, z1)
             }
             PartKind::TendonGuard => {
                 let (yc, xc, hw) = (lm.leg_c.1, lm.leg_c.0, 0.5 * p.guard_w1 + 4.0);
@@ -970,19 +1194,10 @@ impl BootGeom {
     /// from horizontal toward the shin. The eyelet pair nearest it is the heel lock: its lace
     /// pulls the heel back and down into the pocket. Moved out onto its boss.
     fn place_lock(&mut self) {
-        let mut s = self.s_front;
-        let mut crease = None;
-        while s < self.prof.len() {
-            let (pt, t) = self.prof.at(s);
-            if t.z.atan2(-t.x).to_degrees() >= 60.0 {
-                crease = Some((s, pt));
-                break;
-            }
-            s += 0.5;
+        if self.s_crease <= 0.0 {
+            return;
         }
-        let Some((sc, pc)) = crease else { return };
-        self.z_crease = pc.z;
-        self.crease = pc;
+        let sc = self.s_crease;
         let n = self.eyelets.len() / 2;
         let k = (0..n)
             .min_by(|&a, &b| {
@@ -1065,7 +1280,48 @@ impl BootGeom {
 
     fn place_eyelets(&mut self) {
         let p = self.p;
-        let (s0, s1) = (self.s_front + 10.0, self.s_cuff - 12.0);
+        // Over the forefoot (outline throat): stations from the front back to the crease, each
+        // just outside the opening's edge on the shell's top, found from above.
+        if self.outlined() {
+            let (x0, x1) = (self.x_front - 10.0, self.crease.x + 8.0);
+            let n = (((x0 - x1) / p.eyelet_spacing).round() as usize).max(1) + 1;
+            for k in 0..n {
+                let x = x0 - (x0 - x1) * k as f64 / (n - 1) as f64;
+                let (lo, hi, _) = self.outline_at(x);
+                let w = self.wrap_at(x);
+                let mut pair = Vec::new();
+                for y in [lo + w - p.eyelet_inset, hi - w + p.eyelet_inset] {
+                    let f = |z: f64| {
+                        let q = Point3::new(x, y, z);
+                        let near = self.prof.closest(q.x, q.z);
+                        self.d_out(q) - self.outer_off(q, &near)
+                    };
+                    let mut z = 150.0;
+                    while z > -5.0 && f(z) > 0.0 {
+                        z -= 0.25;
+                    }
+                    if z <= -5.0 {
+                        break;
+                    }
+                    let (mut a, mut b) = (z, z + 0.25);
+                    for _ in 0..30 {
+                        let m = 0.5 * (a + b);
+                        if f(m) <= 0.0 {
+                            a = m;
+                        } else {
+                            b = m;
+                        }
+                    }
+                    let c = Point3::new(x, y, 0.5 * (a + b));
+                    pair.push((c, self.grad(c)));
+                }
+                if pair.len() == 2 {
+                    self.eyelets.extend(pair);
+                }
+            }
+        }
+        let s0 = if self.outlined() { self.s_crease + 12.0 } else { self.s_front + 10.0 };
+        let s1 = self.s_cuff - 12.0;
         if s1 <= s0 {
             return;
         }
@@ -1075,20 +1331,25 @@ impl BootGeom {
             let (pt, _) = self.prof.at(s);
             let nn = self.prof.normal(s);
             let hw = 0.5 * self.throat_w(s);
+            let centre = self.throat_c(&Near { s, d: 0.0, y: pt.y });
+            let mut pair = Vec::new();
             for side in [-1.0, 1.0] {
                 // In from outside along the dorsal line's normal, at the eyelet row's y, to the
                 // facing's outer surface: the first surface met is the front-facing quarter. (Out
                 // from inside, a row far round a narrow leg met the side wall at a grazing angle.)
-                let y = pt.y + side * (hw + p.eyelet_inset);
+                let y = centre + side * (hw + p.eyelet_inset);
                 let at = |t: f64| Point3::new(pt.x + nn.x * t, y, pt.z + nn.z * t);
                 let f = |t: f64| {
                     let q = at(t);
                     let near = self.prof.closest(q.x, q.z);
                     self.d_out(q) - self.outer_off(q, &near)
                 };
-                let mut t = 45.0;
-                while t > -30.0 && f(t) > 0.0 {
+                let mut t = 60.0;
+                while t > -60.0 && f(t) > 0.0 {
                     t -= 0.25;
+                }
+                if t <= -60.0 {
+                    break;
                 }
                 let (mut a, mut b) = (t, t + 0.25);
                 for _ in 0..30 {
@@ -1101,7 +1362,10 @@ impl BootGeom {
                 }
                 let c = at(0.5 * (a + b));
                 let axis = self.grad(c);
-                self.eyelets.push((c, axis));
+                pair.push((c, axis));
+            }
+            if pair.len() == 2 {
+                self.eyelets.extend(pair);
             }
         }
     }
@@ -1116,7 +1380,7 @@ impl BootGeom {
         // early-out in `sdf`), a chord between the splayed top eyelets runs ~12 mm inside the leg,
         // and the open cuff's room between the leg and the tongue would also read clear.
         for _ in 0..320 {
-            let env = self.sdf(PartKind::Shell, q).min(self.sdf(PartKind::Tongue, q));
+            let env = self.sdf(PartKind::Shell, q).min(self.tongue_body(q));
             if env >= r + 0.4 && self.d(q) > self.inner_off(q) {
                 break;
             }
@@ -1395,29 +1659,38 @@ pub struct Removal {
 
 pub const ZONES: [&str; 3] = ["heel cup", "quarters", "toe box"];
 
+/// Where a foot point is against the shell (`BootGeom::place_of`).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Side {
+    Open,
+    In,
+    Out,
+    /// In the wall, this far (mm) past the squeezed liner.
+    Wall(f64),
+}
+
 impl BootGeom {
-    /// How far a foot point (upright boot frame) pushes into the rigid shell, mm (0 if free).
-    /// The barrier is the band from the squeezed liner to 25 mm past the shell's outside: a point
-    /// further out is outside the boot (free), and the band is thicker than any one step of the
-    /// search (at most ~9 mm at the heel), so no point can jump it.
-    fn push(&self, v: Point3<f64>, liner_min: f64) -> f64 {
+    /// Where a foot point (upright boot frame) is, against the rigid shell: in an opening (above
+    /// the cuff's top line, or out through the throat with the tongue pulled forward), inside the
+    /// cavity (short of the liner squeezed to `liner_min`), outside the boot (past the shell's
+    /// outer surface), or in the wall, with how far into it, mm.
+    fn place_of(&self, v: Point3<f64>, liner_min: f64) -> Side {
+        if v.z > self.z_trim(v) {
+            return Side::Open;
+        }
         let d = self.d(v);
         let io = self.inner_off(v);
         let pen = d - (io - liner_min);
-        if pen <= 0.0 || d > io + self.p.wall + 25.0 || v.z > self.z_trim(v) {
-            return 0.0;
+        if pen <= 0.0 {
+            return Side::In;
         }
-        // Out through the open throat: in its band, and no deeper than 12 mm under the dorsal
-        // line (below that the shell's quarters and sole are there).
+        // The throat: in its band, and no deeper under the dorsal line than it reaches.
         let n = self.prof.closest(v.x, v.z);
-        if self.throat(&n, v.y) < 0.0 {
-            let (pt, _) = self.prof.at(n.s);
-            let nn = self.prof.normal(n.s);
-            if (v.x - pt.x) * nn.x + (v.z - pt.z) * nn.z > -12.0 {
-                return 0.0;
-            }
+        if self.opening(v, &n) < 0.0 {
+            return Side::Open;
         }
-        pen
+        // The shell's outside, with the facing and toe cap on it (at most 3 mm more).
+        if d > io + self.p.wall + 3.0 { Side::Out } else { Side::Wall(pen) }
     }
 }
 
@@ -1441,8 +1714,12 @@ pub fn removal_check(g: &BootGeom, foot: &IndexedMesh, liner_min: f64, budget: [
         }
         Point3::new(x - back, v.y, z + h)
     };
-    // The worst push per zone, and its point, at every pose; in parallel over the heel lift.
-    type Cell = ([f64; 3], [usize; 3]);
+    // At every pose: the worst push per zone and its point, and which points are inside the
+    // cavity and which outside the boot (bitsets): a move between neighbouring poses in which a
+    // point goes straight from inside to outside (or back) went through the wall, and isn't
+    // allowed. In parallel over the heel lift.
+    let words = pts.len().div_ceil(64);
+    type Cell = ([f64; 3], [usize; 3], Vec<u64>, Vec<u64>);
     let grid: Vec<Cell> = std::thread::scope(|sc| {
         let hs: Vec<_> = (0..nb)
             .map(|i| {
@@ -1452,13 +1729,19 @@ pub fn removal_check(g: &BootGeom, foot: &IndexedMesh, liner_min: f64, budget: [
                     for j in 0..nh {
                         for k in 0..nk {
                             let (beta, h, back) = (i as f64 * db, j as f64 * dh, k as f64 * dk);
-                            let mut cell: Cell = ([0.0; 3], [0; 3]);
+                            let mut cell: Cell = ([0.0; 3], [0; 3], vec![0u64; words], vec![0u64; words]);
                             for (pi, v) in pts.iter().enumerate() {
-                                let push = g.push(place(v, beta, h, back), liner_min);
-                                let z = zone(v);
-                                if push > cell.0[z] {
-                                    cell.0[z] = push;
-                                    cell.1[z] = pi;
+                                match g.place_of(place(v, beta, h, back), liner_min) {
+                                    Side::In => cell.2[pi / 64] |= 1 << (pi % 64),
+                                    Side::Out => cell.3[pi / 64] |= 1 << (pi % 64),
+                                    Side::Wall(push) => {
+                                        let z = zone(v);
+                                        if push > cell.0[z] {
+                                            cell.0[z] = push;
+                                            cell.1[z] = pi;
+                                        }
+                                    }
+                                    Side::Open => {}
                                 }
                             }
                             out.push(cell);
@@ -1490,6 +1773,10 @@ pub fn removal_check(g: &BootGeom, foot: &IndexedMesh, liner_min: f64, budget: [
             break;
         }
         let mut step = |m: usize| {
+            let (a, b) = (&grid[n], &grid[m]);
+            if (0..words).any(|w| (a.2[w] & b.3[w]) != 0 || (a.3[w] & b.2[w]) != 0) {
+                return;
+            }
             let cm = c.max(cost(&grid[m]));
             if cm < best[m] {
                 best[m] = cm;
@@ -1538,7 +1825,15 @@ pub fn removal_check(g: &BootGeom, foot: &IndexedMesh, liner_min: f64, budget: [
     if std::env::var("BOOT_DEBUG").as_deref() == Ok("removal") {
         let (beta, h, back) = (i as f64 * db, j as f64 * dh, k as f64 * dk);
         let mut v: Vec<(f64, Point3<f64>, Point3<f64>)> =
-            pts.iter().map(|p| { let q = place(p, beta, h, back); (g.push(q, liner_min), *p, q) }).filter(|x| x.0 > 0.0).collect();
+            pts.iter()
+                .filter_map(|p| {
+                    let q = place(p, beta, h, back);
+                    match g.place_of(q, liner_min) {
+                        Side::Wall(push) => Some((push, *p, q)),
+                        _ => None,
+                    }
+                })
+                .collect();
         v.sort_by(|a, b| b.0.total_cmp(&a.0));
         println!("  removal debug: pose {beta} deg, up {h}, back {back}: {} points pushing", v.len());
         for (push, p, q) in v.iter().step_by((v.len() / 12).max(1)).take(12) {
@@ -1745,7 +2040,16 @@ pub fn run(scan_path: &Path, out: &Path, vented: bool) -> Result<(), String> {
         }
         None => (foot.mesh.clone(), "the loaded scan (no unloaded one found): a strict check, the sole spreads under load".to_string()),
     };
-    let rm = removal_check(&g, &out_foot, 1.5, [2.0, 8.0, 3.0]);
+    // The budgets that steer the path (BOOT_BUDGET=heel,quarters,toe to change them, e.g. a
+    // large heel budget to see what the forefoot alone needs).
+    let budget: [f64; 3] = std::env::var("BOOT_BUDGET")
+        .ok()
+        .and_then(|v| {
+            let b: Vec<f64> = v.split(',').filter_map(|x| x.parse().ok()).collect();
+            (b.len() == 3).then(|| [b[0], b[1], b[2]])
+        })
+        .unwrap_or([2.0, 8.0, 3.0]);
+    let rm = removal_check(&g, &out_foot, 1.5, budget);
     let removal_line = format!(
         "taking it off, with {out_note} (liner squeezed to {} mm, {} foot points, in place {:.2} mm): the way out needs {} (budgets steering the path {:.0}/{:.0}/{:.0} mm, assumed); worst pose: heel lifted {:.1} deg, up {:.0} mm, back {:.0} mm ({:.1} s)",
         rm.liner_min,
@@ -1768,18 +2072,39 @@ pub fn run(scan_path: &Path, out: &Path, vented: bool) -> Result<(), String> {
     // top (w1), the on/off check for each; the narrowest throat that lets the foot out is the
     // design value (Jon, 2026-11-11: a wide throat like the CCM Jetspeed FT6 Pro's, the shell
     // still low tolerance round the foot, no flexible bands).
+    // BOOT_SWEEP=wrap: the outline throat with the shell wrapping over the foot's widest line by
+    // `wrap_ball` at the ball and `wrap_instep` at the crease: how much wrap still lets it off.
+    if std::env::var("BOOT_SWEEP").as_deref() == Ok("wrap") {
+        println!("wrap sweep (outline throat from {:.2} L, rigid shell; pushes in mm: heel cup / quarters / toe box):", p.throat_front);
+        for wb in [0.0, 5.0, 10.0, 15.0, 25.0] {
+            for wi in [10.0, 18.0, 30.0] {
+                let ps = HockeyParams { wrap_ball: wb, wrap_instep: wi, ..p };
+                let gs = BootGeom::new(base.clone(), base_fair_c.clone(), lb.bounds, lm, ps);
+                let r = removal_check(&gs, &out_foot, 1.5, budget);
+                println!(
+                    "  wrap {wb:4.0} at the ball, {wi:4.0} at the instep: {:5.1} / {:5.1} / {:5.1}  (worst pose {:.1} deg, up {:.0}, back {:.0}; {} eyelets a side)",
+                    r.push[0], r.push[1], r.push[2], r.pose.0, r.pose.1, r.pose.2, gs.eyelets.len() / 2
+                );
+            }
+        }
+    }
     if std::env::var("BOOT_SWEEP").as_deref() == Ok("throat") {
         println!("throat sweep (rigid shell; pushes in mm: heel cup / quarters / toe box):");
+        // The throat's start (fraction of length) matters as much as its width: at 0.70 the ball
+        // (0.72-0.75) sits under the closed vamp.
+        let fronts: Vec<f64> = std::env::var("BOOT_SWEEP_FRONTS").ok().map_or(vec![p.throat_front], |v| v.split(',').filter_map(|x| x.parse().ok()).collect());
+        for &tf in &fronts {
         for w0 in [26.0, 38.0, 50.0, 62.0] {
             for w1 in [48.0, 64.0, 80.0] {
-                let ps = HockeyParams { throat_w0: w0, throat_w1: w1, ..p };
+                let ps = HockeyParams { throat_w0: w0, throat_w1: w1, throat_front: tf, ..p };
                 let gs = BootGeom::new(base.clone(), base_fair_c.clone(), lb.bounds, lm, ps);
-                let r = removal_check(&gs, &out_foot, 1.5, [2.0, 8.0, 3.0]);
+                let r = removal_check(&gs, &out_foot, 1.5, budget);
                 println!(
-                    "  throat {w0:3.0} -> {w1:3.0} mm: {:5.1} / {:5.1} / {:5.1}  (worst pose {:.1} deg, up {:.0}, back {:.0})",
+                    "  throat from {tf:.2} L, {w0:3.0} -> {w1:3.0} mm: {:5.1} / {:5.1} / {:5.1}  (worst pose {:.1} deg, up {:.0}, back {:.0})",
                     r.push[0], r.push[1], r.push[2], r.pose.0, r.pose.1, r.pose.2
                 );
             }
+        }
         }
     }
     if std::env::var_os("BOOT_DEBUG").is_some() {
@@ -1934,9 +2259,9 @@ pub fn run(scan_path: &Path, out: &Path, vented: bool) -> Result<(), String> {
     let groups: Vec<(Vec<usize>, &str)> = vec![
         (vec![0, 1, 2], "shell, toe cap, outsole"),
         (vec![3, 4, 5], "liner, ankle pads, footbed"),
-        (vec![6], "tongue"),
+        (vec![6, 8], "tongue plate, lattice"),
         (vec![7], "tendon guard"),
-        (vec![8, 9], "eyelets, laces"),
+        (vec![9, 10], "eyelets, laces"),
     ];
     let all: Vec<&IndexedMesh> = meshes.iter().chain([&eyelet_mesh, &lace_mesh]).collect();
     let colors: Vec<([f64; 3], f64)> = layers.iter().map(|l| (l.color, l.spec)).collect();
@@ -2005,7 +2330,7 @@ pub fn run(scan_path: &Path, out: &Path, vented: bool) -> Result<(), String> {
         println!("viewer meshes skipped (set BOOT_VIEWER=1 to build them)");
     } else {
         let t = Instant::now();
-        let cells = [2.0, 1.5, 2.0, 2.0, 1.5, 2.0, 2.0, 1.5];
+        let cells = [2.0, 1.5, 2.0, 2.0, 1.5, 2.0, 1.5, 1.5, 1.4];
         let grommet_union = grommets.iter().cloned().reduce(|a, b| a.union(b));
         let mut display: Vec<IndexedMesh> = std::thread::scope(|sc| {
             let mut hs: Vec<_> = specs
@@ -2032,15 +2357,16 @@ pub fn run(scan_path: &Path, out: &Path, vented: bool) -> Result<(), String> {
         });
         display.push(g.lean_mesh(&foot.mesh));
         let lat = -lm.medial_side;
-        let explode: [[f64; 3]; 11] = [
+        let explode: [[f64; 3]; 12] = [
             [0.0, 0.0, 0.0],
             [70.0, 0.0, 0.0],
             [0.0, 0.0, -60.0],
             [0.0, lat * 150.0, 20.0],
             [0.0, lat * 150.0, 20.0],
             [0.0, lat * 150.0, -40.0],
-            [80.0, 0.0, 90.0],
+            [95.0, 0.0, 105.0],
             [-70.0, 0.0, 40.0],
+            [60.0, 0.0, 70.0],
             [0.0, 0.0, 0.0],
             [130.0, 0.0, 130.0],
             [0.0, 0.0, 0.0],
@@ -2051,8 +2377,8 @@ pub fn run(scan_path: &Path, out: &Path, vented: bool) -> Result<(), String> {
             .zip(&rows)
             .map(|(sp, r)| (sp.name.to_string(), sp.color, sp.look, sp.finish, r.3, sp.material.name.to_string()))
             .collect();
-        names.push(("eyelets".into(), [0.80, 0.81, 0.84], EYELET_LOOK, "metal", rows[8].3, AL_6061_T6.name.into()));
-        names.push(("laces".into(), [0.96, 0.96, 0.94], LACE_LOOK, "fabric", rows[9].3, LACE.name.into()));
+        names.push(("eyelets".into(), [0.80, 0.81, 0.84], EYELET_LOOK, "metal", rows[9].3, AL_6061_T6.name.into()));
+        names.push(("laces".into(), [0.96, 0.96, 0.94], LACE_LOOK, "fabric", rows[10].3, LACE.name.into()));
         names.push(("foot (stand-in scan)".into(), skin, skin, "skin", 0.0, "".into()));
         let dir = out.join("viewer");
         std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
