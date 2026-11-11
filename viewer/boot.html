@@ -1,0 +1,297 @@
+<title>Custom Skate Boot</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: one screen. The boot fills a rink-white stage; a spec panel beside it (below it on a phone)
+     lists the parts like a build sheet: swatch, name, grams, material. */
+  :root {
+    --bg: #eef2f5;
+    --stage: #f7f9fb;
+    --panel: #ffffff;
+    --line: #d4dde4;
+    --fg: #13202b;
+    --muted: #5a6b78;
+    --accent: #c8102e;
+    --accent-ink: #ffffff;
+    --font-display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+    --font-text: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+    --font-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d141a; --stage: #111b23; --panel: #142029; --line: #24343f;
+      --fg: #e4ecf1; --muted: #8ea1ae; --accent: #ff5468; --accent-ink: #1a0508;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d141a; --stage: #111b23; --panel: #142029; --line: #24343f;
+    --fg: #e4ecf1; --muted: #8ea1ae; --accent: #ff5468; --accent-ink: #1a0508;
+    color-scheme: dark;
+  }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg); color: var(--fg); font-family: var(--font-text); font-size: 14px; line-height: 1.45;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 12px;
+    box-sizing: border-box;
+  }
+  .app { height: 100%; display: grid; grid-template-columns: minmax(0, 1fr) 320px; grid-template-rows: auto minmax(0, 1fr); gap: 12px; }
+  header { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; }
+  h1 { font-family: var(--font-display); font-weight: 700; font-size: 30px; letter-spacing: 0.01em; margin: 0; text-wrap: balance; }
+  .sub { color: var(--muted); margin: 0; }
+  .stage { position: relative; min-height: 0; background: var(--stage); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+  .status { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font-family: var(--font-data); font-size: 13px; text-align: center; padding: 16px; }
+  .hint { position: absolute; left: 12px; bottom: 10px; color: var(--muted); font-size: 12px; pointer-events: none; }
+  aside { min-height: 0; overflow: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 16px; }
+  .label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+  .total { display: flex; align-items: baseline; gap: 8px; }
+  .total b { font-family: var(--font-display); font-size: 40px; font-weight: 700; line-height: 1; }
+  .total span { color: var(--muted); }
+  ul.parts { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+  ul.parts li { display: grid; grid-template-columns: 18px 12px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 5px 4px; border-radius: 6px; }
+  ul.parts li:hover { background: color-mix(in srgb, var(--fg) 5%, transparent); }
+  ul.parts input { margin: 0; accent-color: var(--accent); width: 15px; height: 15px; }
+  .sw { width: 12px; height: 12px; border-radius: 3px; border: 1px solid color-mix(in srgb, var(--fg) 25%, transparent); }
+  .nm { min-width: 0; }
+  .nm label { display: block; cursor: pointer; }
+  .nm small { display: block; color: var(--muted); font-size: 11.5px; }
+  .g { font-family: var(--font-data); font-variant-numeric: tabular-nums; font-size: 12.5px; }
+  .ctl { display: grid; gap: 8px; }
+  .row { display: flex; align-items: center; gap: 10px; }
+  .row label { min-width: 0; flex: 1; }
+  input[type="range"] { width: 100%; accent-color: var(--accent); }
+  .seg { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .seg button { flex: 1; font: inherit; font-size: 12.5px; padding: 6px 4px; background: transparent; color: var(--fg); border: 0; border-right: 1px solid var(--line); cursor: pointer; }
+  .seg button:last-child { border-right: 0; }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn { font: inherit; font-size: 12.5px; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--fg); cursor: pointer; }
+  .notes { color: var(--muted); font-size: 12.5px; display: grid; gap: 6px; margin: 0; padding-left: 16px; }
+  @media (max-width: 760px) {
+    .app { height: auto; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; }
+    .stage { height: 62vh; min-height: 340px; }
+    aside { overflow: visible; }
+    h1 { font-size: 26px; }
+  }
+</style>
+
+<div class="app">
+  <header>
+    <h1>Custom skate boot</h1>
+    <p class="sub">Round 2 of the boot, grown from a foot scan. Drag to turn it, scroll or pinch to zoom.</p>
+  </header>
+  <div class="stage">
+    <canvas id="view" aria-label="3D view of the boot"></canvas>
+    <div class="status" id="status">Loading the boot…</div>
+    <div class="hint" id="hint" hidden>Drag to turn · right-drag to move · scroll to zoom</div>
+  </div>
+  <aside>
+    <div>
+      <p class="label">Whole boot</p>
+      <div class="total"><b id="total">–</b><span>grams, shell in printed PA 12</span></div>
+      <p class="sub" id="carbon"></p>
+    </div>
+    <div>
+      <p class="label">Parts</p>
+      <ul class="parts" id="parts"></ul>
+    </div>
+    <div class="ctl">
+      <p class="label">Take it apart</p>
+      <div class="row"><label for="explode">Explode</label><span class="g" id="explodeVal">0%</span></div>
+      <input type="range" id="explode" min="0" max="100" value="0">
+    </div>
+    <div class="ctl">
+      <p class="label">Cut through</p>
+      <div class="seg" role="group" aria-label="Cut">
+        <button type="button" id="cutNone" aria-pressed="true">None</button>
+        <button type="button" id="cutAnkle" aria-pressed="false">Ankle</button>
+        <button type="button" id="cutLength" aria-pressed="false">Lengthwise</button>
+      </div>
+      <div class="row"><label for="cutPos">Cut position</label><span class="g" id="cutVal">0 mm</span></div>
+      <input type="range" id="cutPos" min="-60" max="60" value="0" disabled>
+    </div>
+    <div class="row"><button type="button" class="btn" id="reset">Reset view</button></div>
+    <div>
+      <p class="label">What this is</p>
+      <ul class="notes">
+        <li>Built on a stand-in foot (a CC0 research scan) until Jon's own scans exist.</li>
+        <li>Lines placed from the scan: the ankle bones set the cuff and the ankle pockets; the ridge from the toes up the shin sets the throat, tongue and eyelets.</li>
+        <li>Cuff, tongue and tendon guard heights are estimates until measured on the TF9.</li>
+        <li>Foam, felt and lace densities are assumed; the shell, toe cap and outsole are 3D-printed nylon (PA 12).</li>
+      </ul>
+    </div>
+  </aside>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function () {
+  const status = document.getElementById('status');
+  const fail = (msg) => { status.hidden = false; status.textContent = msg; };
+  if (!window.THREE || !THREE.OrbitControls) { fail('The 3D library did not load. Check the connection and reload the page.'); return; }
+
+  const canvas = document.getElementById('view');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.localClippingEnabled = true;
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(30, 1, 5, 5000);
+  const controls = new THREE.OrbitControls(camera, canvas);
+  controls.enableDamping = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  controls.dampingFactor = 0.12;
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x8a96a3, 0.75));
+  const key = new THREE.DirectionalLight(0xffffff, 0.75); key.position.set(-300, 500, 600); scene.add(key);
+  const fill = new THREE.DirectionalLight(0xffffff, 0.3); fill.position.set(500, 150, -400); scene.add(fill);
+
+  // The boot is modelled z-up (x heel to toe); three.js is y-up.
+  const root = new THREE.Group(); root.rotation.x = -Math.PI / 2; scene.add(root);
+  const parts = [];
+  const clip = new THREE.Plane(new THREE.Vector3(1, 0, 0), 0);
+  let cutMode = 'none', cutPos = 0, explode = 0, manifest = null, center = new THREE.Vector3(), radius = 200;
+
+  function stageColor() {
+    const v = getComputedStyle(document.documentElement).getPropertyValue('--stage').trim();
+    return new THREE.Color(v || '#f7f9fb');
+  }
+  function applyTheme() { renderer.setClearColor(stageColor(), 1); render(); }
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
+  new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  function resize() {
+    const r = canvas.parentElement.getBoundingClientRect();
+    renderer.setSize(r.width, r.height, false);
+    camera.aspect = r.width / Math.max(1, r.height);
+    camera.updateProjectionMatrix();
+    render();
+  }
+  new ResizeObserver(resize).observe(canvas.parentElement);
+
+  function frame() {
+    const dir = new THREE.Vector3(0.62, 0.42, manifest ? 0.62 * manifest.medialSide : 0.62).normalize();
+    // Three-quarter view from the front and the outside (lateral) of the foot, a little above.
+    camera.position.copy(center).addScaledVector(dir, radius * 3.3);
+    controls.target.copy(center);
+    camera.near = radius * 0.05; camera.far = radius * 20; camera.updateProjectionMatrix();
+    controls.update();
+    render();
+  }
+
+  function updateClip() {
+    let on = cutMode !== 'none';
+    for (const p of parts) for (const m of p.mats) { m.clippingPlanes = on ? [clip] : []; m.needsUpdate = true; }
+    if (on && manifest) {
+      // A plane in the boot's own frame, moved into the world.
+      const ms = manifest.medialSide;
+      const local = cutMode === 'ankle'
+        ? new THREE.Plane(new THREE.Vector3(-1, 0, 0), manifest.cuts.ankleX + cutPos)
+        : new THREE.Plane(new THREE.Vector3(0, -ms, 0), ms * (manifest.cuts.legY + cutPos));
+      root.updateMatrixWorld(true);
+      clip.copy(local).applyMatrix4(root.matrixWorld);
+    }
+    render();
+  }
+
+  function updateExplode() {
+    for (const p of parts) p.group.position.set(p.explode[0] * explode, p.explode[1] * explode, p.explode[2] * explode);
+    render();
+  }
+
+  let pending = false;
+  function render() {
+    if (pending) return;
+    pending = true;
+    requestAnimationFrame(() => { pending = false; renderer.render(scene, camera); });
+  }
+  controls.addEventListener('change', render);
+  (function tick() { if (controls.enableDamping) controls.update(); requestAnimationFrame(tick); })();
+
+  function swatch(c) { return 'rgb(' + c.map((v) => Math.round(v * 255)).join(',') + ')'; }
+
+  function buildList() {
+    const ul = document.getElementById('parts');
+    parts.forEach((p, i) => {
+      const li = document.createElement('li');
+      const id = 'part-' + i;
+      li.innerHTML = '<input type="checkbox" id="' + id + '"' + (p.group.visible ? ' checked' : '') + '>' +
+        '<span class="sw" style="background:' + swatch(p.color) + '"></span>' +
+        '<span class="nm"><label for="' + id + '"></label><small></small></span>' +
+        '<span class="g"></span>';
+      li.querySelector('label').textContent = p.name.charAt(0).toUpperCase() + p.name.slice(1);
+      li.querySelector('small').textContent = p.material;
+      li.querySelector('.g').textContent = p.grams > 0 ? p.grams.toFixed(1) + ' g' : '';
+      li.querySelector('input').addEventListener('change', (e) => { p.group.visible = e.target.checked; render(); });
+      ul.appendChild(li);
+    });
+  }
+
+  async function load() {
+    // The meshes come as base64 text (boot.txt): int16 positions and uint32 indices per part.
+    const [mRes, bRes] = await Promise.all([fetch('manifest.json'), fetch('boot.txt')]);
+    if (!mRes.ok || !bRes.ok) throw new Error('missing data');
+    manifest = await mRes.json();
+    const b64 = (await bRes.text()).replace(/\s+/g, '');
+    const raw = atob(b64);
+    const bytes = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+    const buf = bytes.buffer;
+    const box = new THREE.Box3();
+    for (const d of manifest.parts) {
+      const q = new Int16Array(buf, d.vertexOffset, d.vertexCount * 3);
+      const pos = new Float32Array(q.length);
+      for (let i = 0; i < q.length; i++) pos[i] = q[i] * manifest.scale;
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      geo.setIndex(new THREE.BufferAttribute(new Uint32Array(buf, d.indexOffset, d.indexCount), 1));
+      geo.computeVertexNormals();
+      const color = new THREE.Color(d.color[0], d.color[1], d.color[2]).convertSRGBToLinear();
+      const front = new THREE.MeshStandardMaterial({ color, roughness: d.name === 'eyelets' ? 0.35 : 0.72, metalness: d.name === 'eyelets' ? 0.6 : 0.0 });
+      // Inside faces, seen only where a cut opens a part: drawn flat and darker, so a cut reads as solid.
+      const back = new THREE.MeshBasicMaterial({ color: color.clone().multiplyScalar(0.55), side: THREE.BackSide });
+      const group = new THREE.Group();
+      group.add(new THREE.Mesh(geo, front), new THREE.Mesh(geo, back));
+      group.visible = !d.name.startsWith('foot');
+      root.add(group);
+      geo.computeBoundingBox();
+      if (group.visible) box.union(geo.boundingBox);
+      parts.push({ name: d.name, color: d.color, grams: d.grams, material: d.material, explode: d.explode, group, mats: [front, back] });
+    }
+    // Centre of the boot, in world space (the root turns z-up into y-up).
+    const c = box.getCenter(new THREE.Vector3());
+    center.set(c.x, c.z, -c.y);
+    radius = box.getSize(new THREE.Vector3()).length() / 2;
+    document.getElementById('total').textContent = Math.round(manifest.totalGrams);
+    document.getElementById('carbon').textContent = 'In carbon/epoxy the shell alone would be ' + Math.round(manifest.shellCarbonGrams) + ' g.';
+    buildList();
+    status.hidden = true;
+    document.getElementById('hint').hidden = false;
+    resize();
+    frame();
+  }
+
+  const ex = document.getElementById('explode');
+  ex.addEventListener('input', () => { explode = ex.value / 100; document.getElementById('explodeVal').textContent = ex.value + '%'; updateExplode(); });
+  const cp = document.getElementById('cutPos');
+  cp.addEventListener('input', () => { cutPos = Number(cp.value); document.getElementById('cutVal').textContent = (cutPos > 0 ? '+' : '') + cutPos + ' mm'; updateClip(); });
+  const modes = { cutNone: 'none', cutAnkle: 'ankle', cutLength: 'length' };
+  for (const id of Object.keys(modes)) {
+    document.getElementById(id).addEventListener('click', () => {
+      cutMode = modes[id];
+      for (const k of Object.keys(modes)) document.getElementById(k).setAttribute('aria-pressed', String(k === id));
+      cp.disabled = cutMode === 'none';
+      updateClip();
+    });
+  }
+  document.getElementById('reset').addEventListener('click', frame);
+
+  applyTheme();
+  load().catch(() => fail('The boot’s mesh files did not load. Reload the page to try again.'));
+})();
+</script>

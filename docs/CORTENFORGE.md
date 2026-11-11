@@ -46,6 +46,17 @@ type (bug, docs, API, perf, setup, works), date, file:line under
   few mm3 of "overlap" at 0.25 mm cells (2 mm3 at rest, 11 mm3 rocked; 0 at 0.1 mm). For clash
   checks, count only cells whose centres are inside both (`round2::overlap_mm3`).
 
+- **API** (2026-11-11, the boot): the QEM decimator (simplify.rs:681, `simplify_mesh`) is not
+  exported (lib.rs has no `pub mod simplify`), so an existing mesh can't be decimated. The public
+  route is `Solid::mesh_simplified` (query.rs:277), which re-meshes with the adaptive octree and
+  then decimates. The octree prunes by `evaluate_interval` (adaptive_dc.rs:253), and a plain
+  `user_fn` answers (-inf, +inf), so nothing is pruned. Giving each part a Lipschitz interval
+  (centre value +- 3 x half-diagonal, `user_fn_with_interval`; `hockey_boot::solid_bounded`) makes
+  it work.
+- **works** (2026-11-11, the boot): ten parts of a hockey boot as layered offsets of one scan
+  field (`user_fn`s sharing an `Arc`), plus primitives (grommets as cylinders, laces as a
+  `pipe`), meshed in parallel threads.
+
 ## sim-opt
 
 - **API** (2026-11-10, round 2): the optimisers (`Sa`, `RicherSa`, `Pt`; algorithm.rs:83-110)
@@ -69,6 +80,11 @@ type (bug, docs, API, perf, setup, works), date, file:line under
 - **note** (2026-11-10): out-of-bounds queries return the clamped edge value (documented at
   flood_fill.rs:625), so an offset surface beyond the grid's margin comes out silently wrong, not
   as an error. Keep the margin larger than the largest offset taken from the grid.
+- **note** (2026-11-11, the boot): the clamping also bites when a small grid is blended with a
+  large one. The toe box's grid (14 mm margin) smooth-unioned into the closed foot's (35 mm)
+  returned its flat edge value ~30 mm behind the leg, which undercut the foot's own distance
+  there: the tendon guard, offset ~30 mm from the leg at its top, grew a flat horizontal tab.
+  Fix: outside its box, add the distance to the box (foot.rs `last_base`).
 
 ## mesh (measure, io, repair)
 
@@ -205,6 +221,11 @@ Nice-to-haves for CortenForge, with what this project built instead.
   so an assembly like the rocker's upper on its lower is one model and the contact forces
   redistribute as the parts give. Instead: two substructures, the upper loaded by the lower's
   reaction forces (one way).
+- **Decimate a mesh, and a Lipschitz bound for `user_fn`** (2026-11-11, the boot): export
+  `simplify_mesh` so an existing mesh (a scan, a uniform mesh already made) can be decimated for
+  display or a web viewer; and a `user_fn_lipschitz(f, l, bounds)` whose interval is the centre
+  value +- l x half-diagonal, so adaptive meshing prunes scan-derived parts without a hand-written
+  interval. Instead: `hockey_boot::solid_bounded`.
 - **Section properties and interference** (2026-11-10, round 2): `Solid::section(plane)` (area,
   centroid, second moments) for beam checks, and `Solid::overlap_volume(&other)` that ignores the
   partial-cell band, for clash checks. Instead: `strength::section`, `round2::overlap_mm3`.

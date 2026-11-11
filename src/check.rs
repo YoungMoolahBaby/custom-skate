@@ -45,9 +45,57 @@ pub fn run() -> Tally {
     strength_checks(&mut t);
     println!("sim-soft as a linear-elastic solver (round 2, step 2)");
     fem_checks(&mut t);
+    println!("hockey boot geometry: the dorsal line's nearest point, mesh volumes");
+    boot_checks(&mut t);
     println!("scan frame on real stand-in scans (Schuster et al. 2024, pre-aligned: x heel to toe, z up)");
     stand_in_checks(&mut t);
     t
+}
+
+/// The boot's own tools, on cases with answers by hand: the dorsal line's nearest point (an L of
+/// two 100 mm legs, as the instep turns up the shin), and the volume of a closed mesh (a meshed
+/// sphere against 4/3 pi r^3).
+fn boot_checks(t: &mut Tally) {
+    use crate::hockey_boot::{Profile, mesh_volume};
+    use nalgebra::Point3;
+    let prof = Profile::new(vec![Point3::new(200.0, 5.0, 0.0), Point3::new(100.0, 5.0, 0.0), Point3::new(100.0, 25.0, 100.0)]);
+    // Above the first leg: nearest at x = 150 -> s = 50, 10 mm away; y from the first leg.
+    let a = prof.closest(150.0, 10.0);
+    t.item(
+        "dorsal line: nearest on the first leg",
+        (a.s - 50.0).abs() < 1e-9 && (a.d - 10.0).abs() < 1e-9 && (a.y - 5.0).abs() < 1e-9,
+        format!("s {:.3}, d {:.3}, y {:.3}", a.s, a.d, a.y),
+    );
+    // In front of the second leg at z = 50: nearest at its middle -> s = 150, y halfway (15).
+    let b = prof.closest(112.0, 50.0);
+    t.item(
+        "dorsal line: nearest on the second leg",
+        (b.s - 150.0).abs() < 1e-9 && (b.d - 12.0).abs() < 1e-9 && (b.y - 15.0).abs() < 1e-9,
+        format!("s {:.3}, d {:.3}, y {:.3}", b.s, b.d, b.y),
+    );
+    // Outside the corner: nearest is the corner itself.
+    let c = prof.closest(90.0, -10.0);
+    t.item(
+        "dorsal line: nearest at the corner",
+        (c.s - 100.0).abs() < 1e-9 && (c.d - 200f64.sqrt()).abs() < 1e-9,
+        format!("s {:.3}, d {:.3}", c.s, c.d),
+    );
+    let n = prof.normal(150.0);
+    t.item(
+        "dorsal line: outward normal on the shin points forward",
+        (n.x - 1.0).abs() < 1e-9 && n.z.abs() < 1e-9,
+        format!("({:.3}, {:.3})", n.x, n.z),
+    );
+    let r = 20.0;
+    let mesh = crate::round1::mesh_of(&Solid::sphere(r), 0.5);
+    let v = mesh_volume(&mesh);
+    let exact = 4.0 / 3.0 * PI * r.powi(3);
+    let err = v / exact - 1.0;
+    t.item("mesh volume: sphere r 20 at 0.5 mm", err.abs() < 0.01, format!("{v:.0} vs {exact:.0} mm3 ({:+.2}%)", err * 100.0));
+    // The viewer's mesh file: base64 against RFC 4648's test vectors.
+    let vectors = [("", ""), ("f", "Zg=="), ("fo", "Zm8="), ("foo", "Zm9v"), ("foob", "Zm9vYg=="), ("fooba", "Zm9vYmE="), ("foobar", "Zm9vYmFy")];
+    let bad: Vec<&str> = vectors.iter().filter(|(i, o)| crate::hockey_boot::base64(i.as_bytes()) != *o).map(|(i, _)| *i).collect();
+    t.item("base64: RFC 4648 test vectors", bad.is_empty(), format!("{} of {} match", vectors.len() - bad.len(), vectors.len()));
 }
 
 /// The three stand-in scans that broke earlier versions of `scan::measure`: a loaded foot with a

@@ -8,6 +8,7 @@ pub mod check;
 pub mod fem;
 pub mod fit;
 pub mod foot;
+pub mod hockey_boot;
 pub mod materials;
 pub mod pitch;
 pub mod render;

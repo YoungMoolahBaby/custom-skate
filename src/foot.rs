@@ -100,11 +100,18 @@ impl Foot {
     /// last's starting surface. (Growing and shrinking one field cancels out, so the grown
     /// surface is meshed and given its own grid.)
     pub fn closed(&self, r: f64, cell: f64) -> Result<Foot, String> {
+        self.closed_with_margin(r, cell, 3.0 * cell + 2.0)
+    }
+
+    /// `closed`, with the distance grid reaching `margin` mm past the grown surface. mesh-sdf
+    /// clamps queries outside its grid to the edge value, so anything offset far from the
+    /// surface (a boot's outer layers) needs the wider grid.
+    pub fn closed_with_margin(&self, r: f64, cell: f64, margin: f64) -> Result<Foot, String> {
         let t0 = Instant::now();
         let mut grown = self.solid().offset(r).mesh(cell).geometry;
         weld_vertices(&mut grown, 1e-5);
         eprintln!("  closing r {r} mm: grown surface {} triangles, {:.1} s", grown.faces.len(), t0.elapsed().as_secs_f64());
-        let bounds = bounds_of(&grown, 3.0 * cell + 2.0);
+        let bounds = bounds_of(&grown, margin);
         let sdf = grid(&grown, bounds, cell, "grown foot")?;
         Ok(Foot {
             mesh: self.mesh.clone(),
@@ -130,6 +137,58 @@ pub fn forefoot_hull(foot: &Foot, x_from: f64, cell: f64, margin: f64) -> Result
     let bounds = bounds_of(&mesh, margin);
     let sdf = grid(&mesh, bounds, cell, "forefoot hull")?;
     Ok(Foot { mesh, length: foot.length, width: foot.width, height: foot.height, sdf, bias: 0.0, bounds })
+}
+
+/// The base of a last (round 1's recipe): the foot closed by `CLOSING` mm (the arch and small
+/// hollows filled; a footbed fills the arch in a real skate), blended with the convex hull of the
+/// forefoot (a toe box). Closing alone can't make a toe box: toes are ~20 mm cylinders side by
+/// side, and a closing of radius r leaves a groove ~a^2/2r deep between them (7 and 18 mm both
+/// left visible grooves).
+pub struct LastBase {
+    /// Negative inside; the last is this offset by the fit allowance.
+    pub solid: Solid,
+    /// Where the closed foot's distance grid is valid.
+    pub bounds: Aabb,
+    /// The toe box starts here, mm from the heel.
+    pub toe_from: f64,
+}
+
+pub const CLOSING: f64 = 12.0;
+/// The toe box from this fraction of the foot's length.
+pub const TOE_FROM: f64 = 0.62;
+/// The toe box fades in: shrunk by up to `FADE` mm over its first `FADE_LEN` mm, so it rises out
+/// of the foot instead of starting with a step. (A 4 mm smooth union left a visible step; a 10 mm
+/// one hid it but swelled the whole forefoot ~2.5 mm, since the hull hugs the foot there.)
+pub const FADE: f64 = 8.0;
+pub const FADE_LEN: f64 = 60.0;
+pub const BLEND: f64 = 2.0;
+
+/// Build the last's base; `margin`: how far past the grown foot its distance grid reaches.
+pub fn last_base(foot: &Foot, margin: f64) -> Result<LastBase, String> {
+    let closed = foot.closed_with_margin(CLOSING, 1.5, margin)?;
+    let toe_from = TOE_FROM * foot.length;
+    let toe = forefoot_hull(foot, toe_from, 1.5, 14.0)?;
+    let hull = toe.clone();
+    let (lo, hi) = (toe.bounds.min, toe.bounds.max);
+    let faded_toe = Solid::user_fn(
+        move |q: Point3<f64>| {
+            let s = ((toe_from + FADE_LEN - q.x) / FADE_LEN).clamp(0.0, 1.0);
+            // Outside its grid the hull's field is the clamped edge value, flat in space; adding
+            // the distance to the grid keeps it growing, so it can't undercut the foot's own field
+            // far from the toes (it made a flat tab on the tendon guard, ~30 mm out). Inside the
+            // grid, and everywhere round 1 meshed, nothing changes.
+            let out = Vector3::new(
+                (lo.x - q.x).max(q.x - hi.x).max(0.0),
+                (lo.y - q.y).max(q.y - hi.y).max(0.0),
+                (lo.z - q.z).max(q.z - hi.z).max(0.0),
+            )
+            .norm();
+            hull.eval(q) + FADE * s + out
+        },
+        toe.bounds,
+    );
+    let solid = closed.solid().smooth_union(faded_toe, BLEND);
+    Ok(LastBase { solid, bounds: closed.bounds, toe_from })
 }
 
 /// `Arc<CachedGridSdf>` as an `Sdf`, so several solids share one grid.

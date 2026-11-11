@@ -11,7 +11,8 @@ boot, the ice skate on a dynamic (rocking) blade holder. Three tracks that meet 
   Phases B1-B7 below.
 - **Track C, the skates**: roller, the boot's sole becomes the chassis's upper (the part that
   rocks), so a whole part, the rivets and the mount plate go away; that is the biggest weight
-  lever we have. Ice, the boot takes a dynamic holder (his Marsblade i2 254 to start).
+  lever we have. Ice, a one-piece skate: the boot runs down into our own rocking holder, with
+  our own runner and rocker insert (nothing proprietary, Jon 2026-11-11).
 
 Everything is modelled in CortenForge and checked against known results first (CLAUDE.md).
 
@@ -421,6 +422,61 @@ rocker table above reads somewhat soft.
    patents before making one (README).
 3. **Bolted at two mounts (Jon's TF9s):** ribbed walls, 81-92 g over a one-piece as stiff.
 
+## Track B, round 2: the hockey boot (2026-11-11)
+
+Jon: "lets not use anything proprietary, so no i2 inserts. can we work on the boot first? it
+would be cool to see the full boot in its glory then go back to the bladeholder".
+`cargo run --release -- boot scans/stand-in/022_fBW_R.ply` (~6 min; `BOOT_VIEWER=1` adds the
+3D viewer's meshes, ~18 min more) builds the whole boot on stand-in 022 (`src/hockey_boot.rs`).
+Renders and the summary are in `docs/boot/`; STLs and the viewer's files go to `out/boot/`. The
+viewer page is `viewer/boot.html` (turn, explode, cut through the ankle or lengthwise).
+
+![The hockey boot, round 2, three-quarter views from the outside front and the inside back](boot/boot_hero.png)
+
+**Placed from the scan, not from fractions of the length.**
+- **The ankle bones:** the outermost skin points each side in the ankle region. On 022 the
+  medial one is at (66, 46, 84) and the lateral at (48, -23, 78) mm, so the medial one is 6 mm
+  higher and 18 mm further forward, as anatomy has it. They set the cuff height, the ankle
+  pockets and the pads.
+- **The dorsal line:** the line over the top of the foot, from the toes up the instep and the
+  front of the shin. Rays are fanned from behind the ankle to find it, and it is centred
+  between the sides of the foot and leg. The throat, tongue, eyelets and laces follow it.
+  Centring matters: the shin's most forward point sits 6-9 mm toward the medial side, and
+  following it put the medial eyelets on the side of the ankle.
+- **The leg:** the scan stops 125 mm up, so above 110 mm the leg is carried up as a prism of
+  its own section.
+
+**The parts** (Jon's list, items 1 and 3-6):
+
+| Part | g | Material | What it is |
+|---|---|---|---|
+| shell | 236.6 | PA 12 | 2.5 mm, cuff trimmed 75 mm above the higher ankle bone (z 159 at the leg's centre, rising 8° to 166 at the back), flared up to 8 mm at its top edge (mostly at the sides, for ankle mobility), ankle pockets bulging 3 mm, an eyelet facing (+1.5 mm) along each side of the throat |
+| toe cap | 21.0 | PA 12 | 1.5 mm over the shell's front, ending at the throat |
+| outsole | 83.0 | PA 12 | 3 mm flat plate under the shell with a small welt; where track C takes over (the roller's sole becomes the chassis's upper) |
+| liner | 38.8 | foam | 4 mm, thickening into a padded collar where the cuff flares |
+| ankle pads | 3.0 | foam | the liner within 24 mm of each ankle bone, 7 mm thick in the pockets |
+| footbed | 8.1 | foam | the liner under the foot |
+| tongue | 14.6 | foam | from under the toe cap to 40 mm above the cuff, padding under the eyelet rows and a raised core filling the throat |
+| tendon guard | 11.0 | TPU | 2.5 mm, overlapping the shell's back, 55 mm above the cuff, kicking 12 mm back at its top |
+| eyelets | 5.6 | 6061 | 7 a side, grommets through the facing |
+| laces | 6.3 | lace | criss-cross, tied in a bow |
+| **total** | **428** | | the same shell in carbon/epoxy at 2.5 mm would weigh 363 g; a laid-up shell would be thinner |
+
+- **Layers (item 6), from the foot out:** 1 mm fit allowance, 4 mm liner (more at the collar
+  and the ankle pads), 2.5 mm shell (+1.5 mm facing), 1.5 mm toe cap. The two sections
+  (`docs/boot/boot_section_*.png`) show the stack.
+- **The throat (item 3):** runs from the toe cap up the instep and the front of the leg to the
+  top, 26 mm wide at the front, 32 mm at the cuff.
+- **Weights:** each part is weighed from its mesh's enclosed volume. At a finer mesh the shell
+  is unchanged (236.6 g at 0.75 mm cells, 236.7 at 0.5) and the tendon guard is within 0.3%.
+  The toe cap needed 0.3 mm cells: it came out 3.9% light at 0.5. `mass_properties` agrees
+  on the tendon guard (11.08 g against 11.02). Foam, TPU and lace densities are assumed.
+- **Estimates until measured on the TF9** (MEASURE.md B1-B7): the cuff, tongue and tendon guard
+  heights, the throat widths, and the eyelet count and spacing.
+- **Not in yet:** Jon's own foot; a forward lean; a tighter heel lock (the last's round 2);
+  puck protection (item 7, the air-gapped shield); a sensor bay (item 8); the fit simulation
+  (B5). And the sole that becomes the roller chassis's upper or the ice holder (track C).
+
 ## Phase 0: the science and the tools (DONE 2026-11-10)
 
 - Sources found and read (docs/RESEARCH.md): the Brock / George Brown poster (2023), the GIH model
@@ -614,17 +670,23 @@ reference: a one-piece goalie skate whose carbon boot runs down into the holder,
 to it). So the boot and the holder are one part. The rocking stays where the i2 has it: inside
 the holder, between a rocker insert and the runner. It mirrors the roller skate, whose sole is
 the rocker's upper: one last, two one-piece skates, each with the rocking joint built in.
-- **Default:** a holder that takes the i2's own runners and rocker inserts (proven, replaceable
-  steel, five radii). Still to settle with Jon: that, or our own runner and insert.
-- **The pitch can match the roller's already:** on the 11 ft runner with the 23 ft insert, the
-  effective radius is 7.46 ft, 0.252°/cm, against the roller's 0.251 (RESEARCH.md 14; the
+- **Nothing proprietary (Jon, 2026-11-11: "lets not use anything proprietary, so no i2
+  inserts").** Our own runner (the steel) and our own rocker insert, designed with the holder.
+  The i2 is only a reference for the feel Jon knows.
+- **The pitch can be matched by choosing our radii:** GIH's eq. 10 gives the effective radius
+  of a runner on a rocker, so the pair can be set to the roller's 0.251°/cm. For reference, the
+  i2's 11 ft runner on its 23 ft insert works out to 7.46 ft, 0.252°/cm (RESEARCH.md 14; the
   insert radii are unverified).
+- **Our own runner is a real job:** hardened stainless steel, cut, heat-treated, ground to a
+  profile, and sharpenable on a normal sharpener, so its blank shape stays standard where the
+  sharpener holds it.
 - **Patents:** check Marsblade's before making one to sell.
 
 ## Jon's list for the boot, the skates and the gear (2026-11-11)
 
-Jon's items, in his words, each with a first engineering take and where it goes. None is built
-yet; the boot work waits on his scans (B1).
+Jon's items, in his words, each with a first engineering take and where it goes. Items 1 and
+3-6 have a first version on the stand-in foot (Track B, round 2: the hockey boot, above); Jon's
+own boot waits on his scans (B1).
 
 1. **"tendon guard".** B4. The guard above the heel. How stiff it is decides how far the ankle
    can extend at push-off, so it's a feel choice, and the part can be made to suit either way: a
@@ -645,8 +707,9 @@ yet; the boot work waits on his scans (B1).
    sets bite and glide, not pitch. The pitch also depends on which rocker insert is in his holder:
    with the factory 23 ft insert (if the catalog figure is right), the ice skate pitches
    0.252°/cm and the 7.5 ft roller rocker 0.251°/cm, so the two already match (RESEARCH.md 14).
-   **Still to measure:** the insert in his holder, and where the runner's lowest point sits under
-   the foot.
+   Since we use no i2 parts (Jon, 2026-11-11), that's the target our own runner and insert
+   copy. **Still to measure, as the feel reference:** the insert in his holder, and where the
+   runner's lowest point sits under the foot.
 3. **"the tongue slot should be adjusted so its from the toes to the heel, direction wise".**
    B4. Round 1 cuts the throat as a straight box, 32% to 70% of the foot's length and 40 mm wide,
    vertical-walled (`boot.rs`). **Jon, 2026-11-11: "probably more like a traditional hockey
@@ -708,5 +771,8 @@ yet; the boot work waits on his scans (B1).
 - Answered 2026-11-11: his ice blades are the i2's factory profile with a 1/2" hollow; the
   tongue slot and cuff like a traditional hockey skate, the cuff flared; the ice skate one
   piece, with the rocker inside the holder.
-- Which rocker insert is in his i2 holder (the inserts may be marked), to confirm the radii.
-- The one-piece ice holder: take the i2's runners and inserts, or our own?
+- Which rocker insert is in his i2 holder (the inserts may be marked), to confirm the radii of
+  the feel he knows.
+- Answered 2026-11-11: the one-piece ice holder takes our own runner and insert, nothing
+  proprietary; and the boot comes first ("it would be cool to see the full boot in its glory
+  then go back to the bladeholder").

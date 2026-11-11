@@ -1,0 +1,19 @@
+hockey boot (track B, round 2 of the boot), scans/stand-in/022_fBW_R.ply
+foot 252.4 x 104.5 mm; scan 125 mm tall, leg carried up as a prism above z 110
+landmarks: medial ankle bone (66, 46, 84), lateral (48, -23, 78), medial side +y
+cuff top z 159 (leg centre) to 166 (back); throat from x 177; tongue top z 193; tendon guard top z 221; 7 eyelets a side
+parts (mass from each mesh's enclosed volume):
+  shell           234.3 cm3   236.6 g  (PA 12 (MJF))
+  toe cap          20.8 cm3    21.0 g  (PA 12 (MJF))
+  outsole          82.2 cm3    83.0 g  (PA 12 (MJF))
+  liner           258.7 cm3    38.8 g  (liner foam (assumed))
+  ankle pads       19.9 cm3     3.0 g  (liner foam (assumed))
+  footbed          54.0 cm3     8.1 g  (liner foam (assumed))
+  tongue           97.0 cm3    14.6 g  (liner foam (assumed))
+  tendon guard      9.2 cm3    11.0 g  (TPU (assumed))
+  eyelets           2.1 cm3     5.6 g  (6061-T6)
+  laces             7.9 cm3     6.3 g  (lace (assumed))
+  total 428 g (shell in PA 12 (MJF); in carbon/epoxy the shell alone would be 363 g); foam and lace densities assumed
+  check: shell 236.60 g at 0.75 mm cells, 236.70 g at 0.5 mm (+0.0%)
+  check: tendon guard 11.02 g at 0.6 mm cells, 11.06 g at 0.3 mm (+0.3%)
+  check: tendon guard by mass_properties at 0.3 mm: 11.08 g

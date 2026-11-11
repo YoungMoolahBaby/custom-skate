@@ -44,6 +44,20 @@ pub const LINER_FOAM: Material = Material {
     source: "assumed 0.15 g/cm3, mid-range for EVA / PE skate-liner foams; replace with a real liner",
 };
 
+/// TPU for a flexible part (the tendon guard): an assumption until a grade is chosen.
+pub const TPU: Material = Material {
+    name: "TPU (assumed)",
+    density: 1200.0,
+    source: "assumed 1.2 g/cm3, typical for 90-95A thermoplastic polyurethanes; replace with a chosen grade",
+};
+
+/// A hockey lace, braided polyester with air in the braid: an assumption.
+pub const LACE: Material = Material {
+    name: "lace (assumed)",
+    density: 800.0,
+    source: "assumed 0.8 g/cm3 for a braided polyester lace (solid polyester ~1.38); weigh a real lace",
+};
+
 /// Titanium Ti-6Al-4V, for bolts.
 pub const TI_6AL_4V: Material = Material {
     name: "Ti-6Al-4V",

@@ -14,8 +14,8 @@ lower frame and four 72 mm wheels. A first layout, not a design yet (see Round 1
 
 ![The ice skate, round 1: the same boot on a holder placeholder and runner, from the side, above, the front and three-quarters](docs/round1/ice_skate.png)
 
-*The ice skate: the same boot on a 254 mm holder. The holder is a placeholder until the real one
-(a Marsblade i2) is measured.*
+*The ice skate: the same boot on a 254 mm holder, a placeholder for our own one-piece rocking
+holder (our own runner and rocker insert; nothing proprietary).*
 
 A Marsblade-style frame is split in two. A rounded upper chassis carries the boot and rocks
 heel-to-toe on a flat lower chassis that carries the wheels, held together by a sprung coupling.
@@ -75,11 +75,12 @@ found a gain only in backward skating. Details and numbers are in `docs/RESEARCH
 ## Run
 
 ```
-cargo run --release -- check         # every tool used, against known results (26/26)
+cargo run --release -- check         # every tool used, against known results (32/32)
 cargo run --release -- pitch         # the pitch tables above
 cargo run --release -- scan <file>   # measure a foot scan (OBJ, STL, PLY)
 cargo run --release -- round1 <scan> # the whole skate on one foot -> out/round1 (STL, PNG)
 cargo run --release -- chassis       # the round-2 roller chassis alone: weighed, rocked, checked -> out/chassis
+cargo run --release -- boot <scan>   # the hockey boot: every part meshed, weighed, drawn -> out/boot
 ```
 
 Builds go to `D:/cargo-target/custom-skate` (`.cargo/config.toml`, local only). The first
@@ -146,11 +147,34 @@ the rocker arc, rolling on the ledge above the axles. All four wheels stay down.
 
 Pictures and numbers: `docs/round2/`, and `docs/PLAN.md` (Round 2).
 
+## The boot: a hockey boot from the scan
+
+![The hockey boot, round 2: three-quarter views from the outside front and the inside back](docs/boot/boot_hero.png)
+
+*Round 2 of the boot, on the stand-in foot: shell, toe cap, outsole, liner with ankle pads and
+footbed, tongue, tendon guard, eyelets and laces. `cargo run --release -- boot <scan>`.*
+
+- **A traditional hockey boot, as Jon asked:** the cuff wraps the ankle and flares at its top
+  edge for ankle mobility, and the throat runs from the toe cap up to the top, with a full tongue.
+- **Placed from the scan.** The ankle bones set the cuff, the ankle pockets and the pads. The
+  line over the top of the foot and up the shin sets the throat, the tongue, the eyelets and the
+  laces. So the same code fits Jon's foot once it's scanned.
+- **428 g in all**, with the shell, toe cap and outsole in printed nylon (PA 12): shell 237 g,
+  outsole 83 g, toe cap 21 g, liner, ankle pads and footbed 50 g, tongue 15 g, tendon guard 11 g,
+  eyelets and laces 12 g. The foam, felt and lace densities are assumed.
+- **Estimates until measured:** the heights of the cuff, tongue and tendon guard, and the
+  eyelet spacing (`docs/MEASURE.md`, B1-B7, on the TF9).
+- **Next for the boot:** Jon's own scans, puck protection (an air-gapped shield), the fit
+  simulation. Then the sole becomes the roller chassis's upper, and the ice skate's one-piece
+  holder takes our own runner and rocker insert; nothing proprietary.
+
+Pictures, the layer sections and the numbers: `docs/boot/`, and `docs/PLAN.md` (Track B, round 2).
+
 ## Status
 
 Phase 0 (the science, the pitch model, the mass tool checked), round 1 (the whole skate on an
-example foot), round 2's first step (the chassis to weight) and the like-for-like FEM sizing of
-step 2 are done. See `docs/PLAN.md` for what comes next and `docs/CORTENFORGE.md` for what
+example foot), round 2's first step (the chassis to weight), the like-for-like FEM sizing of
+step 2 and round 2 of the boot (a hockey boot from the scan) are done. See `docs/PLAN.md` for what comes next and `docs/CORTENFORGE.md` for what
 CortenForge did well and where it fell short.
 
 ## Patents

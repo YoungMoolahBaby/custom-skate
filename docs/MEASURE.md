@@ -49,13 +49,31 @@ sides of the widest part (the ball). Both feet.
 | 9 | Rocker plate | Which plate is in (any label or number on it)? | |
 | 10 | Rocking | Press the toe down by hand: roughly how far does the boot tip, and does it spring back? | |
 
+## TF9 boot: the shape to copy
+
+The boot model's heights are hand estimates until these are measured. Skate standing on a table;
+heights from the table, or say if from the bottom of the boot's sole.
+
+| # | What | How | Value |
+|---|---|---|---|
+| B1 | Cuff top at the side | At the ankle bones, inside and outside. | |
+| B2 | Cuff top at the back | Where the shell ends and the tendon guard starts. | |
+| B3 | Tendon guard top | Its highest point. | |
+| B4 | Tongue top | Its highest point, laced up. | |
+| B5 | Eyelets | How many a side, and the gap between the two rows when laced (bottom pair and top pair). | |
+| B6 | Throat start | From the toe of the boot to the lowest eyelet pair. | |
+| B7 | Forward lean (optional) | Does the cuff lean forward? A side photo with a ruler shows it. | |
+
 ## Ice skate, i2 holder (254)
+
+We won't use any i2 parts (Jon, 2026-11-11: nothing proprietary). These measure the feel he
+knows, which our own runner and rocker insert are designed to match.
 
 | # | What | How | Value |
 |---|---|---|---|
 | 11 | Boot | Which boot is the i2 on (make, size)? | |
 | 12 | Stack height | Skate on a table: table to the bottom of the sole, heel and toe. | |
-| 12b | i2 mount pattern | Rivets in the front and rear groups, and the centre-to-centre distance between the groups. The custom ice boot's sole must match it. A photo from below with a ruler is ideal. (Less needed now that the ice skate is to be one piece, but it shows how the holder sits under the boot.) | |
+| 12b | i2 mount pattern (optional) | Rivets in the front and rear groups, and the centre-to-centre distance between the groups. A photo from below with a ruler is ideal. Not needed for our skate (one piece, our own holder), but it shows how a holder sits under a boot. | |
 | 12c | i2 rocker insert | Which insert is in the holder: any marking on it (a radius in ft, a number or a colour)? The factory one is said to be 23 ft. | |
 | 12d | Runner's lowest point | Skate on a flat table, blade down: where along the boot does the runner touch (distance from the heel's back edge)? A side photo with a ruler is ideal. | |
 

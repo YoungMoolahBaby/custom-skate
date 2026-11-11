@@ -40,29 +40,9 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
     let foot = foot::build(&raw, &m, 1.5, 24.0)?;
     println!("  standard frame: length {:.1}, width {:.1}, height {:.1} mm", foot.length, foot.width, foot.height);
 
-    // The base of the last: the foot closed by 12 mm (the arch and small hollows filled; a
-    // footbed fills the arch in a real skate), blended with the convex hull of the forefoot (a
-    // toe box). Closing alone can't make a toe box: toes are ~20 mm cylinders side by side, and a
-    // closing of radius r leaves a groove ~a^2/2r deep between them (7 and 18 mm both left
-    // visible grooves).
-    let closing = 12.0;
-    let closed = foot.closed(closing, 1.5)?;
-    let toe_from = 0.62 * foot.length;
-    let toe = foot::forefoot_hull(&foot, toe_from, 1.5, 14.0)?;
-    // The toe box fades in: shrunk by up to `fade` mm over its first `fade_len` mm, so it rises out
-    // of the foot instead of starting with a step. (A 4 mm smooth union left a visible step; a
-    // 10 mm one hid it but swelled the whole forefoot ~2.5 mm, since the hull hugs the foot there.)
-    let (fade, fade_len) = (8.0, 60.0);
-    let hull = toe.clone();
-    let faded_toe = Solid::user_fn(
-        move |q: nalgebra::Point3<f64>| {
-            let s = ((toe_from + fade_len - q.x) / fade_len).clamp(0.0, 1.0);
-            hull.eval(q) + fade * s
-        },
-        toe.bounds,
-    );
-    let blend = 2.0;
-    let base = closed.solid().smooth_union(faded_toe, blend);
+    // The base of the last (foot::last_base): the foot closed by 12 mm + a convex toe box.
+    let lb = foot::last_base(&foot, 3.0 * 1.5 + 2.0)?;
+    let base = lb.solid;
     if std::env::var_os("ROUND1_DEBUG").is_some() {
         let base_mesh = mesh_of(&base, 1.5);
         render(&[Layer::solid(&base_mesh, [0.6, 0.6, 0.6])], &standard_views(), 1.5, &out.join("debug_base.png"))
@@ -70,10 +50,13 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
     }
 
     let p = BootParams::default();
-    let b = boot::build(base, closed.bounds, foot.length, p);
+    let b = boot::build(base, lb.bounds, foot.length, p);
     println!(
-        "  last base: foot closed by {closing} mm + convex toe box from {:.0}% of length, faded in over {fade_len} mm, blended {blend} mm",
-        toe_from / foot.length * 100.0
+        "  last base: foot closed by {} mm + convex toe box from {:.0}% of length, faded in over {} mm, blended {} mm",
+        foot::CLOSING,
+        lb.toe_from / foot.length * 100.0,
+        foot::FADE_LEN,
+        foot::BLEND
     );
     println!(
         "boot (round 1): ease {} + liner {} + wall {} mm, trim at {} mm, sole plate {} mm, sole bottom z {:.1}",

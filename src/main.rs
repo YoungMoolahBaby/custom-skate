@@ -5,6 +5,7 @@
 //! - `scan <file>`: load a foot scan (OBJ, STL, PLY) and measure it.
 //! - `round1 <scan> [out]`: the whole skate on one foot, round-1 quality.
 //! - `chassis [foot length mm] [out]`: the round-2 roller chassis on its own, weighed and checked.
+//! - `boot <scan> [out]`: the hockey boot on one foot, every part meshed, weighed and drawn.
 
 use custom_skate::check;
 use custom_skate::pitch::{FT, Rocker, fixed_alpha, passive_rocking_stiffness, roller_alpha};
@@ -56,8 +57,19 @@ fn main() {
                 std::process::exit(1);
             }
         }
+        "boot" => {
+            let Some(path) = std::env::args().nth(2) else {
+                eprintln!("usage: boot <scan> [out dir]");
+                std::process::exit(2);
+            };
+            let out = std::env::args().nth(3).unwrap_or_else(|| "out/boot".into());
+            if let Err(e) = custom_skate::hockey_boot::run(std::path::Path::new(&path), std::path::Path::new(&out)) {
+                eprintln!("{e}");
+                std::process::exit(1);
+            }
+        }
         other => {
-            eprintln!("unknown mode {other:?}; modes: check, pitch, scan, round1, chassis");
+            eprintln!("unknown mode {other:?}; modes: check, pitch, scan, round1, chassis, boot");
             std::process::exit(2);
         }
     }
