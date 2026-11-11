@@ -226,8 +226,36 @@ sufficiently related to predict function from form", Proc R Soc B, doi:10.1098/r
   files are fetched by hand in a browser:
   https://datadryad.org/dataset/doi:10.5061/dryad.g4f4qrfwt
 
+## 13. Loads on a skate frame (round 2, 2026-11-10)
+
+What the strength checks (`src/strength.rs`) start from. No source gives frame design loads for
+hockey yet, so the cases are assumptions built on these:
+- **EN 13843:2009**, "Roller sports equipment - Inline skates - Safety requirements and test
+  methods" (CEN). From the free preview of the 2003 edition (iTeh, SIST EN 13843:2003): users of
+  20-100 kg (class A; class B up to 60 kg and feet up to 260 mm); the chassis (supports, axles,
+  wheels, bearings, fixings) "shall withstand the impact loads, the constant load and the static
+  load to which it is exposed during use", judged by function after the tests of clause 5. The
+  2009 contents list a chassis-to-shoe attachment test and a vertical impact test. The load values
+  are past the preview's last page (paid). **Used**: 100 kg, the top of class A.
+- **Brock / George Brown poster** (section 1): in-skate peak forces up to 1196 N on ice (agility
+  turns, fixed holder), from insoles, which miss shear.
+- **van der Kruk et al., "Wireless instrumented klapskates for long-track speed skating"**,
+  Sports Engineering 19 (2016) 273-281, doi:10.1007/s12283-016-0208-8 (TU Delft / VU). Force
+  sensors between shoe and blade measure normal and lateral force in the skate's own frame. Their
+  introduction cites an earlier single-skater study: peak lateral force 0.3-0.6 BW, 25-45% of the
+  peak normal force (so the normal peak is near 1.3 BW). Speed skating, n = 1, read second-hand
+  (abstract and excerpts; the full text is paywalled).
+- **Stidwill (McGill thesis) and Stidwill, Pearsall, Dixon, Turcotte, "Force transducer system
+  for measurement of ice hockey skating force"**: strain gauges on an ice hockey blade holder
+  measured vertical and medial-lateral force in forward skating (11 male players, resolution
+  1.9 N). The force numbers weren't in what we could read. The best next source for hockey.
+
+**The cases used** (assumptions, `strength::LOADS`): 100 kg skater; stride 1.5 BW on one skate,
+repeated (fatigue); impact 3 BW once (static); lateral / normal 0.45 in the skate's frame.
+
 ## Still to find
 
+- Frame design loads for hockey: Stidwill's thesis numbers; the EN 13843 test loads (paid).
 - How a hockey boot is built and what each part does: shell, toe cap, tendon guard, liner, tongue,
   footbed, eyelets; materials, wall thicknesses, weights; any puck-protection standard. Ice vs
   roller boots: what differs.
@@ -238,6 +266,5 @@ sufficiently related to predict function from form", Proc R Soc B, doi:10.1098/r
   one, or find drawings).
 - The R1's bushing: material, durometer, size; the exact radii of the four inserts; how far the
   rocker can travel.
-- Skating loads beyond in-skate pressure: lateral and torsional loads on an inline frame (look for
-  inline frame testing standards, e.g. EN 13843 / ASTM F1714 for inline skates).
+- Torsional loads on an inline frame, and ASTM F1714 if it has frame tests.
 - The full Footwear Science paper (forward vs backward, sample size).

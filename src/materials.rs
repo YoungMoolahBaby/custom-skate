@@ -57,3 +57,41 @@ pub const PU_BUSHING: Material = Material {
     density: 1200.0,
     source: "assumed 1.2 g/cm3, typical cast polyurethane elastomers 1.1-1.25",
 };
+
+/// Mechanical properties for the strength checks (MPa, except `nu`). `fatigue` is the
+/// fully reversed (R = -1) fatigue strength at `fatigue_cycles`, unnotched.
+#[derive(Debug, Clone, Copy)]
+pub struct Strength {
+    pub name: &'static str,
+    pub e: f64,
+    pub nu: f64,
+    pub yield_: f64,
+    pub uts: f64,
+    pub fatigue: f64,
+    pub fatigue_cycles: f64,
+    pub source: &'static str,
+}
+
+/// 7075-T6 plate/bar.
+pub const AL_7075_T6_STRENGTH: Strength = Strength {
+    name: "7075-T6",
+    e: 71_700.0,
+    nu: 0.33,
+    yield_: 503.0,
+    uts: 572.0,
+    fatigue: 159.0,
+    fatigue_cycles: 5e8,
+    source: "ASM Aerospace Specification Metals / MatWeb, 7075-T6: E 71.7 GPa, nu 0.33, yield 503 MPa, UTS 572 MPa, fatigue strength 159 MPa at 5e8 cycles (R. R. Moore, completely reversed)",
+};
+
+/// Ti-6Al-4V (grade 5, annealed), bolts.
+pub const TI_6AL_4V_STRENGTH: Strength = Strength {
+    name: "Ti-6Al-4V",
+    e: 113_800.0,
+    nu: 0.342,
+    yield_: 880.0,
+    uts: 950.0,
+    fatigue: 510.0,
+    fatigue_cycles: 1e7,
+    source: "ASM Aerospace Specification Metals / MatWeb, Ti-6Al-4V grade 5 annealed: E 113.8 GPa, yield 880 MPa, UTS 950 MPa, fatigue 510 MPa unnotched at 1e7",
+};

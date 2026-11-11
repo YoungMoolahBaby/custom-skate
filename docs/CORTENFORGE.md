@@ -34,6 +34,28 @@ type (bug, docs, API, perf, setup, works), date, file:line under
   shrinking one field is a no-op: a morphological closing needs the grown surface meshed and
   re-distanced (`foot::Foot::closed`).
 
+- **works** (2026-11-10, round 2): `Solid::evaluate` sampled on a plane gives exact section
+  properties for beam checks (`strength::section`, with `mass_properties`' partial-cell weight in
+  2D): a 30 x 6 bar, an offset I-beam and a 20/14 tube come out at their closed-form area, second
+  moment and centroid to the printed digits at 0.1 mm cells (`check`). A truss drawn as a 2D
+  `user_fn` profile (members as capsules joined by a smooth minimum, bosses, holes) and extruded
+  composes with primitives and booleans into a whole chassis: 8 parts weighed at 0.25 mm in ~21 s.
+- **note** (2026-11-10, round 2): `mass_properties` gives cells within half a cell of the
+  surface a partial weight (mechanism/mass.rs:234, `clamp(0.5 - d / cell)`), which is right for
+  mass. But the intersection of two parts 0.1 mm apart (a rocker on its track) then weighs as a
+  few mm3 of "overlap" at 0.25 mm cells (2 mm3 at rest, 11 mm3 rocked; 0 at 0.1 mm). For clash
+  checks, count only cells whose centres are inside both (`round2::overlap_mm3`).
+
+## sim-opt
+
+- **API** (2026-11-10, round 2): the optimisers (`Sa`, `RicherSa`, `Pt`; algorithm.rs:83-110)
+  implement sim-ml-chassis's `Algorithm` and train a `Policy` on a `VecEnv` built from a sim-core
+  `Model` (sim-ml-chassis vec_env.rs:91-118). There is no plain black-box minimise
+  (`f(x) -> cost` over bounded parameters), so a static design search (chassis mass under stress
+  limits) would have to pose as a policy acting in a dummy physics model. Instead: a parameter
+  sweep (`examples/sweep_frame.rs`); with the stresses well under their limits only a few
+  parameters are active.
+
 ## cf-geometry
 
 - **works** (2026-11-10): `convex_hull` (convex_hull.rs:167, Quickhull) takes 10,074 forefoot
@@ -82,6 +104,10 @@ type (bug, docs, API, perf, setup, works), date, file:line under
 - Not used yet. Hyperelastic only (`NeoHookean`, `Yeoh`, lib.rs:1-14), backward Euler, SDF → tet
   via isosurface stuffing. Phase 3 tries it on aluminium at small strain against a cantilever
   closed form; phase 4 uses it for the rubber bushing.
+- **note** (2026-11-10, round 2): promising for that: its own tests check bending against beam
+  theory (tests/bonded_bilayer_beam.rs: a cantilever vs Euler-Bernoulli, converging with
+  refinement; tests/slender_bending_matches_analytic.rs; tests/tet10_bending_locking.rs), and
+  run static problems as backward Euler with a long time step (dt = 1 s). Next step of round 2.
 
 ## Setup
 
@@ -113,3 +139,8 @@ Nice-to-haves for CortenForge, with what this project built instead.
   scan-derived solids. Instead: `foot::Foot::closed` meshes and re-grids the grown surface.
 - **Weld in the clip** (2026-11-10): `clip_mesh_against_plane` could share the cut vertices, so
   the cut is one boundary loop straight away.
+- **A black-box optimiser** (2026-11-10, round 2): `minimize(f, x0, bounds)` in sim-opt for
+  design searches that have no dynamics (mass under stress limits). Instead: a parameter sweep.
+- **Section properties and interference** (2026-11-10, round 2): `Solid::section(plane)` (area,
+  centroid, second moments) for beam checks, and `Solid::overlap_volume(&other)` that ignores the
+  partial-cell band, for clash checks. Instead: `strength::section`, `round2::overlap_mm3`.

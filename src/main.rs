@@ -3,6 +3,8 @@
 //! - `check` (default): the tools this project builds on, against known results.
 //! - `pitch`: how a rocker turns weight shift into foot pitch, ice vs roller.
 //! - `scan <file>`: load a foot scan (OBJ, STL, PLY) and measure it.
+//! - `round1 <scan> [out]`: the whole skate on one foot, round-1 quality.
+//! - `chassis [foot length mm] [out]`: the round-2 roller chassis on its own, weighed and checked.
 
 use custom_skate::check;
 use custom_skate::pitch::{FT, Rocker, fixed_alpha, passive_rocking_stiffness, roller_alpha};
@@ -40,8 +42,22 @@ fn main() {
                 std::process::exit(1);
             }
         }
+        "chassis" => {
+            let length = match std::env::args().nth(2) {
+                Some(s) => s.parse::<f64>().unwrap_or_else(|_| {
+                    eprintln!("usage: chassis [foot length mm] [out dir]");
+                    std::process::exit(2);
+                }),
+                None => custom_skate::round2::STAND_IN_LENGTH,
+            };
+            let out = std::env::args().nth(3).unwrap_or_else(|| "out/chassis".into());
+            if let Err(e) = custom_skate::round2::run(length, std::path::Path::new(&out)) {
+                eprintln!("{e}");
+                std::process::exit(1);
+            }
+        }
         other => {
-            eprintln!("unknown mode {other:?}; modes: check, pitch, scan, round1");
+            eprintln!("unknown mode {other:?}; modes: check, pitch, scan, round1, chassis");
             std::process::exit(2);
         }
     }

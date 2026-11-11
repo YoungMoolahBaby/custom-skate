@@ -54,9 +54,57 @@ summary are in `docs/round1/`; STLs go to `out/round1/` (not in git).
 - Not in round 1: strength (phase 3), the spring rate (phase 4), dynamics (phase 5), heel lock,
   tendon guard, eyelets, tongue, variable wall thickness, the i2's real mounting pattern.
 
-**Round 2** (next): the chassis to the weight target (pocket the rails, lighten the bridge and
-rocker, then sim-opt), a first strength check of the rails and rocker, the last shaped tighter at
-the heel and midfoot with sim-soft pressures, then Jon's own foot (ruler first, scans later).
+## Round 2: the chassis to weight (step 1 DONE 2026-11-10)
+
+Jon: "start round 2". Plan: (1) the chassis to the weight target, (2) strength, (3) the last
+tighter at the heel and midfoot, (4) Jon's own foot. `cargo run --release -- chassis` (~2 min,
+`src/frame.rs`, `src/strength.rs`, `src/round2.rs`) builds the chassis alone, weighs it, checks
+clashes at rest and rocked to both ends, runs the hand-formula checks, renders `docs/round2/`.
+
+**What following the loads by hand showed** (`strength.rs`; loads in RESEARCH.md 13):
+- Vertical loads barely size a frame: round 1's rails were ~5x stronger than they needed to be.
+- Round 1's 6 mm rocker was the weak part: it bridges from heel to ball over the contact, ~100 N m
+  at 3 BW on a 30 x 6 mm section, past yield.
+- **The real driver is roll.** The lateral push at the wheels (0.3-0.6 BW in the skate's frame,
+  speed skating) acts ~80 mm below the sole. A rocking joint has to pass that roll moment. Round
+  1's rocker sat on top, 79 mm up and 30 mm wide: the vertical load alone holds a lateral /
+  vertical ratio of only ~0.19 before one side lifts, so everything above that must go through
+  bending walls or the bolt. This is probably where the R1's weight goes too.
+
+**So round 2 moves the rocker down and out** (`frame.rs`): the upper is a web under the sole and
+two walls hanging outside the lower rails; each wall's foot is the rocker arc (7.5 ft), rolling on a
+ledge on the rail's outer face just above the axle heads. The tracks are 34 mm apart and 46 mm up,
+so the vertical load alone holds lateral / vertical up to 0.37. Both the walls and the rails are
+Warren trusses in their own planes (deep, so stiff for their weight). Bolt + bushing in a ring
+between the middle wheels; two ties across the walls' feet through the rails' truss windows.
+
+**Result (stand-in foot 252 mm, 4 x 72):**
+- **174.2 g** with axles, spacers, bolt, nut and bushing: upper 57.0, ties 4.0, lower 77.9, axles
+  21.7, spacers 5.8, bolt 3.9, nut 1.3, bushing 2.7. Round 1 was 281.4 g; one-piece 7075 frames
+  are 170-184 g (bigger sizes); the R1 282-302 g.
+- No clashes at rest or rocked +-50 mm (+-1.25 deg); the frame leans to 64 deg before touching
+  the ground, after the axle heads (61 deg).
+- Hand checks (100 kg skater; stride 1.5 BW fatigue, impact 3 BW static): worst stress / allowable
+  0.74 (the ledge and bottom chord between bosses, 125 MPa at the stride). Upper 54 MPa, lower
+  65 MPa, wall feet 119 MPa, axles <= 88 MPa, contact 64 MPa peak.
+- **Like for like:** a one-piece built from the same members (same rails, wheels, stack, axles)
+  weighs 110.9 g, so the rocker costs 63.3 g. The first sizing (2.5 mm rails and walls) weighed
+  221.4 g and cost 101 g over its one-piece, about the R1's premium over real one-pieces.
+- Our one-piece at 111-134 g is lighter than real ones (170-184 g, bigger sizes), so our members
+  are probably on the light side of what frame makers use, likely for impact, wear and lateral
+  stiffness. The 174 g is a paper weight until the lateral case is checked.
+- Sweep (`examples/sweep_frame.rs`): the lower truss's top chord is essential (without it the
+  lower is 3.8x over); the ties are 4 g; 1.8 mm members reach 168 g at 0.82.
+- sim-opt didn't fit a mass search: its optimisers train policies on sim-core environments, there
+  is no plain minimise (CORTENFORGE.md). The sweep did the job, and few parameters are active.
+
+**Not checked yet, and it decides the design:** the lateral push (662 N at the stride) bending the
+walls and rails sideways, torsion, buckling of the 2 mm walls, stress at holes and corners.
+
+**Next (round 2, step 2):** FEM. Try sim-soft on aluminium at small strain against a cantilever
+closed form; if it passes, mesh the chassis (sim-soft's SDF to tet) and run the lateral case. Then
+size for it (the 2.0 vs 2.5 mm question), then the coupling's rate (phase 4). Steps 3-4 as
+planned: the last with sim-soft pressures, then Jon's foot.
 
 ## Phase 0: the science and the tools (DONE 2026-11-10)
 

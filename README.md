@@ -75,10 +75,11 @@ found a gain only in backward skating. Details and numbers are in `docs/RESEARCH
 ## Run
 
 ```
-cargo run --release -- check         # every tool used, against known results (18/18)
+cargo run --release -- check         # every tool used, against known results (23/23)
 cargo run --release -- pitch         # the pitch tables above
 cargo run --release -- scan <file>   # measure a foot scan (OBJ, STL, PLY)
 cargo run --release -- round1 <scan> # the whole skate on one foot -> out/round1 (STL, PNG)
+cargo run --release -- chassis       # the round-2 roller chassis alone: weighed, rocked, checked -> out/chassis
 ```
 
 Builds go to `D:/cargo-target/custom-skate` (`.cargo/config.toml`, local only). The first
@@ -98,11 +99,29 @@ this page is its roller skate.
 
 More pictures and the numbers: `docs/round1/`, and `docs/PLAN.md` (Round 1).
 
+## Round 2: the chassis to weight
+
+Following the loads by hand changed the layout. Vertical loads hardly size a frame. What does is
+**roll**: the sideways push at the wheels acts ~80 mm below the sole, and a rocking joint has to
+pass that moment across. Round 1's rocker sat on top of the lower frame, narrow and high, where
+it can't. So in round 2 the upper hangs two truss walls outside the lower rails. Each wall's foot
+is the rocker arc, and it rolls on a low ledge on the rail. The vertical load alone then holds
+the roll up to a sideways / vertical ratio of 0.37, against ~0.19 for round 1.
+
+- **174 g** with axles, spacers and the coupling: in the 170-184 g class of one-piece frames, down
+  from round 1's 281 g. All vertical-load checks pass by hand formulas (worst at 0.74 of its
+  allowable, for a 100 kg skater at 1.5x body weight striding and 3x landing).
+- Like for like: a one-piece built from the same members weighs 111 g, so the rocker costs 63 g.
+- Not checked yet, and it decides the design: the sideways push bending the 2 mm walls and rails.
+  That needs FEM, the next step.
+
+Pictures and numbers: `docs/round2/`, and `docs/PLAN.md` (Round 2).
+
 ## Status
 
-Phase 0 (the science, the pitch model, the mass tool checked) and round 1 (the whole skate on an
-example foot) are done. See `docs/PLAN.md` for what comes next and `docs/CORTENFORGE.md` for what
-CortenForge did well and where it fell short.
+Phase 0 (the science, the pitch model, the mass tool checked), round 1 (the whole skate on an
+example foot) and round 2's first step (the chassis to weight) are done. See `docs/PLAN.md` for
+what comes next and `docs/CORTENFORGE.md` for what CortenForge did well and where it fell short.
 
 ## Patents
 

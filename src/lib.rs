@@ -3,6 +3,7 @@
 
 pub mod boot;
 pub mod chassis;
+pub mod frame;
 pub mod check;
 pub mod fit;
 pub mod foot;
@@ -10,4 +11,6 @@ pub mod materials;
 pub mod pitch;
 pub mod render;
 pub mod round1;
+pub mod round2;
 pub mod scan;
+pub mod strength;

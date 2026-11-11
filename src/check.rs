@@ -41,6 +41,8 @@ pub fn run() -> Tally {
     mass_checks(&mut t);
     println!("scan measuring (mesh-io, mesh-measure, scan-prep-core) on a tilted ellipsoid");
     scan_checks(&mut t);
+    println!("strength tools (round 2): sections, wheel loads, the rolled rocker");
+    strength_checks(&mut t);
     println!("scan frame on real stand-in scans (Schuster et al. 2024, pre-aligned: x heel to toe, z up)");
     stand_in_checks(&mut t);
     t
@@ -290,4 +292,88 @@ fn mass_checks(t: &mut Tally) {
     let m = mass_properties(&rod, AL_7075_T6.density, 0.25).expect("rod has mass");
     let com_err = (m.center_of_mass.coords - offset).norm();
     t.item("rod centre of mass at its offset", com_err < 0.01, format!("off by {com_err:.4} mm"));
+}
+
+/// Round 2's strength tools: the section sampler against closed-form sections, the wheel-load
+/// model against statics, and the rolled rocker against where it must touch.
+fn strength_checks(t: &mut Tally) {
+    use crate::strength::{lower_moment, section, wheel_reactions};
+    let x_to_y = UnitQuaternion::from_axis_angle(&Vector3::x_axis(), FRAC_PI_2);
+    let along_x = UnitQuaternion::from_axis_angle(&Vector3::y_axis(), FRAC_PI_2);
+    let close = |a: f64, b: f64, tol: f64| ((a - b) / b).abs() < tol;
+
+    // A 30 (y) x 6 (z) bar along x: A = 180, I = b h^3 / 12 = 540, c = 3.
+    let bar = Solid::cuboid(Vector3::new(50.0, 15.0, 3.0));
+    let s = section(&bar, 0.0, 0.1, None).expect("bar section");
+    t.item(
+        "section of a 30 x 6 bar: A 180, I 540 mm4, c 3 (within 1%)",
+        close(s.area, 180.0, 0.01) && close(s.i, 540.0, 0.01) && close(s.c(), 3.0, 0.02),
+        format!("A {:.2}, I {:.1}, c {:.3}", s.area, s.i, s.c()),
+    );
+    // An I-section 30 wide, 20 deep, 3 mm flanges and web: I = 30*20^3/12 - 27*14^3/12.
+    let i_exact = 30.0 * 8000.0 / 12.0 - 27.0 * 2744.0 / 12.0;
+    let ibeam = Solid::cuboid(Vector3::new(50.0, 15.0, 1.5))
+        .translate(Vector3::new(0.0, 0.0, 8.5))
+        .union(Solid::cuboid(Vector3::new(50.0, 15.0, 1.5)).translate(Vector3::new(0.0, 0.0, -8.5)))
+        .union(Solid::cuboid(Vector3::new(50.0, 1.5, 7.5)))
+        .translate(Vector3::new(0.0, 4.0, 11.0));
+    let s = section(&ibeam, 0.0, 0.1, None).expect("I section");
+    t.item(
+        &format!("section of an I-beam (offset): I {i_exact:.0} mm4, centroid at z 11 (within 1%)"),
+        close(s.i, i_exact, 0.01) && (s.zc - 11.0).abs() < 0.05,
+        format!("A {:.1} (exact 222), I {:.0}, zc {:.3}", s.area, s.i, s.zc),
+    );
+    // A tube along x, 20 / 14 mm: I = pi (D^4 - d^4) / 64.
+    let i_tube = PI * (20f64.powi(4) - 14f64.powi(4)) / 64.0;
+    let tube = Solid::cylinder(10.0, 40.0).subtract(Solid::cylinder(7.0, 41.0)).rotate(along_x);
+    let s = section(&tube, 0.0, 0.1, None).expect("tube section");
+    t.item(
+        &format!("section of a 20/14 tube: I {i_tube:.0} mm4 (within 1%)"),
+        close(s.i, i_tube, 0.01),
+        format!("A {:.1} (exact {:.1}), I {:.0}", s.area, PI * (100.0 - 49.0), s.i),
+    );
+    let _ = x_to_y;
+
+    // Four wheels 76 mm apart, load at the centre: R = P/4 each, M(centre) = P (38 + 114) / 4 = 38 P.
+    let ax = [-114.0, -38.0, 38.0, 114.0];
+    let r = wheel_reactions(&ax, 0.0, 1000.0);
+    let m0 = lower_moment(0.0, &ax, 0.0, 1000.0);
+    // Off centre: statics must close (sum R = P, sum R x = P e) and the moment past the last wheel is 0.
+    let e = 40.0;
+    let r2 = wheel_reactions(&ax, e, 1000.0);
+    let fsum: f64 = r2.iter().sum();
+    let msum: f64 = r2.iter().zip(&ax).map(|(ri, a)| ri * a).sum();
+    let m_end = lower_moment(200.0, &ax, e, 1000.0);
+    t.item(
+        "rigid frame on 4 wheels: P/4 each and 38 P mm at the centre; statics close off centre",
+        r.iter().all(|ri| (ri - 250.0).abs() < 1e-9)
+            && (m0 - 38_000.0).abs() < 1e-6
+            && (fsum - 1000.0).abs() < 1e-9
+            && (msum - 1000.0 * e).abs() < 1e-6
+            && m_end.abs() < 1e-6,
+        format!("R {r:.1?}, M(0) {m0:.1} N mm; off centre sum R {fsum:.3}, sum R x {msum:.3}, M past the end {m_end:.2e}"),
+    );
+
+    // The rolled rocker: at e = +50 mm the wall's arc must sit 0.1 mm above the ledge at
+    // x = xc + 50 and lift clear of it 30 mm either side by (30^2 / 2r).
+    let p = crate::frame::FrameParams::default();
+    let f = crate::frame::build(0.0, 252.4, p);
+    let l = f.layout;
+    let up = crate::frame::rolled(&f.upper, &l, p.rocker_r, 50.0);
+    let y = 0.5 * (l.y_wi + l.y_wo);
+    let bottom_at = |x: f64| {
+        // Walk up from the ledge until inside the wall.
+        let mut z = l.z_t - 0.5;
+        while up.evaluate(&nalgebra::Point3::new(x, y, z)) > 0.0 && z < l.z_t + 10.0 {
+            z += 0.005;
+        }
+        z - l.z_t
+    };
+    let (b0, bm, bp) = (bottom_at(l.xc + 50.0), bottom_at(l.xc + 20.0), bottom_at(l.xc + 80.0));
+    let rise = 900.0 / (2.0 * p.rocker_r);
+    t.item(
+        "rolled rocker touches its ledge at the new contact (0.1 mm gap) and rises x^2/2r beside it",
+        (b0 - 0.1).abs() < 0.02 && (bm - 0.1 - rise).abs() < 0.03 && (bp - 0.1 - rise).abs() < 0.03,
+        format!("gap at +50 {b0:.3} mm; at +20 {bm:.3} and +80 {bp:.3} (expected {:.3})", 0.1 + rise),
+    );
 }

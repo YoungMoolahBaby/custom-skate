@@ -1,0 +1,34 @@
+round-2 roller chassis, foot length 252.4 mm (z = 0 at the boot sole)
+  4 x 72 mm wheels, pitch 76 mm; rocker radius 2286 mm (7.5 ft); travel +-50 mm = +-1.25 deg of foot pitch
+  stack: ground 81.5 mm below the sole (round 1: 85.0); rocker tracks 46.0 mm above the ground, 34.0 mm apart
+mass (0.25 mm cells):
+  upper (web, rocker walls)              57.0 g  (7075-T6)
+  ties x2                                 4.0 g  (7075-T6)
+  lower (rails, ledges, cross-member)    77.9 g  (7075-T6)
+  axles x4                               21.7 g  (7075-T6)
+  spacers (bearing + side) x4             5.8 g  (6061-T6)
+  bolt                                    3.9 g  (Ti-6Al-4V)
+  nut                                     1.3 g  (Ti-6Al-4V)
+  bushing                                 2.7 g  (polyurethane (assumed))
+  total 174.2 g  (round 1: 281.4 g without spacers or nut; one-piece 7075 frames 170-184 g with axles and spacers; Marsblade R1 282-302 g) (21.0 s)
+  one-piece from the same members (165 mm mounts 36 x 4 mm): frame 83.5 g + axles and spacers 27.5 g = 110.9 g; the rocker adds 63.3 g
+clashes (overlap volume, mm3; 0 = clear):
+  rocked   -50 mm: upper x lower 0.0, upper x wheels 0.0
+  rocked    +0 mm: upper x lower 0.0, upper x wheels 0.0
+  rocked   +50 mm: upper x lower 0.0, upper x wheels 0.0
+  wheels x lower 0.0, wheels x bushing 0.0, wheels x nut 0.0 (54.9 s)
+strength (hand formulas; loads assumed, see strength.rs): body 100 kg, stride 1.5 BW = 1472 N (fatigue), impact 3 BW = 2943 N (static)
+  allowables 7075-T6: static 335 MPa (yield / 1.5), fatigue 174 MPa (R = 0 range by Goodman x 0.7)
+  upper bending: max 54 MPa stride / 109 MPa impact at x = -14 (contact +0); heel x 38, ball x 182
+  lower bending: max 65 MPa stride / 130 MPa impact at x = -50 (contact -50); all wheels stay loaded for contact within +-63 mm
+  rocker wall feet between nodes (45 mm panels): 119 / 238 MPa (stride / impact)
+  ledge + bottom chord between bosses (76 mm): local 90 + global 35 = 125 / 249 MPa
+  rocker contact (stride): half-width 5.2 mm, peak pressure 45 MPa (static limit ~840 MPa = 1.67 x yield)
+  rocker contact (impact): half-width 7.3 mm, peak pressure 64 MPa (static limit ~840 MPa = 1.67 x yield)
+  axle (stride, wheel load 658 N): bending 39 MPa (8 mm 7075, solid); boss bearing 21 MPa
+  axle (impact, wheel load 1317 N): bending 79 MPa (8 mm 7075, solid); boss bearing 41 MPa
+  axle (stride on one wheel, wheel load 1472 N): bending 88 MPa (8 mm 7075, solid); boss bearing 46 MPa
+  roll: tracks 34.0 mm apart, 46.0 mm up: the vertical load alone holds lateral / vertical up to 0.37 (assumed 0.45; round 1's top rocker ~0.19)
+  lateral push at 0.45: 662 N stride; NOT checked yet: walls and rails in side bending, torsion, buckling (FEM next)
+  worst stress / allowable over the vertical cases: 0.74 (3.6 s)
+lean before touching the ground (tread radius 12 mm assumed): axle heads 61 deg, lower 64 deg, upper 76 deg

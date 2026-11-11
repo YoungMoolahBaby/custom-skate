@@ -8,6 +8,7 @@ use std::path::Path;
 use cortenforge::mesh::types::IndexedMesh;
 use nalgebra::{Point3, Rotation3, Vector3};
 
+#[derive(Clone, Copy)]
 pub struct Layer<'a> {
     pub mesh: &'a IndexedMesh,
     pub color: [f64; 3],
