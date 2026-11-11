@@ -55,7 +55,9 @@ sides of the widest part (the ball). Both feet.
 |---|---|---|---|
 | 11 | Boot | Which boot is the i2 on (make, size)? | |
 | 12 | Stack height | Skate on a table: table to the bottom of the sole, heel and toe. | |
-| 12b | i2 mount pattern | Rivets in the front and rear groups, and the centre-to-centre distance between the groups. The custom ice boot's sole must match it. A photo from below with a ruler is ideal. | |
+| 12b | i2 mount pattern | Rivets in the front and rear groups, and the centre-to-centre distance between the groups. The custom ice boot's sole must match it. A photo from below with a ruler is ideal. (Less needed now that the ice skate is to be one piece, but it shows how the holder sits under the boot.) | |
+| 12c | i2 rocker insert | Which insert is in the holder: any marking on it (a radius in ft, a number or a colour)? The factory one is said to be 23 ft. | |
+| 12d | Runner's lowest point | Skate on a flat table, blade down: where along the boot does the runner touch (distance from the heel's back edge)? A side photo with a ruler is ideal. | |
 
 ## Optional
 

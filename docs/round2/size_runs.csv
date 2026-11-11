@@ -1,0 +1,34 @@
+part,params,cell,lam,grams,peak_mpa,peak_where,dy_mean_mm,dy_max_mm,split,mesh_vol_err,dof,seconds
+onepiece,rail_t=2,2,0.45,110.9,743,frame x-45 y+14 z+9,2.570,2.804,,-9.1%,1354194,107
+onepiece,rail_t=3,2,0.45,141.8,284,frame x-68 y+16 z+32,0.675,0.729,,-4.5%,1509042,126
+onepiece,rail_t=3.9,2,0.45,169.5,208,frame x-69 y+17 z+34,0.350,0.378,,-5.2%,1355004,114
+onepiece,rail_t=4.4,2,0.45,185.0,156,frame x-69 y+18 z+34,0.247,0.268,,-3.8%,1426260,126
+rocker,rail_t=2 wall_t=2,2,0.45,174.2,1415,upper x+0 y+16 z+14,3.089,4.307,lower 569 upper 1415 MPa; give lower 1.03 upper 2.06 mm,-9.5%/-12.5%,2021091,148
+rocker,rail_t=2 wall_t=2 upper_len=204,2,0.45,180.0,1453,upper x+0 y+16 z+14,2.726,3.030,lower 555 upper 1453 MPa; give lower 0.19 upper 2.54 mm,-9.5%/-10.5%,2096463,152
+rocker,rail_t=2 wall_t=2 upper_len=240 wall_panels=6,2,0.45,191.6,1200,upper x+0 y+16 z+14,2.011,2.150,lower 401 upper 1200 MPa; give lower 0.15 upper 1.86 mm,-9.5%/-10.9%,2204277,159
+rocker,rail_t=2 wall_t=2 upper_len=240 wall_panels=6 sole=1,2,0.45,191.6,940,upper x+0 y+16 z+14,1.331,1.450,lower 401 upper 940 MPa; give lower 0.15 upper 1.18 mm,-9.5%/-10.9%,2204277,161
+rocker,rail_t=2 wall_t=3 upper_len=240 wall_panels=6 sole=1,2,0.45,222.3,442,upper x-14 y+19 z+36,0.560,0.659,lower 401 upper 442 MPa; give lower 0.15 upper 0.41 mm,-9.5%/-7.2%,2288391,174
+rocker,rail_t=2 wall_t=3 web_t=3 upper_len=240 wall_panels=6,2,0.45,238.8,425,upper x+13 y+19 z+37,0.841,0.945,lower 415 upper 425 MPa; give lower 0.15 upper 0.69 mm,-10.3%/-5.2%,2189682,162
+rocker,rail_t=2 wall_t=3.75 upper_len=240 wall_panels=6 ledge_w=4.75,2,0.45,247.0,398,lower x+102 y+16 z+12,0.688,0.793,lower 398 upper 352 MPa; give lower 0.15 upper 0.54 mm,-9.2%/-6.4%,2436237,185
+rocker,rail_t=3 wall_t=3 upper_len=240 wall_panels=6,2,0.45,254.8,403,upper x+10 y+16 z+44,0.763,0.804,lower 204 upper 403 MPa; give lower 0.07 upper 0.69 mm,-4.6%/-7.6%,2511483,195
+rocker,rail_t=2 wall_t=3.75 web_t=3 upper_len=240 wall_panels=6 ledge_w=4.75,2,0.45,265.1,413,lower x+102 y+16 z+12,0.603,0.706,lower 413 upper 243 MPa; give lower 0.15 upper 0.45 mm,-10.3%/-4.3%,2347098,173
+rocker,rail_t=2.5 wall_t=4 upper_len=240 wall_panels=6 ledge_w=5,2,0.45,271.6,288,upper x-73 y+16 z+14,0.501,0.562,lower 234 upper 288 MPa; give lower 0.09 upper 0.41 mm,-6.2%/-6.8%,2698827,219
+rocker,rail_t=2.5 wall_t=3.75 web_t=3 upper_len=240 wall_panels=6 ledge_w=4.75,2,0.45,281.6,237,lower x+103 y+16 z+11,0.471,0.537,lower 237 upper 234 MPa; give lower 0.10 upper 0.37 mm,-6.7%/-4.8%,2352714,175
+rocker,rail_t=2.5 wall_t=3.75 web_t=3 upper_len=240 wall_panels=6 sole=1 ledge_w=4.75,2,0.45,281.6,293,upper x+13 y+20 z+35,0.319,0.382,lower 237 upper 293 MPa; give lower 0.10 upper 0.22 mm,-6.7%/-4.8%,2352714,181
+rocker,rail_t=2.5 wall_t=4.5 upper_len=240 wall_panels=6 ledge_w=5.5,2,0.45,288.1,239,upper x-73 y+16 z+14,0.418,0.476,lower 234 upper 239 MPa; give lower 0.09 upper 0.32 mm,-6.3%/-6.1%,2556159,202
+rocker,rail_t=2 wall_t=3.75 web_t=3 web_windows=0 upper_len=240 wall_panels=6 ledge_w=4.75,2,0.45,308.6,413,lower x+102 y+16 z+12,0.505,0.606,lower 413 upper 265 MPa; give lower 0.15 upper 0.36 mm,-10.3%/-2.5%,2463468,192
+rocker,upper_len=240 wall_panels=6 cell_up=1.5,2,0.45,191.6,991,upper x-0 y+16 z+14,1.750,1.891,lower 401 upper 991 MPa; give lower 0.15 upper 1.60 mm,-9.5%/-4.0%,3016614,215
+rocker,upper_len=240 wall_panels=6 cell_up=1.5 vee=1,2,0.45,202.5,598,lower x-70 y-16 z+5,1.729,2.932,lower 598 upper 345 MPa; give lower 1.45 upper 0.27 mm,-9.1%/-5.3%,3836826,342
+rocker,upper_len=240 wall_panels=6 cell_up=1.5 vee=1 deck_panels=6,2,0.45,213.7,451,lower x-70 y-16 z+5,1.350,2.186,lower 451 upper 345 MPa; give lower 1.07 upper 0.27 mm,-9.7%/-5.3%,3914394,415
+rocker,upper_len=240 wall_panels=6 cell_up=1.5 vee=1 web_truss=4 deck_panels=4,2,0.45,217.2,454,lower x-70 y-16 z+5,1.338,2.183,lower 454 upper 344 MPa; give lower 1.08 upper 0.25 mm,-9.5%/-5.8%,3946575,408
+rocker,upper_len=240 wall_panels=6 cell_up=1.5 vee=1 web_truss=6 deck_panels=6,2,0.45,222.6,451,lower x-70 y-16 z+5,1.333,2.170,lower 451 upper 338 MPa; give lower 1.07 upper 0.26 mm,-9.7%/-5.8%,3985470,435
+rocker,upper_len=240 wall_panels=6 cell_up=1.5 vee=1 deck_panels=6 bulk_t=2,2,0.45,227.5,345,upper x+57 y+27 z+36,1.005,1.579,lower 321 upper 345 MPa; give lower 0.73 upper 0.28 mm,-9.9%/-5.3%,3960024,511
+rocker,upper_len=240 wall_panels=6 cell_up=1.5 rib_d=5,2,0.45,243.8,401,lower x+102 y+16 z+12,0.494,0.591,lower 401 upper 197 MPa; give lower 0.15 upper 0.35 mm,-9.5%/-2.2%,3630498,274
+rocker,upper_len=240 wall_panels=6 cell_up=1.5 rib_d=5 rib_taper=0.4,2,0.45,228.1,401,lower x+102 y+16 z+12,0.621,0.723,lower 401 upper 273 MPa; give lower 0.15 upper 0.47 mm,-9.5%/-2.7%,3463272,257
+rocker,upper_len=240 wall_panels=6 cell_up=1.5 rib_d=3,2,0.45,222.9,401,lower x+102 y+16 z+12,0.676,0.780,lower 401 upper 274 MPa; give lower 0.15 upper 0.53 mm,-9.5%/-2.7%,3367056,251
+rocker,upper_len=240 wall_panels=6 cell_up=1.5 rib_d=5 rib_chords=1,2,0.45,229.3,401,lower x+102 y+16 z+12,0.671,0.773,lower 401 upper 290 MPa; give lower 0.15 upper 0.52 mm,-9.5%/-2.7%,3527148,263
+rocker,upper_len=240 wall_panels=6 cell_up=1.5 rib_d=5 rib_chords=0,2,0.45,214.8,481,upper x-13 y+14 z+45,1.003,1.116,lower 401 upper 481 MPa; give lower 0.15 upper 0.85 mm,-9.5%/-3.3%,3377934,231
+rocker,upper_len=240 wall_panels=6 cell_up=1.5 sole=1,2,0.45,191.6,905,upper x+14 y+18 z+37,1.185,1.309,lower 401 upper 905 MPa; give lower 0.15 upper 1.04 mm,-9.5%/-4.0%,3016614,191
+rocker,upper_len=240 wall_panels=6 cell_up=1.5 sole=1 rib_d=3,2,0.45,222.9,401,lower x+102 y+16 z+12,0.371,0.466,lower 401 upper 312 MPa; give lower 0.15 upper 0.22 mm,-9.5%/-2.7%,3367056,234
+rocker,upper_len=240 wall_panels=6 cell_up=1.5 sole=1 rib_d=5,2,0.45,243.8,401,lower x+102 y+16 z+12,0.275,0.368,lower 401 upper 167 MPa; give lower 0.15 upper 0.13 mm,-9.5%/-2.2%,3630498,262
+rocker,upper_len=240 wall_panels=6 cell_up=1.5 wall_t=3.75 ledge_w=4.75,2,0.45,247.0,398,lower x+102 y+16 z+12,0.590,0.694,lower 398 upper 265 MPa; give lower 0.15 upper 0.44 mm,-9.2%/-3.0%,3358008,237

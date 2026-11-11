@@ -75,7 +75,7 @@ found a gain only in backward skating. Details and numbers are in `docs/RESEARCH
 ## Run
 
 ```
-cargo run --release -- check         # every tool used, against known results (23/23)
+cargo run --release -- check         # every tool used, against known results (26/26)
 cargo run --release -- pitch         # the pitch tables above
 cargo run --release -- scan <file>   # measure a foot scan (OBJ, STL, PLY)
 cargo run --release -- round1 <scan> # the whole skate on one foot -> out/round1 (STL, PNG)
@@ -108,20 +108,50 @@ it can't. So in round 2 the upper hangs two truss walls outside the lower rails.
 is the rocker arc, and it rolls on a low ledge on the rail. The vertical load alone then holds
 the roll up to a sideways / vertical ratio of 0.37, against ~0.19 for round 1.
 
-- **174 g** with axles, spacers and the coupling: in the 170-184 g class of one-piece frames, down
-  from round 1's 281 g. All vertical-load checks pass by hand formulas (worst at 0.74 of its
-  allowable, for a 100 kg skater at 1.5x body weight striding and 3x landing).
-- Like for like: a one-piece built from the same members weighs 111 g, so the rocker costs 63 g.
-- Not checked yet, and it decides the design: the sideways push bending the 2 mm walls and rails.
-  That needs FEM, the next step.
+![The round-2 chassis from the side, rocked toe-down: the upper's truss wall rolls on the ledge of the lower rail, all four wheels down](docs/round2/rocked_toe.png)
+
+*The round-2 chassis rocked toe-down to the end of its travel (contact 50 mm forward, 1.25° of
+foot pitch). Dark: the upper, its truss wall hanging outside the lower rail; its bottom edge is
+the rocker arc, rolling on the ledge above the axles. All four wheels stay down.*
+
+- **Step 1: 174 g** with axles, spacers and the coupling, down from round 1's 281 g. All
+  vertical-load checks pass by hand formulas (worst at 0.74 of its allowable, for a 100 kg skater
+  at 1.5x body weight striding and 3x landing). A one-piece built from the same members weighs
+  111 g, so the rocker costs 63 g.
+- **Step 2: FEM.** CortenForge's soft-body solver, sim-soft, works as a linear-elastic solver for
+  aluminium: within 1% of beam theory once run static and at a small fraction of the load. Its
+  reaction readout lets the two-piece frame be solved as two linked models.
+- **The sideways push sizes the frame.** At 0.45 of the stride load, the 174 g frame's thin parts
+  go past yield. So the sizing is like for like: a one-piece thickened to real weights sets the
+  target, under the same loads and the same boot mounts. At 170 g it gives 0.35 mm sideways at
+  the axles, peak 208 MPa.
+- **By thickening alone, the rocker can't match that at a sensible weight.** The stiffest run is
+  0.42 mm at 288 g. At equal stiffness the rocker costs 76 g more than a one-piece at 2 mm
+  parts, and 103-127 g as it nears the one-piece's stiffness; that is roughly R1 weight
+  (282-302 g). The reason: the upper's walls carry the push up to the boot as plates bending
+  out of their own plane, the job a one-piece's rails do, so the lower frame is the extra.
+  Bonding the upper to a custom boot's sole makes it ~40% stiffer.
+- **Leaning the walls into a V doesn't help overall.** Leaning them so that, from the front,
+  they meet at the wheels' contact patch, the push runs along the walls instead of bending them:
+  the upper gives 6x less. But a tilted seat only touches at the rolling contact, mid-length, so
+  the lower has to carry the push lengthwise to it, and it twists. Best: 1.00 mm at 228 g, no
+  better per gram than thickening.
+- **Ribbed walls do better, and bonded to the boot's sole they reach one-piece stiffness.** A rib
+  on every member of the walls makes each a T-section. Bolted at two mounts that saves 10-20 g
+  over thickening, still 81-92 g over a one-piece as stiff. Bonded along a custom boot's sole
+  (modelled as rigid, so a best case), it gives 0.37 mm at 223 g and 0.28 mm at 244 g, against
+  0.35 mm for the 170 g one-piece: about 60-70 g over a one-piece, and 40-80 g under an R1.
+  Next: the custom-boot route with a real sole, or pinned links that pass the push near the
+  mounts (`docs/PLAN.md`).
 
 Pictures and numbers: `docs/round2/`, and `docs/PLAN.md` (Round 2).
 
 ## Status
 
 Phase 0 (the science, the pitch model, the mass tool checked), round 1 (the whole skate on an
-example foot) and round 2's first step (the chassis to weight) are done. See `docs/PLAN.md` for
-what comes next and `docs/CORTENFORGE.md` for what CortenForge did well and where it fell short.
+example foot), round 2's first step (the chassis to weight) and the like-for-like FEM sizing of
+step 2 are done. See `docs/PLAN.md` for what comes next and `docs/CORTENFORGE.md` for what
+CortenForge did well and where it fell short.
 
 ## Patents
 

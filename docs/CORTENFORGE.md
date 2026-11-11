@@ -101,13 +101,64 @@ type (bug, docs, API, perf, setup, works), date, file:line under
 
 ## sim-soft
 
-- Not used yet. Hyperelastic only (`NeoHookean`, `Yeoh`, lib.rs:1-14), backward Euler, SDF → tet
-  via isosurface stuffing. Phase 3 tries it on aluminium at small strain against a cantilever
-  closed form; phase 4 uses it for the rubber bushing.
+- Hyperelastic only (`NeoHookean`, `Yeoh`, lib.rs:1-14), backward Euler, SDF → tet via
+  isosurface stuffing. Used since round 2 step 2 as the chassis's linear-elastic solver (below);
+  phase 4 uses it for the rubber bushing.
 - **note** (2026-11-10, round 2): promising for that: its own tests check bending against beam
   theory (tests/bonded_bilayer_beam.rs: a cantilever vs Euler-Bernoulli, converging with
   refinement; tests/slender_bending_matches_analytic.rs; tests/tet10_bending_locking.rs), and
   run static problems as backward Euler with a long time step (dt = 1 s). Next step of round 2.
+- **works** (2026-11-10, round 2): **sim-soft is a usable linear-elastic solver for aluminium**
+  (`src/fem.rs`). A cf-design `Solid` goes straight into `SdfMeshedTetMesh::from_sdf` (it
+  implements the shared `Sdf` trait), then `Tet10Mesh::from_tet4`, then `CpuTet10NHSolver` with
+  `density = 0` (static). A 100 x 10 x 10 mm 7075 cantilever: tip deflection 0.991 / 1.035 /
+  1.012 / 0.992 of beam theory at 2.5 / 2 / 1.5 / 1.25 mm cells (the 1.035 where the mesher lost
+  0.4% of the volume at the edges); mid-span surface bending stress 1.000 / 1.000 / 0.995 /
+  1.000 of M c / I (nodal-averaged). A 60 x 20 x 2 mm strip (a thin wall bent sideways): 0.966
+  and 0.994 of beam theory at 1.0 and 0.8 mm cells, stress 1.000 and 1.012. In `check`.
+- **note, important** (2026-11-10, round 2): the Newton solve **stalls on slender stiff parts at
+  their real load**. sim-soft solves finite strain with an Armijo line search on the residual
+  norm (solver/backward_euler/newton.rs:1130-1170). Its first step from rest is the linear
+  solution, which moves points along straight lines, so a slender part also stretches by
+  ~theta^2 / 2; times aluminium's in-plane stiffness that makes a residual several times the
+  load, full steps are rejected and Newton crawls: a 100 x 10 x 10 bar took 5 iterations (the
+  first four reducing the residual 1.66 -> 1.06 N), a 60 x 20 x 2 strip did not converge in 50,
+  and the lower frame without its axles not in 12. That residual grows with the load squared
+  while the answer is linear in it, so **solve at 1e-3 of the load and scale the displacement
+  back** (`fem::LOAD_SCALE`): 2 iterations everywhere, the same answers. The residual has an
+  absolute floor near 1.3e-7 N (mm, N, MPa units), so the tolerance needs a floor too.
+- **API, stub** (2026-11-10): `Observable::stress_field` is `unimplemented!("skeleton phase 2")`
+  (observable/basic.rs:90). Instead: `fem::corner_stresses` (F from `Tet10::shape_gradients` at
+  the corners, P from `NeoHookean::first_piola`, Cauchy = P F^T / det F) and `fem::nodal_stresses`
+  (averaged over the elements sharing a node; raw corner maxima read 3-14% high and got worse
+  with refinement).
+- **perf** (2026-11-10): the round-2 lower frame with its axles at 2 mm cells: 1.4M DOF (with
+  the lattice's unused points, which sim-soft pins) in ~115 s, 2 Newton iterations, 32 GB
+  machine. Thin members lose volume to the BCC + stuffing mesher: 2 mm rails -9.5% at 2 mm
+  cells, -3.9% at 1.5 mm (so stresses read high). Mesh quality stays good (worst dihedral
+  ~14 deg, no slivers).
+- **note, unexplained** (2026-11-10): a half model cut on a symmetry plane (the solid
+  intersected with a box, a roller u_x = 0 on the cut) gave a 1,060 MPa spot on the cut face,
+  ~6x the 181 MPa of the full model at the same place, with a node shared by only 4 elements
+  and a ~3 um displacement jump to its neighbours. Cause not found (our boundary conditions or
+  the mesher at the cut); full models only for now.
+- **works** (2026-11-11, round 2 step 2): **the reaction readout**, `nodal_reaction_forces`
+  (solver/backward_euler/assembly.rs:415, -f_int after a static solve). On the rocker's lower,
+  held at its contacts, the forces at the held nodes sum to the applied loads within 0.1 N
+  (662.2 N sideways, 1471.5 N vertical; `fem::solve_with_reactions`, scaled back like the
+  displacements). That is what lets the two-piece frame be solved as two substructures: the
+  lower's contact forces become the upper's loads (`src/sizing.rs`).
+- **API, limit** (2026-11-11, round 2 step 2, V section): **rollers hold only global x, y, z**
+  (`BoundaryConditions::roller_vertices: Vec<(VertexId, [bool; 3])>`, readout/scene.rs:913).
+  A contact on a tilted face (the V section's ledges, 20 deg) needs a node held along its normal
+  only. Instead: the heavy side pinned (it sticks by friction; the friction it needs is printed,
+  0.01) and the light side loaded along its normal by a force found from two solves and
+  superposition (`sizing::lower_vee`).
+- **note** (2026-11-11, round 2 step 2): **a thin wall leaning across the lattice is lost at a
+  cell size equal to its thickness**. The V section's 2 mm walls, leaning 20 deg, at 2 mm cells:
+  the stuffing broke them into pieces, `largest_component` kept the web, and the upper lost 70%
+  of its volume (upright 2 mm walls at 2 mm cells lose 11%). At 1.5 mm cells: -5.3% (upright
+  -4.0%). Nothing warns; we check the meshed volume against `mass_properties` on every run.
 
 ## Setup
 
@@ -141,6 +192,19 @@ Nice-to-haves for CortenForge, with what this project built instead.
   the cut is one boundary loop straight away.
 - **A black-box optimiser** (2026-11-10, round 2): `minimize(f, x0, bounds)` in sim-opt for
   design searches that have no dynamics (mass under stress limits). Instead: a parameter sweep.
+- **A linear-elastic static mode for sim-soft** (2026-11-10, round 2): one factorisation of the
+  small-strain stiffness, no line search; plus the stress field. Wanted for metal parts.
+  Instead: solve at 1e-3 of the load and scale back; our own stress recovery. (This replaces
+  the "linear-elastic structures" wish above: the solver is there, the static mode isn't.)
+- **Skew rollers and a lost-volume warning** (2026-11-11, round 2 step 2): a roller along any
+  unit vector (or a local frame per node), for contacts on tilted faces; and a warning from
+  `SdfMeshedTetMesh::largest_component` (sdf_bridge/sdf_meshed_tet_mesh.rs:278) when the parts
+  it drops hold more than a few percent of the volume, which is how a too-coarse mesh shows.
+- **Tied or contacting meshes** (2026-11-11, round 2 step 2): two meshed bodies in one solve,
+  bonded on a named interface (shared or constrained nodes) or in contact (penalty or mortar),
+  so an assembly like the rocker's upper on its lower is one model and the contact forces
+  redistribute as the parts give. Instead: two substructures, the upper loaded by the lower's
+  reaction forces (one way).
 - **Section properties and interference** (2026-11-10, round 2): `Solid::section(plane)` (area,
   centroid, second moments) for beam checks, and `Solid::overlap_volume(&other)` that ignores the
   partial-cell band, for clash checks. Instead: `strength::section`, `round2::overlap_mm3`.

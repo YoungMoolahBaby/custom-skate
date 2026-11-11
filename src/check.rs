@@ -43,6 +43,8 @@ pub fn run() -> Tally {
     scan_checks(&mut t);
     println!("strength tools (round 2): sections, wheel loads, the rolled rocker");
     strength_checks(&mut t);
+    println!("sim-soft as a linear-elastic solver (round 2, step 2)");
+    fem_checks(&mut t);
     println!("scan frame on real stand-in scans (Schuster et al. 2024, pre-aligned: x heel to toe, z up)");
     stand_in_checks(&mut t);
     t
@@ -375,5 +377,71 @@ fn strength_checks(t: &mut Tally) {
         "rolled rocker touches its ledge at the new contact (0.1 mm gap) and rises x^2/2r beside it",
         (b0 - 0.1).abs() < 0.02 && (bm - 0.1 - rise).abs() < 0.03 && (bp - 0.1 - rise).abs() < 0.03,
         format!("gap at +50 {b0:.3} mm; at +20 {bm:.3} and +80 {bp:.3} (expected {:.3})", 0.1 + rise),
+    );
+}
+
+/// sim-soft as a linear-elastic solver for aluminium (round 2, step 2): a 100 x 10 x 10 mm
+/// 7075 cantilever meshed from a cf-design solid (SDF -> Tet10), tip load 20 N, static (density
+/// 0). Against beam theory: tip deflection vs P L^3 / 3EI + P L / (k G A), and the mid-span
+/// surface bending stress (nodal-averaged, `fem::nodal_stresses`) vs M c / I.
+fn fem_checks(t: &mut Tally) {
+    use crate::fem::{self, pick, spread};
+    use crate::materials::AL_7075_T6_STRENGTH as AL;
+    let (l, b, h, p) = (100.0, 10.0, 10.0, 20.0);
+    let bar = Solid::cuboid(Vector3::new(0.5 * l, 0.5 * b, 0.5 * h)).translate(Vector3::new(0.5 * l, 0.0, 0.0));
+    let i = b * h * h * h / 12.0;
+    let g = AL.e / (2.0 * (1.0 + AL.nu));
+    let d_exact = p * l.powi(3) / (3.0 * AL.e * i) + p * l / (5.0 / 6.0 * g * b * h);
+    let s_exact = p * 0.5 * l * 0.5 * h / i;
+    let t0 = Instant::now();
+    let m = match fem::mesh_solid(&bar, 2.5, AL.e, AL.nu) {
+        Ok(m) => m,
+        Err(e) => {
+            t.item("sim-soft cantilever", false, e);
+            return;
+        }
+    };
+    let clamp = pick(&m, |q| q.x < 1e-3);
+    let tip = pick(&m, |q| q.x > l - 1e-3);
+    let (x, r) = match fem::solve_with_reactions(&m, clamp.clone(), vec![], &spread(&tip, Vector3::new(0.0, 0.0, -p))) {
+        Ok(x) => x,
+        Err(e) => {
+            t.item("sim-soft cantilever", false, e);
+            return;
+        }
+    };
+    let d = tip.iter().map(|&v| -fem::disp(&m, &x, v).z).sum::<f64>() / tip.len() as f64;
+    let ns = fem::nodal_stresses(&m, &x);
+    let mid: Vec<f64> = m
+        .rest
+        .iter()
+        .zip(&ns)
+        .filter(|(q, s)| s.is_some() && (q.x - 0.5 * l).abs() < 1.5 && q.z.abs() > 0.5 * h - 1e-3)
+        .map(|(_, s)| s.expect("filtered")[(0, 0)].abs())
+        .collect();
+    let s_mid = mid.iter().sum::<f64>() / mid.len().max(1) as f64;
+    t.item(
+        "sim-soft Tet10 cantilever in 7075: tip deflection within 3% of beam theory",
+        ((d - d_exact) / d_exact).abs() < 0.03,
+        format!("{d:.5} mm vs {d_exact:.5} ({:+.2}%), {:.1} s", (d / d_exact - 1.0) * 100.0, t0.elapsed().as_secs_f64()),
+    );
+    t.item(
+        "... and mid-span surface bending stress within 2% of M c / I",
+        ((s_mid - s_exact) / s_exact).abs() < 0.02 && !mid.is_empty(),
+        format!("{s_mid:.3} MPa vs {s_exact:.3} ({:+.2}%), mean of {} surface nodes", (s_mid / s_exact - 1.0) * 100.0, mid.len()),
+    );
+    // The reaction readout (what the rocker's two-model coupling rests on): the force the bar puts
+    // on its clamp is the tip load, and its moment about the clamp is the tip load x the length.
+    let (mut f, mut my) = (Vector3::zeros(), 0.0);
+    for &v in &clamp {
+        let k = 3 * v as usize;
+        let rv = Vector3::new(r[k], r[k + 1], r[k + 2]);
+        f += rv;
+        my += m.rest[v as usize].z * rv.x - m.rest[v as usize].x * rv.z;
+    }
+    t.item(
+        "sim-soft reaction readout: clamp force = tip load within 0.1%, clamp moment = P L within 1%",
+        (f.z + p).abs() < 1e-3 * p && f.x.abs() < 1e-3 * p && ((my.abs() - p * l) / (p * l)).abs() < 0.01,
+        format!("force ({:.3}, {:.3}, {:.3}) N vs (0, 0, {:.1}); moment {:.1} N mm vs {:.1}", f.x, f.y, f.z, -p, my.abs(), p * l),
     );
 }

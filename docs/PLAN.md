@@ -98,13 +98,328 @@ between the middle wheels; two ties across the walls' feet through the rails' tr
 - sim-opt didn't fit a mass search: its optimisers train policies on sim-core environments, there
   is no plain minimise (CORTENFORGE.md). The sweep did the job, and few parameters are active.
 
-**Not checked yet, and it decides the design:** the lateral push (662 N at the stride) bending the
-walls and rails sideways, torsion, buckling of the 2 mm walls, stress at holes and corners.
+**Not checked by step 1, and it decides the design:** the lateral push (662 N at the stride)
+bending the walls and rails sideways, torsion, buckling of the 2 mm walls, stress at holes and
+corners. Step 2 below.
 
-**Next (round 2, step 2):** FEM. Try sim-soft on aluminium at small strain against a cantilever
-closed form; if it passes, mesh the chassis (sim-soft's SDF to tet) and run the lateral case. Then
-size for it (the 2.0 vs 2.5 mm question), then the coupling's rate (phase 4). Steps 3-4 as
-planned: the last with sim-soft pressures, then Jon's foot.
+## Round 2, step 2: FEM (first results 2026-11-10)
+
+Jon: "lets do round 2, step 2". `src/fem.rs`: sim-soft as a linear-elastic solver (Tet10 from the
+cf-design solid, static, solved at 1e-3 of the load and scaled back, stresses recovered by us).
+Experiments: `examples/fem_cantilever.rs`, `fem_probe.rs`, `fem_lower.rs`.
+
+- **The solver checks out** (`check` 25/25): a 7075 cantilever's tip deflection within 1% of beam
+  theory (3.5% where the mesher shaved an edge) and its bending stress within 0.5%; a 2 mm strip
+  bent sideways 0.97-0.99 and 1.00-1.01. Two fixes were needed, both in CORTENFORGE.md: density 0
+  (static), and the load scaling (sim-soft's finite-strain Newton stalls on slender aluminium at
+  full load).
+- **The lower frame, vertical stride** (full model with its axles, 2 mm cells, held at the rocker
+  contact and by the walls along the rails): peak 181 MPa at the bottom edge of the rails under
+  the contact. The hand formula said 125 MPa there, so it was ~30% low; the 2 mm mesh is also
+  9.5% short of material, so the FEM reads high. Both under the fatigue allowable (174 MPa)
+  only roughly: this needs a finer mesh.
+- **The sideways push (0.45 of the vertical) breaks the 174 g frame**: ~580 MPa (both walls
+  bearing on the rails along the upper) or ~530 MPa (one wall), and ~1.8-2.0 mm sideways at the
+  axles. The peaks sit where the ledge and its backing end (x = +-70 mm) and near the end axles.
+- **But a one-piece built from the same 2 mm members does worse**: ~743 MPa and 2.8 mm (clamped
+  at its two mounts; vertical stride alone 94 MPa). The upper's walls hold the rails just above
+  the axles, lower than a one-piece's mounts do, which shortens the rails' sideways lever.
+  So the rocker layout is not the weak point; 2 mm members are, under this push. That fits
+  real one-pieces weighing 170-184 g against our same-member one-piece's 111 g. **(Overtaken
+  below: this held the lower against rigid walls. With the upper's walls modelled, they are
+  the soft part, and the rocker comes out the softer frame.)**
+- With 3 mm rails: ~330 MPa (rocker lower, peak at the sharp end of the ledge) and ~285 MPa
+  (one-piece), both under yield, both still over the fatigue allowable at this push.
+- The sideways push of 0.45 is from speed skating (RESEARCH.md 13), and it now decides the
+  frame's weight. A hockey number would be worth more than any other single input.
+- Not done yet: the upper's walls under the push (they carry it from the rails to the boot); a
+  finer mesh (1.5 mm: ~3M DOF); torsion; buckling; tapering the ledge ends.
+
+## Round 2, step 2 continued: like for like (2026-11-11)
+
+Jon: "thicken the one-piece model until it weighs what real frames do, use its sideways stress
+and stiffness as the target, then size the rocker's rails and walls to match and see what it
+weighs". `src/sizing.rs`; one run = `cargo run --release --example size_frame -- <part> key=value
+...`, ~2 min for a one-piece, ~3 for a rocker; every run is a row in `docs/round2/size_runs.csv`.
+
+**How the two frames are compared.**
+- **The same for both:**
+  - loads: 100 kg skater, stride 1.5 BW, sideways 0.45 of it;
+  - mounts: clamped on top, 165 mm apart and 36 mm long (an assumption until Jon's TF9 rivet
+    pattern is measured);
+  - mesh: 2 mm cells.
+- **Two measures:**
+  - the four axles' mean sideways give;
+  - the peak von Mises stress away from the clamps and the rocker contact.
+- **The rocker is two models.** The lower is held at its contacts, and sim-soft's reaction
+  readout gives the forces there; they sum to the applied loads within 0.1 N, and the readout is
+  in `check` (26/26). Those forces then load the upper, clamped at the mounts. The lower rides on
+  the upper's contact faces, so the two gives add.
+- **The coupling is one way:** the contact forces don't shift as the upper gives.
+
+**The target: our one-piece, its rail plates thickened to real weights** (with axles and spacers;
+real ones: 170-184 g):
+
+| One-piece rails | Weight | Mean sideways give | Peak stress |
+|---|---|---|---|
+| 2 mm | 110.9 g | 2.57 mm | 743 MPa |
+| 3 mm | 141.8 g | 0.68 mm | 284 MPa |
+| **3.9 mm** | **169.5 g** | **0.35 mm** | **208 MPa** |
+| 4.4 mm | 185.0 g | 0.25 mm | 156 MPa |
+
+Give falls as 1/t³ and stress as 1/t², as plate bending predicts. The peaks sit on the rails just
+under the inner end of a mount. Even at real weight, the one-piece is over our fatigue allowable
+(174 MPa) at this push, which is one more reason to compare like for like rather than against an
+absolute limit.
+
+**The rocker, sized by thickness** (upper 240 mm long, 6 wall panels; rails / walls / web in mm;
+premium = rocker weight minus a one-piece as stiff, interpolated from the table above):
+
+| Rails / walls / web | Weight | Give: total (lower + upper) | Peak, lower / upper | Premium |
+|---|---|---|---|---|
+| 2 / 2 / 1.5 | 191.6 g | 2.01 mm (0.15 + 1.86) | 401 / 1,200* MPa | 76 g |
+| 2 / 3 / 3 | 238.8 g | 0.84 (0.15 + 0.69) | 415 / 425 | 103 g |
+| 2 / 3.75 / 1.5 | 247.0 g | 0.69 (0.15 + 0.54) | 398 / 352 | 106 g |
+| 2.5 / 4 / 1.5 | 271.6 g | 0.50 (0.09 + 0.41) | 234 / 288 | 118 g |
+| 2.5 / 3.75 / 3 | 281.6 g | 0.47 (0.10 + 0.37) | 237 / 234 | 125 g |
+| 2.5 / 4.5 / 1.5 | 288.1 g | 0.42 (0.09 + 0.32) | 234 / 239 | 127 g |
+
+*The 2 mm wall is one element thick at this mesh. Its peak sits where the contact loads go in,
+and is mostly a modelling artefact.
+
+**What it found.**
+- **By thickening alone, the rocker doesn't reach a real-weight one-piece's stiffness at a
+  sensible weight.**
+  - The stiffest rocker run is 0.42 mm at 288.1 g; the 170 g one-piece gives 0.35 mm.
+  - Following those last runs on, 0.35 mm comes at roughly 300 g: the R1's weight (282-302 g).
+  - The premium at equal stiffness grows as the target stiffens: ~76 g at 2 mm parts,
+    103-127 g as the rocker approaches the one-piece's stiffness.
+  - Stress tells the same story: ~235 MPa at the stiffest rockers against 208 MPa for the
+    170 g one-piece.
+- **Why: the walls do the job a one-piece's rails do.** They carry the push 35-40 mm up to the
+  boot as plates bending out of their own plane. So they end up as thick as a one-piece's rails,
+  and the whole lower frame is the premium on top. Of the give, 0.09-0.15 mm is in the lower and
+  the rest in the upper:
+  - **The walls' own bending** falls roughly as 1/t³ (2 → 3.75 mm walls: 1.86 → 0.54 mm).
+  - **A floor of ~0.2 mm that thicker walls don't remove.** Between the two mounts the upper
+    twists like an open U-channel, and its windowed web shears in its own plane (0.13 mm at the
+    centre).
+  - **The web:** against the 1.5 mm windowed web, a 3 mm web takes 0.09 mm off for 18 g, and a
+    solid 3 mm web 0.18 mm for 62 g.
+- **The upper has to cover the mounts.** Step 1's 180 mm upper doesn't reach the assumed mounts
+  (±100.5 mm). With 2 mm parts:
+
+  | Upper length | Weight | Give: total (lower + upper) |
+  |---|---|---|
+  | 180 mm (step 1) | 174.2 g | 3.09 mm (1.03 + 2.06) |
+  | 204 mm (just covers the mounts) | 180.0 g | 2.73 mm (0.19 + 2.54) |
+  | 240 mm (covers the end axles too; 6 wall panels) | 191.6 g | 2.01 mm (0.15 + 1.86) |
+
+  With its walls modelled, step 1's 174 g frame gives 3.09 mm, softer than the one-piece from
+  the same 2 mm members (2.57 mm).
+- **At the 0.45 push nearly all the vertical load moves to one ledge** (1,438 of 1,472 N). Both
+  ledges stay in compression, so the low ledges do hold the roll, as designed; the coupling
+  bolt isn't needed for it.
+- **Bonded to a custom boot's sole** along its length (track C) instead of bolted at the mounts,
+  the upper gives ~40% less (the whole frame ~33% less): 0.32 mm at 281.6 g (2.5 / 3.75 / 3),
+  under the 170 g one-piece's 0.35. That's not like for like (a one-piece bonded the same way
+  would gain too), but it is the lever a custom boot offers.
+
+**Limits of these numbers.**
+- **Mesh:** 2 mm cells lose 5-10% of thin parts' volume. The rocker's thinner parts lose more,
+  so they read a little soft.
+- **Coupling:** one way only.
+- **Load cases:** the rocker at rest only; with the contact between two wall-truss nodes
+  (rocked), the foot carries the 1.4 kN point load in bending. No torsion case yet.
+- **Peak stresses** on the lower sit at the ends of the side-bearing band, where its rigid
+  support begins.
+- **The one-piece stand-in** is our own truss with thicker plates; a maker's sections may be
+  more efficient, which would make the target harder.
+
+**Next, for Jon to choose** (superseded by the V section's list below):
+1. **Stiffer walls per gram than a plate.** Ribs or gussets on the walls' outer faces, deep at
+   the root where the bending moment is, plus a web with diagonal ribs instead of windows.
+   By hand, a 3 x 6 mm rib makes 40 mm of 2 mm wall ~10x as stiff for ~2 g.
+2. **Take the side push high**, at the web, where the upper is stiff in its own plane. The
+   rails then work like a one-piece's, but by hand the roll then needs ~1.4 kN from the bolt at
+   0.45. A bushing can't give that, so it would take a hard stop.
+3. **Build the roller skate on the custom boot**, with the upper bonded to the sole (track C).
+4. **Accept a heavier rocker** and size it to a softer target.
+
+A hockey sideways-load number still matters most for absolute stress, less for this
+comparison. Then the coupling (phase 4) and steps 3-4.
+
+## Round 2, step 2: the V section, "less material" (2026-11-11)
+
+Jon: "how could we engineer this so theres less material needed?", then "go ahead" on the first
+two ideas: point the parts at the wheels' contact patch, and make the web a truss.
+
+**The idea.** In front view the ground force enters at one point, the contact patch. Two
+members whose lines meet there carry any force through it by tension and compression, with no
+bending. So the walls lean out along the line from the patch through their feet (20.3°: ~62 mm
+apart at the web instead of 36), and the ledges tilt square to that line (`FrameParams::vee`).
+The lower's rails already lie within ~1 mm of that line below the ledge.
+
+**The catch, found while building it.** A tilted ledge can only press where the arc touches it:
+the rolling patch, mid-length. The upright layout's side bearing, which slid along the whole
+wall, has no tilted equivalent (only a face square to y allows the rocking motion). So each
+axle's push has to travel lengthwise: through the lower to the patch, and through the upper to
+the mounts. Two more options carry it: `web_truss` (the web as a Warren truss in plan) and
+`deck_panels` (a truss deck across the lower's rails, over the wheels), and then `bulk_t`
+(plates across the rails in the gaps between wheels, clear of the tyres by 0.75 mm).
+
+**Modelling.**
+- **Mesh:** a 2 mm wall leaning across the 2 mm mesh lattice fell apart (the upper lost 70% of
+  its volume), so the uppers here are meshed at 1.5 mm (`cell_up`; -5.3% leaning, -4.0%
+  upright), and the upright layout re-run that way for a like-for-like baseline.
+- **The tilted contact:** sim-soft holds nodes only along x, y and z. So the heavy side's patch
+  is pinned (it may stick by friction) and the light side presses along its tilted normal
+  only, with the force that leaves no roll moment on the heavy patch (two solves superposed;
+  `sizing::lower_vee`). The lower then rides on the upper's feet the same way.
+- **A first try held both patches pinned.** The light side then carried 148 N of sideways force,
+  which a contact can't, and it bent its 2 mm wall 2 mm locally. That run is superseded (its row
+  in out/size/runs.csv reads 0.264 mm, which is wrong).
+
+**Results** (2 mm parts, 1.5 mm web, upper 240 mm, 6 wall panels; lower at 2 mm cells, upper
+at 1.5 mm):
+
+| Frame | Weight | Give: total (lower + upper) | Peak, lower / upper |
+|---|---|---|---|
+| Upright (the step-2 layout), re-run at the finer mesh | 191.6 g | 1.75 mm (0.15 + 1.60) | 401 / 991* MPa |
+| V | 202.5 g | 1.73 (1.45 + 0.27) | 598 / 345 |
+| V + deck (6 panels) | 213.7 g | 1.35 (1.07 + 0.27) | 451 / 345 |
+| V + truss web + deck (4 panels each) | 217.2 g | 1.34 (1.08 + 0.25) | 454 / 344 |
+| V + truss web + deck (6 panels each) | 222.6 g | 1.33 (1.07 + 0.26) | 451 / 338 |
+| V + deck + 2 mm bulkheads | 227.5 g | 1.00 (0.73 + 0.28) | 321 / 345 |
+
+*As before, the 2 mm upright wall's peak sits where the contact loads go in.
+
+**What it found.**
+- **The V works in front view, as designed.**
+  - The heavy side presses 1,750 N (hand: 1,739) and needs friction of only 0.01, so the push
+    runs along the wall.
+  - The upper carries the axles 0.27 mm instead of 1.60. At mid-length its wall foot moves
+    0.16 mm instead of 2.70.
+  - The light side pulls 184 N at the 0.45 push, so the coupling bolt needs a preload of at
+    least 346 N (hand: ~320). That is well under the 1.4 kN of "take the push high".
+- **But the gain moves into the lower.** With the push crossing only at the middle, the lower
+  carries each axle's push, and its twisting moment, up to 114 mm lengthwise. Its section is
+  open (two rails, plus a deck if added), so it twists. At the end axles:
+
+  | Lower | Roll of the section | Rails leaning (racking) | End axles' sideways give |
+  |---|---|---|---|
+  | Deck only | 0.028 rad | 0.35 mm | 1.9 mm |
+  | Deck + bulkheads | 0.024 rad | 0.15 mm | 1.3 mm |
+
+  The inner axles (38 mm from the middle) give 0.17-0.26 mm. The bulkheads stop most of the
+  racking, but the twist is the bigger part.
+- **The truss web stiffens the web** (its top moves 0.02 mm instead of 0.07 at mid-length), but
+  the web was no longer where the give was.
+- **Per gram, the V is no better than thickening.** At 1.00 mm the V costs ~97 g more than a
+  one-piece as stiff (interpolated as in the table above). The thickened upright frames cost
+  76-127 g.
+- **Why the upright layout's lower was so stiff:** the side bearing held it sideways along its
+  whole length (0.15 mm). Whichever way the push crosses, one of the two parts pays:
+  - along the length (the side bearing), the walls bend;
+  - at one place (the rolling contact), the lower twists.
+
+**Limits.**
+- The V runs are at rest only, with the contact mid-length; rocked, the patch moves 50 mm
+  toward one end.
+- Coupling one way, as before.
+- In the deck-only V the end of the lower's rail swings to within ~0.1 mm of the upper's wall
+  foot, which would start a side contact the model doesn't have.
+- The bulkheads' 0.75 mm clearance to the tyres is tight for real wheels.
+
+**Next, for Jon to choose** (superseded by the ribbed walls' list below):
+1. **Upright layout, ribbed walls** (old option 1). The upright layout keeps the lower stiff
+   (0.15 mm), and its walls' bending was 1.60 of its 1.75 mm. Ribs attack that directly: by
+   hand, a 3 x 6 mm rib makes 40 mm of 2 mm wall ~10x as stiff for ~2 g.
+2. **A torsion box for the V's lower**: a closed cell along the frame. The only room is above
+   the wheels, under the upper's web (8 mm of stack there today), so a box deep enough to matter
+   raises the boot by ~10 mm.
+3. **Pass the push near the mounts instead of mid-length**: two short links with pins across
+   the frame, front and back, in place of the rolling arcs. Neither part then carries the push
+   lengthwise. A four-bar's motion only approximates the rocker arc, so this is a new joint,
+   with its own kinematics to check.
+4. **Bond the upper to the custom boot's sole** (track C), as before: ~40% stiffer.
+5. **Accept a heavier rocker.**
+
+## Round 2, step 2: ribbed walls, and bonded to the sole (2026-11-11)
+
+Jon: "try the ribbed walls on the upright layout", and the pinned links and the bonded sole
+"both are interesting".
+
+**The ribs** (`FrameParams::rib_d`, `rib_t`, `rib_taper`, `rib_chords`). Every truss member of
+each wall gets a rib on its outer face, so it bends sideways as a T-section, not a flat strip:
+the diagonals, the top chord (the wall's root, at the web) and the foot chord. The ribs are
+2 mm thick and stand out 3-5 mm, so the walls are 42-46 mm across instead of 36. The upper is
+meshed at 1.5 mm like the V runs (thin ribs at an angle need it; -2.2% to -3.3% volume), and
+the comparisons below are all at that mesh.
+
+**Results** (2 mm rails and walls, 1.5 mm web, upper 240 mm, 6 wall panels; premium = weight
+minus a one-piece as stiff, interpolated as before):
+
+| Upper | Weight | Give: total (lower + upper) | Peak, upper | Premium |
+|---|---|---|---|---|
+| Plain 2 mm walls | 191.6 g | 1.75 mm (0.15 + 1.60) | 991* MPa | 75 g |
+| Walls thickened to 3.75 mm | 247.0 g | 0.59 (0.15 + 0.44) | 265 | 101 g |
+| Ribs 5 mm, diagonals only | 214.8 g | 1.00 (0.15 + 0.85) | 481 | 85 g |
+| Ribs 5 mm, diagonals + foot chord | 229.3 g | 0.67 (0.15 + 0.52) | 290 | 87 g |
+| Ribs 3 mm, all members | 222.9 g | 0.68 (0.15 + 0.53) | 274 | 81 g |
+| Ribs 5 mm tapering to 2 mm at the foot | 228.1 g | 0.62 (0.15 + 0.47) | 273 | 84 g |
+| Ribs 5 mm, all members | 243.8 g | 0.49 (0.15 + 0.35) | 197 | 92 g |
+
+*At the contact, where the loads go in; as before mostly a modelling artefact.
+
+**Bonded to a custom boot's sole** (the whole web top held instead of the two mounts):
+
+| Upper, bonded | Weight | Give: total (lower + upper) | Peak, lower / upper |
+|---|---|---|---|
+| Plain 2 mm walls | 191.6 g | 1.19 mm (0.15 + 1.04) | 401 / 905 MPa |
+| Ribs 3 mm, all members | 222.9 g | 0.37 (0.15 + 0.22) | 401 / 312 |
+| Ribs 5 mm, all members | 243.8 g | 0.275 (0.15 + 0.13) | 401 / 167 |
+
+**What it found.**
+- **Ribs beat thickening, by less than the hand sum promised.** At about the same weight, 5 mm
+  ribs give 0.49 mm and 3.75 mm walls 0.59. At about the same give (0.6 mm), ribs save ~19 g.
+  The premium falls from 101 g to 81-92 g. The hand sum (a rib makes a strip of wall ~10x as
+  stiff for 2 g) holds for a strip; on the frame it doesn't, because a rib on every member of
+  both walls is 31-52 g, and the lower (0.15 mm) and the web don't change.
+- **The top chord's rib earns its place.** It is the wall's root, and with it the web twists
+  less: at mid-length the web moves 0.11 mm with it, 0.28 mm without.
+- **Bolted at two mounts, the rocker still doesn't reach one-piece weight.** The premium is now
+  mostly the lower: it weighs 77.9 g, about what a whole one-piece frame does (83 g without
+  axles).
+- **Bonded to the sole, ribbed walls reach one-piece stiffness.**
+  - 0.37 mm at 222.9 g (3 mm ribs), 0.275 mm at 243.8 g (5 mm ribs), against 0.35 mm for the
+    170 g one-piece and 0.25 mm for the 185 g one.
+  - That's ~60-70 g heavier than a bolted one-piece as stiff, and ~40-80 g lighter than an R1
+    (282-302 g).
+  - Not like for like: a one-piece bonded to a sole would gain too, and the model holds the
+    sole rigidly, so these are best cases.
+  - With 5 mm ribs the upper's peak is 167 MPa, under the fatigue allowable (174). The lower's
+    401 MPa (at the end of the side-bearing band, partly a modelling artefact) is now the
+    highest stress, and its 0.15 mm more than half the give.
+
+**Limits.** At rest only; one-way coupling; the bonded runs hold the sole rigidly. The ribs
+widen the frame to 46 mm at the walls, which is less clearance when leaning (to check against
+the boot and the lean angles). Ribs this thin need a 1.5 mm mesh, so the earlier 2 mm-mesh
+rocker table above reads somewhat soft.
+
+**Next, for Jon to choose** (this replaces the lists above):
+1. **The custom-boot route, made real.**
+   - Model the boot sole as a real plate, not a rigid clamp: its stiffness is what the bonded
+     numbers lean on.
+   - Merge the upper's web into the sole (the web is ~13 g, by hand).
+   - Lighten and fix the lower, now half the give and the peak stress.
+2. **The pinned links** (Jon: interesting). First the motion, no FE: find two links, front and
+   back near the mounts, whose pivot moves like the 7.5 ft rocker's contact (35 mm under the
+   sole, moving forward ~40 mm per degree of pitch) over the ±50 mm travel. Then the link and pin
+   forces from the loads, then the structure, like for like. The pins need no play (preloaded
+   bearings, or flexure links: thin strips that bend instead of pins that turn). Check the
+   patents before making one (README).
+3. **Bolted at two mounts (Jon's TF9s):** ribbed walls, 81-92 g over a one-piece as stiff.
 
 ## Phase 0: the science and the tools (DONE 2026-11-10)
 
@@ -293,9 +608,91 @@ rivets + upper chassis. Weigh the whole skate, like for like: a TF9 7W + R1 with
 1396 g a skate; Mako 8EE + Sprung 1231-1334 g (Coast Hockey Shop). Jon's skates, weighed, are the
 real baselines.
 
-**Ice.** The boot takes his Marsblade i2 (254) to start, so the ice skate keeps a rocker it already
-has and the work is the boot. The sole carries the i2's mounting pattern (measure it). Later,
-possibly our own dynamic holder, with the GIH model (`src/pitch.rs`) setting the rocker radius.
+**Ice.** ~~The boot takes his Marsblade i2 (254) to start.~~ **Jon, 2026-11-11: a one-piece
+skate**, "as the rocker sits inside the blade holder. and the blade itself rocks against it" (his
+reference: a one-piece goalie skate whose carbon boot runs down into the holder, the steel bolted
+to it). So the boot and the holder are one part. The rocking stays where the i2 has it: inside
+the holder, between a rocker insert and the runner. It mirrors the roller skate, whose sole is
+the rocker's upper: one last, two one-piece skates, each with the rocking joint built in.
+- **Default:** a holder that takes the i2's own runners and rocker inserts (proven, replaceable
+  steel, five radii). Still to settle with Jon: that, or our own runner and insert.
+- **The pitch can match the roller's already:** on the 11 ft runner with the 23 ft insert, the
+  effective radius is 7.46 ft, 0.252°/cm, against the roller's 0.251 (RESEARCH.md 14; the
+  insert radii are unverified).
+- **Patents:** check Marsblade's before making one to sell.
+
+## Jon's list for the boot, the skates and the gear (2026-11-11)
+
+Jon's items, in his words, each with a first engineering take and where it goes. None is built
+yet; the boot work waits on his scans (B1).
+
+1. **"tendon guard".** B4. The guard above the heel. How stiff it is decides how far the ankle
+   can extend at push-off, so it's a feel choice, and the part can be made to suit either way: a
+   separate flexure (printed TPU, or thin PA12 shaped as a spring) on the shell, sized by
+   bending stiffness with sim-soft.
+2. **"align wheel and blade radius point so the feel the same for anchors and soft drags for
+   both roller and ice".** Track C, with `src/pitch.rs`. One "feel spec" in the foot's own
+   frame (both boots come from the same last), and both skates set to match it:
+   - **where the pivot sits under the foot:** the blade profile's radius point on ice (the
+     runner's profile and the i2), and the rocker's rest contact on roller (`center`, 0.47 of
+     foot length now);
+   - **how fast the foot pitches** per cm of weight shift (the tables at the top of the README);
+   - **the contact length that turns on an edge:** the blade profile's radius against the
+     wheels' layout.
+
+   **Jon's ice setup** (2026-11-11): "i just sharpened them half inch on the original profile the
+   i2 blades come with". That's the factory i2 runner, an 11 ft radius, and a 1/2" hollow, which
+   sets bite and glide, not pitch. The pitch also depends on which rocker insert is in his holder:
+   with the factory 23 ft insert (if the catalog figure is right), the ice skate pitches
+   0.252°/cm and the 7.5 ft roller rocker 0.251°/cm, so the two already match (RESEARCH.md 14).
+   **Still to measure:** the insert in his holder, and where the runner's lowest point sits under
+   the foot.
+3. **"the tongue slot should be adjusted so its from the toes to the heel, direction wise".**
+   B4. Round 1 cuts the throat as a straight box, 32% to 70% of the foot's length and 40 mm wide,
+   vertical-walled (`boot.rs`). **Jon, 2026-11-11: "probably more like a traditional hockey
+   skate, with the top cuff around the ankle flared a bit for ankle mobility"** (his reference:
+   a player skate in profile). So:
+   - the throat runs from the toe cap up the instep and the front of the ankle to the top, with
+     a full-length tongue;
+   - the cuff wraps the ankle and flares outward at its top edge;
+   - the trim line rises at the back into the tendon guard (item 1).
+
+   The lines are placed from landmarks on the scan (ankle bones, instep, heel) rather than as
+   fractions of the length, so they follow his foot.
+4. **"the tongue itself".** B4/B7. Its own part, shaped to the last's instep: padding against
+   lace bite, a stiffer outer layer, and its stiffness sets part of the boot's forward flex. A
+   graded printed lattice (`mesh-lattice`) could do comfort, flex and puck protection (item 7)
+   in one piece.
+5. **"eyelits".** B4. Two rows along the throat's edges, placed from the last so lace pressure
+   spreads over the instep. A printed shell needs a reinforced boss at each eyelet; their
+   pull-out under lace tension is a sim-soft check.
+6. **"layers".** B4/B5. The stack per region (heel pocket, ankle, instep, toe box): shell, liner
+   foam, padding, footbed, and the outsole that carries the chassis or holder. Round 1 used one
+   uniform stack (1 mm ease, 4 mm liner, 2.5 mm shell); round 2 of the boot makes it regional.
+7. **"potential air gapped layer, like the shot blocker attachment for skates, but built into
+   these? ... it would hurt more for ice hockey than roller. as these are basically 0 tolerance
+   to the foot (which performance wise is optimal, we just need to keep the comfort/protection
+   too."** B4/B5. A stiff outer shield held off the foot over a gap (air or a soft lattice), so
+   an impact bends the shield and spreads the load before anything reaches the foot. With a
+   zero-gap fit the gap has to be designed in, outside the fit layers. The ice boot gets more
+   of it than the roller boot.
+   - **Sizing:** sim-soft can run the impact: a puck's mass and speed, the shield's stiffness and
+     the gap's thickness, giving peak force on the foot. Puck masses and speeds need a source.
+   - **Placement:** where pucks hit, to decide with Jon (laces and instep, toe cap, ankle sides).
+   - **Cost:** weight, counted like the chassis.
+8. **"thinking early about building in electronics/sensors to the skate to help you improve
+   your skating".** Track C, planned now so the parts leave room for them:
+   - an IMU on each part (stride, edge angle, and, from the upper and lower together, how much
+     the rocker is actually used);
+   - pressure insoles, like the Brock study's;
+   - strain gauges on the chassis (load per wheel, the sideways push this sizing still lacks);
+   - a sealed bay for battery and logger (wet and cold on ice).
+9. **Shin pads made with the skates** (Jon: "tuning shinpads to skates and getting it perfect is
+   kind of difficult. we could honestly probably just make a full set of equipment."). The pad's
+   bottom meets the skate's tongue and cuff, so they're designed together, from the same scan
+   extended up the shin (the Otter can scan a leg). The pad's cap and the tongue's shield
+   (item 7) are one protection system: what overlaps, and what moves when the ankle flexes
+   forward. A full set of equipment comes later, as its own track, shin pads first.
 
 ## Open questions for Jon
 
@@ -308,3 +705,8 @@ possibly our own dynamic holder, with the GIH model (`src/pitch.rs`) setting the
 - The measurements in `docs/MEASURE.md`, and the first scans.
 - Manufacturing route: CNC 7075 or metal printing (chassis); printed shell or carbon over a
   printed last (boots).
+- Answered 2026-11-11: his ice blades are the i2's factory profile with a 1/2" hollow; the
+  tongue slot and cuff like a traditional hockey skate, the cuff flared; the ice skate one
+  piece, with the rocker inside the holder.
+- Which rocker insert is in his i2 holder (the inserts may be marked), to confirm the radii.
+- The one-piece ice holder: take the i2's runners and inserts, or our own?

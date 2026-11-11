@@ -253,6 +253,33 @@ hockey yet, so the cases are assumptions built on these:
 **The cases used** (assumptions, `strength::LOADS`): 100 kg skater; stride 1.5 BW on one skate,
 repeated (fatigue); impact 3 BW once (static); lateral / normal 0.45 in the skate's frame.
 
+## 14. Marsblade i2: the ice holder's radii (2026-11-11)
+
+- **Runner:** "The I2 steel comes delivered with an 11 ft radius and can be profiled and
+  sharpened just like regular skate blades" (HockeyMonkey, i2 holder kit page,
+  https://www.hockeymonkey.com/marsblade-hockey-skate-components-i2-holder-kit.html, read
+  2026-11-11).
+- **Rocker:** set by inserts in the holder, not by the runner. The kit has "Rocker Radius
+  Inserts x 5 pairs" (same page).
+- **The inserts' radii:** 14, 17, 20, 23 and 26 ft, with 23 ft fitted from the factory. This
+  comes from a web search's summary of Marsblade's 2023 catalog (issuu, Interhockey AG); the
+  catalog itself wouldn't load, so **not verified**. To be checked on Jon's inserts.
+- **Jon's runners** (2026-11-11): the factory profile, sharpened with a 1/2" hollow. The hollow
+  is the cross-section (bite against glide); it doesn't change the pitch.
+- **What that means for pitch** (hand, GIH eq. 10, effective radius r s / (r + s - h), with the
+  blade height h taken as 3 cm, which hardly matters: 2-4 cm moves it 0.01 ft):
+
+  | Insert (r) on the 11 ft runner | Effective radius | Foot pitch per cm |
+  |---|---|---|
+  | 14 ft | 6.18 ft | 0.304 deg |
+  | 17 ft | 6.70 ft | 0.280 deg |
+  | 20 ft | 7.12 ft | 0.264 deg |
+  | 23 ft (factory, if the catalog is right) | 7.46 ft | 0.252 deg |
+  | 26 ft | 7.75 ft | 0.243 deg |
+
+  The round-2 roller rocker (7.5 ft on a flat lower) gives 0.251 deg/cm, within 1% of the 23 ft
+  insert.
+
 ## Still to find
 
 - Frame design loads for hockey: Stidwill's thesis numbers; the EN 13843 test loads (paid).

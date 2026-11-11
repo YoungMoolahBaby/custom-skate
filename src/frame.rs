@@ -18,6 +18,15 @@
 //!   between the rails, in the gap between the middle wheels, with a nut below.
 //! - Optional ties across the walls' feet, through the rails' truss windows, close the upper into
 //!   a box against the lateral push.
+//! - Option `vee` (step 2, "less material"): the walls lean out along the line from the wheels'
+//!   ground contact through their feet, and the ledges tilt square to that line. In front view
+//!   the two walls then meet at the contact patch, so the ground force runs along them instead of
+//!   bending them. Options `web_truss` (the web as a truss in plan) and `deck_panels` (a truss
+//!   deck across the lower's rails) carry the push lengthwise to the one place a tilted ledge
+//!   can take it: the rolling contact.
+//! - Option `rib_d` (step 2, upright walls): a rib along every truss member of the walls, on the
+//!   outer face, so each member is a T-section against the sideways push (`rib_t`, `rib_taper`,
+//!   `rib_chords` choose its thickness, taper and which chords get one).
 //!
 //! Every dimension is a parameter; the defaults are a first sizing, weighed and checked by
 //! `cargo run --release -- chassis`.
@@ -86,6 +95,25 @@ pub struct FrameParams {
     pub bushing_len: f64,
     /// Rocking travel: the contact moves +- this far from the centre, mm (an assumption).
     pub travel: f64,
+    /// V section (round 2 step 2, "less material"): the walls lean out along the line from the
+    /// wheels' ground contact through their feet, and the ledges tilt square to that line, so in
+    /// front view the push runs along the walls instead of bending them. False = upright walls.
+    pub vee: bool,
+    /// The web as a Warren truss in plan (this many panels; 0 = the windowed web).
+    pub web_truss: usize,
+    /// A Warren-truss deck in plan between the lower's rails, at their top (this many panels,
+    /// 0 = none), `deck_t` thick: carries the sideways push along the lower to the contact.
+    pub deck_panels: usize,
+    pub deck_t: f64,
+    /// Bulkheads across the lower's rails in the gaps between wheels, this thick (0 = none).
+    pub bulk_t: f64,
+    /// Ribs on the upright walls' outer faces, one along every truss member: depth at the top
+    /// chord (0 = none), thickness, and depth at the foot chord as a fraction of it.
+    pub rib_d: f64,
+    pub rib_t: f64,
+    pub rib_taper: f64,
+    /// Which chords get ribs too: 0 = none (diagonals only), 1 = the foot chord, 2 = both.
+    pub rib_chords: usize,
 }
 
 impl Default for FrameParams {
@@ -131,6 +159,15 @@ impl Default for FrameParams {
             bushing_od: 18.0,
             bushing_len: 10.0,
             travel: 50.0,
+            vee: false,
+            web_truss: 0,
+            deck_panels: 0,
+            deck_t: 2.0,
+            bulk_t: 0.0,
+            rib_d: 0.0,
+            rib_t: 2.0,
+            rib_taper: 1.0,
+            rib_chords: 2,
         }
     }
 }
@@ -158,9 +195,15 @@ pub struct Layout {
     pub x1: f64,
     pub xu0: f64,
     pub xu1: f64,
-    /// Centre of the rocker arc at rest.
+    /// Centre of the rocker arc at rest (in the wall's own plane: x and `up_wall`).
     pub arc_c: Point3<f64>,
     pub r_boss: f64,
+    /// The walls' mid-line in the (|y|, z) plane: through (`y_wc`, `z_t`), leaning out by an
+    /// angle with this sine and cosine (0 and 1 for upright walls); half the wall thickness.
+    pub y_wc: f64,
+    pub v_sin: f64,
+    pub v_cos: f64,
+    pub half_t: f64,
 }
 
 impl Layout {
@@ -183,6 +226,11 @@ impl Layout {
         let x1 = axle_x[3] + r_boss + p.rail_end;
         // 0.1 mm above the ledge: a line contact, not an overlap (round 1: a tangent arc read as a clash).
         let arc_c = Point3::new(xc, 0.0, z_t + 0.1 + p.rocker_r);
+        // V section: the mid-line through the wall foot also passes through the wheels' ground
+        // contact (y = 0, ground), so any ground force is carried along the two walls.
+        let y_wc = 0.5 * (y_wi + y_wo);
+        let lean = if p.vee { (y_wc / (z_t - ground_z)).atan() } else { 0.0 };
+        let (v_sin, v_cos) = lean.sin_cos();
         Self {
             xc,
             axle_x,
@@ -202,7 +250,35 @@ impl Layout {
             xu1: xc + 0.5 * p.upper_len,
             arc_c,
             r_boss,
+            y_wc,
+            v_sin,
+            v_cos,
+            half_t: 0.5 * p.wall_t,
         }
+    }
+
+    /// Signed distance from the wall's mid-line across the wall (+ outward), mirrored in y.
+    pub fn across(&self, y: f64, z: f64) -> f64 {
+        (y.abs() - self.y_wc) * self.v_cos - (z - self.z_t) * self.v_sin
+    }
+
+    /// Signed distance along the wall's mid-line from the ledge top's plane (+ up), mirrored in y.
+    pub fn along(&self, y: f64, z: f64) -> f64 {
+        (y.abs() - self.y_wc) * self.v_sin + (z - self.z_t) * self.v_cos
+    }
+
+    /// Height along the wall's mid-line, as the z it has on the line (= z for upright walls):
+    /// the coordinate the wall's (x, z) profile is drawn in.
+    pub fn up_wall(&self, y: f64, z: f64) -> f64 {
+        self.z_t + self.along(y, z) * self.v_cos
+    }
+
+    /// |y| of the wall's outer and inner faces at height z.
+    pub fn wall_out(&self, z: f64) -> f64 {
+        self.y_wc + (z - self.z_t) * self.v_sin / self.v_cos + self.half_t / self.v_cos
+    }
+    pub fn wall_in(&self, z: f64) -> f64 {
+        self.y_wc + (z - self.z_t) * self.v_sin / self.v_cos - self.half_t / self.v_cos
     }
 }
 
@@ -365,15 +441,73 @@ pub fn build(sole_bottom: f64, length: f64, p: FrameParams) -> Frame {
         d
     };
     let rails = extrude_pair(rail_profile, l.y_in, l.y_out, [l.x0, l.x1, axle_z - r_boss, l.rail_top]);
-    let mut lower = rails
-        .union(slab(ledge_x.0, ledge_x.1, l.y_out - 0.5, l.y_out + p.ledge_w, l.z_t - p.ledge_t, l.z_t))
-        .union(slab(ledge_x.0, ledge_x.1, -l.y_out - p.ledge_w, -l.y_out + 0.5, l.z_t - p.ledge_t, l.z_t));
+    let mut lower = if p.vee {
+        // Tilted ledges: the top square to the walls' mid-line, from inside the rail out past the
+        // wall's outer face by the same margin as the flat ledge.
+        let (lv, ledge_t, xh) = (l, p.ledge_t, 0.5 * p.ledge_len);
+        let reach = l.half_t + (p.ledge_w - p.side_gap - p.wall_t).max(0.5);
+        let y_rail = l.y_out - 0.5;
+        let y_max = l.wall_out(l.z_t) + reach + 2.0;
+        rails.union(Solid::user_fn(
+            move |q: Point3<f64>| {
+                let dz = (lv.along(q.y, q.z) + 0.5 * ledge_t).abs() - 0.5 * ledge_t;
+                dz.max(y_rail - q.y.abs()).max(lv.across(q.y, q.z) - reach).max((q.x - lv.xc).abs() - xh)
+            },
+            Aabb::new(Point3::new(l.xc - xh - 1.0, -y_max, l.z_t - ledge_t - 4.0), Point3::new(l.xc + xh + 1.0, y_max, l.z_t + 3.0)),
+        ))
+    } else {
+        rails
+            .union(slab(ledge_x.0, ledge_x.1, l.y_out - 0.5, l.y_out + p.ledge_w, l.z_t - p.ledge_t, l.z_t))
+            .union(slab(ledge_x.0, ledge_x.1, -l.y_out - p.ledge_w, -l.y_out + 0.5, l.z_t - p.ledge_t, l.z_t))
+    };
     // Cross-member between the rails, in the gap between the middle wheels: a ring round the
     // bushing bore and an arm out to each rail.
     let cm_bottom = l.rail_top - p.cm_h;
     lower = lower
         .union(along_z(ring_r, l.xc, cm_bottom, l.rail_top))
         .union(slab(l.xc - 0.5 * p.cm_arm, l.xc + 0.5 * p.cm_arm, -l.y_in - 0.5, l.y_in + 0.5, cm_bottom, l.rail_top));
+    // Deck: a Warren truss in plan across the rails' tops, over the wheels (2 mm clear at the
+    // defaults), so the two rails act together as the flanges of one beam in plan.
+    if p.deck_panels > 0 {
+        let n = p.deck_panels;
+        let r = 0.5 * p.diag_w;
+        let (xa, xb) = (l.axle_x[0], l.axle_x[3]);
+        let deck = Warren {
+            top: [xa, xb, l.y_in - 1.0, l.y_out],
+            bot: [xa, xb, -l.y_out, -(l.y_in - 1.0)],
+            nodes: (0..=n).map(|i| xa + r + (xb - xa - 2.0 * r) * i as f64 / n as f64).collect(),
+            diag_w: p.diag_w,
+            post_w: 0.0,
+            fillet: p.fillet,
+        };
+        let (z0, z1) = (l.rail_top - p.deck_t, l.rail_top);
+        lower = lower.union(Solid::user_fn(
+            move |q: Point3<f64>| deck.eval(q.x, q.y).max((q.z - 0.5 * (z0 + z1)).abs() - 0.5 * (z1 - z0)),
+            Aabb::new(Point3::new(xa - 1.0, -l.y_out - 1.0, z0 - 1.0), Point3::new(xb + 1.0, l.y_out + 1.0, z1 + 1.0)),
+        ));
+    }
+    // Bulkheads: plates across the rails in the three gaps between wheels, `bulk_t` thick,
+    // clear of the wheels by `BULK_CLEAR` (the gap is narrowest at axle height); the middle one
+    // stops below the coupling's nut. They keep the rails' section square (no racking).
+    if p.bulk_t > 0.0 {
+        const BULK_CLEAR: f64 = 0.75;
+        let pitch = p.wheel_d + p.wheel_gap;
+        let z0 = l.axle_z + p.bot_z0;
+        for (gx, z1) in [(l.xc - pitch, l.rail_top), (l.xc, cm_bottom - 7.0), (l.xc + pitch, l.rail_top)] {
+            let mut plate = slab(gx - 0.5 * p.bulk_t, gx + 0.5 * p.bulk_t, -l.y_in - 0.5, l.y_in + 0.5, z0, z1);
+            for &ax in &l.axle_x {
+                if (ax - gx).abs() < pitch {
+                    plate = plate.subtract(along_y(0.5 * p.wheel_d + BULK_CLEAR, p.wheel_w + 2.0, ax, l.axle_z));
+                }
+            }
+            // The upper's ties pass the outer gaps: a hole with room for the rocking (~2 mm).
+            if p.tie_d > 0.0 && gx != l.xc {
+                let z_tie = l.z_t + 0.1 + arc_rise(r_rock, gx - l.xc) + 0.5 * p.wall_bot_h;
+                plate = plate.subtract(along_y(0.5 * p.tie_d + 2.5, 2.0 * l.y_out + 2.0, gx, z_tie));
+            }
+            lower = lower.union(plate);
+        }
+    }
     lower = lower
         .subtract(along_z(0.5 * p.bushing_od + 0.2, l.xc, l.rail_top - p.bushing_len, l.rail_top + 1.0))
         .subtract(along_z(0.5 * p.bolt_d + 1.0, l.xc, cm_bottom - 1.0, l.rail_top));
@@ -386,27 +520,104 @@ pub fn build(sole_bottom: f64, length: f64, p: FrameParams) -> Frame {
     let x_first = l.xu0 + 0.5 * p.wall_diag_w;
     let x_last = l.xu1 - 0.5 * p.wall_diag_w;
     let wall = Warren {
-        top: [l.xu0, l.xu1, l.z_wb - p.wall_top_h, l.z_s],
+        // A leaned wall's top is cut off at the sole by z itself, so its chord runs past it.
+        top: [l.xu0, l.xu1, l.z_wb - p.wall_top_h, if p.vee { l.z_s + 1.0 } else { l.z_s }],
         bot: [l.xu0, l.xu1, l.z_t - 1.0, foot_top],
         nodes: (0..=n).map(|i| x_first + (x_last - x_first) * i as f64 / n as f64).collect(),
         diag_w: p.wall_diag_w,
         post_w: 0.0,
         fillet: p.fillet,
     };
+    // Ribs (upright walls only): every truss member of the wall gets a rib `rib_t` thick standing
+    // out from its outer face, so each member is a T-section bending out of the wall's plane.
+    // `rib_d` deep at the top chord (the wall's root, where the bending moment is largest),
+    // tapering linearly to `rib_d * rib_taper` at the foot chord.
+    let ribs = (p.rib_d > 0.0 && !p.vee).then(|| {
+        let rt = 0.5 * p.rib_t;
+        let (tc, bc) = (0.5 * (l.z_wb - p.wall_top_h + l.z_s), 0.5 * (l.z_t - 1.0 + foot_top));
+        let rib = Warren {
+            top: [l.xu0, l.xu1, tc - rt, tc + rt],
+            bot: [l.xu0, l.xu1, bc - rt, bc + rt],
+            nodes: wall.nodes.clone(),
+            diag_w: p.rib_t,
+            post_w: 0.0,
+            fillet: p.fillet,
+        };
+        let (y_wo, rib_d, taper, chords) = (l.y_wo, p.rib_d, p.rib_taper, p.rib_chords);
+        Solid::user_fn(
+            move |q: Point3<f64>| {
+                let above_arc = (q.x - arc_c.x).hypot(q.z - arc_c.z) - r_rock;
+                let s = ((q.z - bc) / (tc - bc)).clamp(0.0, 1.0);
+                let depth = rib_d * (taper + (1.0 - taper) * s);
+                let ya = q.y.abs();
+                let mut d = rib.eval(q.x, q.z).max(above_arc).max(y_wo - 0.5 - ya).max(ya - y_wo - depth);
+                // Leave the chords' own ribs off (the diagonals' ribs still reach the chords).
+                if chords < 2 {
+                    d = d.max(rt + 0.5 - (q.z - tc).abs());
+                }
+                if chords < 1 {
+                    d = d.max(rt + 0.5 - (q.z - bc).abs());
+                }
+                d
+            },
+            Aabb::new(Point3::new(l.xu0 - 1.0, -l.y_wo - p.rib_d - 1.0, l.z_t - 1.0), Point3::new(l.xu1 + 1.0, l.y_wo + p.rib_d + 1.0, l.z_s)),
+        )
+    });
     let wall_profile = move |x: f64, z: f64| {
         // Inside the drum = above the arc.
         let above_arc = (x - arc_c.x).hypot(z - arc_c.z) - r_rock;
         wall.eval(x, z).max(above_arc)
     };
-    let walls = extrude_pair(wall_profile, l.y_wi, l.y_wo, [l.xu0, l.xu1, l.z_t - 1.0, l.z_s]);
-    let web = slab(l.xu0, l.xu1, -l.y_wo, l.y_wo, l.z_wb, l.z_s);
+    let walls = if p.vee {
+        // The wall's profile drawn along its leaning mid-line; its foot is then square to the
+        // line, flat on the tilted ledge.
+        let (lv, z_s) = (l, l.z_s);
+        let y_max = l.wall_out(l.z_s) + 1.0;
+        Solid::user_fn(
+            move |q: Point3<f64>| wall_profile(q.x, lv.up_wall(q.y, q.z)).max(lv.across(q.y, q.z).abs() - lv.half_t).max(q.z - z_s),
+            Aabb::new(Point3::new(l.xu0 - 1.0, -y_max, l.z_t - 3.0), Point3::new(l.xu1 + 1.0, y_max, l.z_s + 1.0)),
+        )
+    } else {
+        extrude_pair(wall_profile, l.y_wi, l.y_wo, [l.xu0, l.xu1, l.z_t - 1.0, l.z_s])
+    };
+    let walls = match ribs {
+        Some(r) => walls.union(r),
+        None => walls,
+    };
+    // The web spans the walls' tops; its windows (or truss) stop at the walls' inner faces.
+    let (y_web, y_web_in) = if p.vee { (l.wall_out(l.z_s), l.wall_in(l.z_wb)) } else { (l.y_wo, l.y_wi) };
     let boss_half = 9.0;
+    let web = if p.web_truss > 0 {
+        // Warren truss in plan: chords along the walls (1.5 mm inside them, like the windowed
+        // web's edges), diagonals `web_rib` wide, a solid strip across round the bolt.
+        let n = p.web_truss;
+        let r = 0.5 * p.web_rib;
+        let chord_in = y_web_in - 1.5;
+        let truss = Warren {
+            top: [l.xu0, l.xu1, chord_in, y_web],
+            bot: [l.xu0, l.xu1, -y_web, -chord_in],
+            nodes: (0..=n).map(|i| l.xu0 + r + (l.xu1 - l.xu0 - 2.0 * r) * i as f64 / n as f64).collect(),
+            diag_w: p.web_rib,
+            post_w: 0.0,
+            fillet: p.fillet,
+        };
+        let (xc, z0, z1, pad, k) = (l.xc, l.z_wb, l.z_s, boss_half + 0.5 * p.web_rib, p.fillet);
+        Solid::user_fn(
+            move |q: Point3<f64>| {
+                let plan = smin(truss.eval(q.x, q.y), (q.x - xc).abs() - pad, k);
+                plan.max(q.y.abs() - y_web).max((q.z - 0.5 * (z0 + z1)).abs() - 0.5 * (z1 - z0))
+            },
+            Aabb::new(Point3::new(l.xu0 - 1.0, -y_web - 1.0, z0 - 1.0), Point3::new(l.xu1 + 1.0, y_web + 1.0, z1 + 1.0)),
+        )
+    } else {
+        slab(l.xu0, l.xu1, -y_web, y_web, l.z_wb, l.z_s)
+    };
     let boss = slab(l.xc - boss_half, l.xc + boss_half, -l.y_in + 1.0, l.y_in - 1.0, l.rail_top + 1.0, l.z_wb + 0.5);
     let mut upper = web.union(walls).union(boss);
     // Web windows between the walls, each side of the bolt boss.
-    let win_y = l.y_wi - 1.5;
+    let win_y = y_web_in - 1.5;
     let side_len = half_u - p.web_rib - boss_half - 0.5 * p.web_rib;
-    if p.web_windows > 0 && side_len > 10.0 {
+    if p.web_truss == 0 && p.web_windows > 0 && side_len > 10.0 {
         let m = p.web_windows as f64;
         let w = (side_len - (m - 1.0) * p.web_rib) / m;
         for side in [-1.0, 1.0] {
@@ -431,7 +642,7 @@ pub fn build(sole_bottom: f64, length: f64, p: FrameParams) -> Frame {
     if p.tie_d > 0.0 {
         for dx in [-pitch, pitch] {
             let z = l.z_t + 0.1 + arc_rise(r_rock, dx) + 0.5 * p.wall_bot_h;
-            let rod = along_y(0.5 * p.tie_d, 2.0 * l.y_wo, l.xc + dx, z);
+            let rod = along_y(0.5 * p.tie_d, 2.0 * if p.vee { l.wall_out(z) } else { l.y_wo }, l.xc + dx, z);
             ties = Some(match ties {
                 None => rod,
                 Some(s) => s.union(rod),
