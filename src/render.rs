@@ -14,11 +14,19 @@ pub struct Layer<'a> {
     pub color: [f64; 3],
     /// Per-vertex colours (overrides `color`), e.g. a fit map.
     pub vertex_colors: Option<&'a [[f64; 3]]>,
+    /// Specular highlight, 0 (matte) to 1 (gloss); smooth style only. Black-on-black parts read
+    /// apart by their sheen.
+    pub spec: f64,
 }
 
 impl<'a> Layer<'a> {
     pub fn solid(mesh: &'a IndexedMesh, color: [f64; 3]) -> Self {
-        Layer { mesh, color, vertex_colors: None }
+        Layer { mesh, color, vertex_colors: None, spec: 0.0 }
+    }
+
+    pub fn with_spec(mut self, spec: f64) -> Self {
+        self.spec = spec;
+        self
     }
 }
 
@@ -119,6 +127,8 @@ pub fn render_styled(
     let pad = 12 * k;
     let light = Vector3::new(-0.3, 0.5, 0.8).normalize();
     let fill = Vector3::new(0.6, -0.2, 0.4).normalize();
+    // Blinn half vector between the key light and the viewer (camera z points at the viewer).
+    let half = (light + Vector3::z()).normalize();
     let normals: Vec<Vec<Vector3<f64>>> =
         if style.smooth { layers.iter().map(|l| vertex_normals(l.mesh)).collect() } else { Vec::new() };
     let mut panels: Vec<(usize, usize, Vec<[u8; 3]>)> = Vec::new();
@@ -153,12 +163,13 @@ pub fn render_styled(
                 if n.norm() == 0.0 {
                     continue;
                 }
-                let shade_of = |n: &Vector3<f64>| {
+                let shade_of = |n: &Vector3<f64>| -> (f64, f64) {
                     let n = n.normalize();
                     if style.smooth {
-                        0.22 + 0.62 * n.dot(&light).abs() + 0.16 * n.dot(&fill).abs()
+                        let diffuse = 0.22 + 0.62 * n.dot(&light).abs() + 0.16 * n.dot(&fill).abs();
+                        (diffuse, layer.spec * n.dot(&half).abs().powi(40))
                     } else {
-                        0.28 + 0.72 * n.dot(&light).abs()
+                        (0.28 + 0.72 * n.dot(&light).abs(), 0.0)
                     }
                 };
                 let flat_shade = shade_of(&n);
@@ -170,7 +181,7 @@ pub fn render_styled(
                     }
                     None => layer.color,
                 };
-                let col_of = |shade: f64| base.map(|k| (k * shade * 255.0).clamp(0.0, 255.0) as u8);
+                let col_of = |(shade, hi): (f64, f64)| base.map(|k| ((k * shade + 0.7 * hi) * 255.0).clamp(0.0, 255.0) as u8);
                 let flat_col = col_of(flat_shade);
                 let (p0, p1, p2) = (to_px(&a), to_px(&b), to_px(&d));
                 let xmin = p0.0.min(p1.0).min(p2.0).floor().max(0.0) as usize;

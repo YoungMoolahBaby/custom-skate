@@ -80,7 +80,7 @@ cargo run --release -- pitch         # the pitch tables above
 cargo run --release -- scan <file>   # measure a foot scan (OBJ, STL, PLY)
 cargo run --release -- round1 <scan> # the whole skate on one foot -> out/round1 (STL, PNG)
 cargo run --release -- chassis       # the round-2 roller chassis alone: weighed, rocked, checked -> out/chassis
-cargo run --release -- boot <scan>   # the hockey boot: every part meshed, weighed, drawn -> out/boot
+cargo run --release -- boot <scan> [out] [ice|roller]   # the hockey boot, every part weighed and drawn
 ```
 
 Builds go to `D:/cargo-target/custom-skate` (`.cargo/config.toml`, local only). The first
@@ -149,29 +149,38 @@ Pictures and numbers: `docs/round2/`, and `docs/PLAN.md` (Round 2).
 
 ## The boot: a hockey boot from the scan
 
-![The hockey boot, round 2: three-quarter views from the outside front and the inside back](docs/boot/boot_hero.png)
+![The hockey boot: black carbon, three-quarter views from the outside front and the inside back](docs/boot/boot_hero.png)
 
-*Round 2 of the boot, on the stand-in foot: shell, toe cap, outsole, liner with ankle pads and
-footbed, tongue, tendon guard, eyelets and laces. `cargo run --release -- boot <scan>`.*
+*The ice boot on the stand-in foot: carbon shell, black thermoplastic toe cap, outsole and
+tendon guard, black tongue. The roller boot is the same, vented (`docs/boot/roller/`).
+`cargo run --release -- boot <scan> [out] [ice|roller]`.*
 
-- **A traditional hockey boot, as Jon asked:** tight from heel to toe, open at the top. Above the
-  ankle bones the liner and shell flare out together: 13 mm of room at the sides at the top
-  (about 9° of ankle tip each way before the leg meets the liner), 7 mm in front, and a slight
-  press at the back to pitch the leg forward. The throat runs from the toe cap to the top, with a
-  full tongue.
-- **Placed from the scan.** The ankle bones set the cuff, the ankle pockets and the pads. The
+- **Tight from heel to toe, open at the top**, as Jon skates. The cuff stops just above the
+  outer ankle bone at the sides (40 mm), rising up the shin at the front for the lacing and into
+  a tall tendon guard at the back. Above the ankle bones the liner and shell flare out together:
+  13 mm of room at the sides, so **the ankle tips about 19° each way** before the leg meets the
+  liner; 7 mm in front; a slight press at the back to pitch the leg forward.
+- **Forward flex:** the upper eyelets splay into a V (26 mm apart at the front, 48 at the top),
+  a 6° forward lean, a tall tongue that curls forward at the top.
+- **The heel lock:** the eyelet pair at the ankle crease, whose lace pulls the heel into its
+  pocket, is heavy duty: bigger grommets on a raised boss.
+- **Ice sealed, roller vented:** slots through the roller boot's toe cap, lower quarters and
+  liner; the ice boot stays sealed against a cold rink and meltwater.
+- **Placed from the scan.** The ankle bones set the cuff, the ankle pockets and the pads; the
   line over the top of the foot and up the shin sets the throat, the tongue, the eyelets and the
-  laces. So the same code fits Jon's foot once it's scanned.
-- **422 g in all**, with the shell, toe cap and outsole in printed nylon (PA 12): shell 238 g,
-  outsole 83 g, toe cap 21 g, liner, ankle pads and footbed 47 g, tongue 12 g, tendon guard 11 g,
-  eyelets and laces 12 g. The foam, felt and lace densities are assumed.
-- **Estimates until measured:** the heights of the cuff, tongue and tendon guard, and the
-  eyelet spacing (`docs/MEASURE.md`, B1-B7, on the TF9).
-- **Next for the boot:** Jon's own scans, puck protection (an air-gapped shield), the fit
-  simulation. Then the sole becomes the roller chassis's upper, and the ice skate's one-piece
-  holder takes our own runner and rocker insert; nothing proprietary.
+  laces. The shell's inside follows the foot; its outside is smoothed over the hollows. So the
+  same code fits Jon's foot once it's scanned.
+- **387 g (ice), 384 g (roller)**, weighed with the shell, toe cap and outsole in printed nylon
+  (PA 12): shell 215 g, outsole 68 g, toe cap 21 g, liner, ankle pads and footbed 43 g, tongue
+  15 g, tendon guard 12 g, eyelets and laces 13 g. The foam, TPU and lace densities are assumed.
+- **Estimates until measured:** the heights of the cuff, tongue and tendon guard, the lean, and
+  the eyelet spacing (`docs/MEASURE.md`, B1-B7, on the TF9).
+- **Next for the boot:** panels and character lines, then the holder under it. Jon's own scans,
+  puck protection (an air-gapped shield) and the fit simulation after. The sole becomes the
+  roller chassis's upper, and the ice skate's one-piece holder takes our own runner and rocker
+  insert; nothing proprietary.
 
-Pictures, the layer sections and the numbers: `docs/boot/`, and `docs/PLAN.md` (Track B, round 2).
+Pictures, the layer sections and the numbers: `docs/boot/`, and `docs/PLAN.md` (Track B).
 
 ## Status
 

@@ -91,6 +91,17 @@
     <div class="hint" id="hint" hidden>Drag to turn · right-drag to move · scroll to zoom</div>
   </div>
   <aside>
+    <div class="ctl">
+      <p class="label">Boot</p>
+      <div class="seg" role="group" aria-label="Boot">
+        <button type="button" id="vIce" aria-pressed="true">Ice, sealed</button>
+        <button type="button" id="vRoller" aria-pressed="false">Roller, vented</button>
+      </div>
+      <div class="seg" role="group" aria-label="Colours">
+        <button type="button" id="cLook" aria-pressed="true">Black</button>
+        <button type="button" id="cLayers" aria-pressed="false">Layers</button>
+      </div>
+    </div>
     <div>
       <p class="label">Whole boot</p>
       <div class="total"><b id="total">–</b><span>grams, shell in printed PA 12</span></div>
@@ -121,9 +132,12 @@
       <ul class="notes">
         <li>Built on a stand-in foot (a CC0 research scan) until Jon's own scans exist.</li>
         <li>Lines placed from the scan: the ankle bones set the cuff and the ankle pockets; the ridge from the toes up the shin sets the throat, tongue and eyelets.</li>
-        <li>Tight from heel to toe, open at the top: above the ankle bones the liner and shell flare out together, leaving 13 mm at the sides (about 9° of ankle tip each way), 7 mm in front, and a slight press at the back to pitch the leg forward. Cut through the ankle to see it.</li>
+        <li>Tight from heel to toe, open at the top. The cuff stops just above the outer ankle bone at the sides (40 mm), rising up the shin at the front for the lacing and into the tendon guard at the back. Above the ankle bones the liner and shell flare out together: 13 mm of room at the sides (about 19° of ankle tip each way), 7 mm in front, a slight press at the back to pitch the leg forward. Cut through the ankle to see it.</li>
+        <li>The upper eyelets splay into a V (26 mm apart at the front, 48 at the top) so the shin can drive forward. The heel-lock pair, at the ankle crease, is heavy duty: bigger grommets on a raised boss.</li>
+        <li>The look: black carbon shell against black thermoplastic (toe cap, outsole, tendon guard), a black leather-look tongue. Leaned forward 6°, a padded collar over the shell's edge, a smooth outer shell (its inside still follows the foot).</li>
+        <li>The roller boot is vented (toe cap, lower quarters, liner); the ice boot is sealed, since a cold rink and melting ice make vents a liability.</li>
         <li>Cuff, tongue and tendon guard heights are estimates until measured on the TF9.</li>
-        <li>Foam, felt and lace densities are assumed; the shell, toe cap and outsole are 3D-printed nylon (PA 12).</li>
+        <li>Weighed with the shell, toe cap and outsole in 3D-printed nylon (PA 12); a carbon shell would be laid up thinner. Foam, lace and TPU densities are assumed.</li>
       </ul>
     </div>
   </aside>
@@ -151,12 +165,39 @@
   scene.add(new THREE.HemisphereLight(0xffffff, 0x8a96a3, 0.75));
   const key = new THREE.DirectionalLight(0xffffff, 0.75); key.position.set(-300, 500, 600); scene.add(key);
   const fill = new THREE.DirectionalLight(0xffffff, 0.3); fill.position.set(500, 150, -400); scene.add(fill);
+  // A rim light from behind and above, so black-on-black edges catch a highlight.
+  const rim = new THREE.DirectionalLight(0xffffff, 0.5); rim.position.set(-500, 350, -500); scene.add(rim);
 
   // The boot is modelled z-up (x heel to toe); three.js is y-up.
   const root = new THREE.Group(); root.rotation.x = -Math.PI / 2; scene.add(root);
-  const parts = [];
+  let parts = [];
+  const hidden = { 'foot (stand-in scan)': true };
   const clip = new THREE.Plane(new THREE.Vector3(1, 0, 0), 0);
-  let cutMode = 'none', cutPos = 0, explode = 0, manifest = null, center = new THREE.Vector3(), radius = 200;
+  let cutMode = 'none', cutPos = 0, explode = 0, manifest = null, colourMode = 'look', variant = '';
+  const center = new THREE.Vector3(); let radius = 200, framed = false;
+
+  // Materials by finish (roughness, metalness). Black parts read apart by their sheen.
+  const FINISH = {
+    carbon: [0.32, 0.0], gloss: [0.3, 0.0], matte: [0.85, 0.0], leather: [0.55, 0.0],
+    fabric: [0.95, 0.0], metal: [0.35, 0.75], skin: [0.7, 0.0],
+  };
+  // A 2x2 twill carbon weave, drawn from the part's own coordinates (mm) on the face's dominant
+  // axis: diagonal tows ~2.2 mm wide, each with a soft sheen across it.
+  function addWeave(m) {
+    m.onBeforeCompile = (sh) => {
+      sh.vertexShader = sh.vertexShader
+        .replace('#include <common>', '#include <common>\nvarying vec3 vPos;\nvarying vec3 vNrm;')
+        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvPos = position;\nvNrm = normal;');
+      sh.fragmentShader = sh.fragmentShader
+        .replace('#include <common>', '#include <common>\nvarying vec3 vPos;\nvarying vec3 vNrm;\n' +
+          'float twill(vec2 p) { vec2 c = floor(p); vec2 f = fract(p); bool w = mod(c.x + c.y, 4.0) < 2.0;' +
+          ' float across = w ? f.y : f.x; return (w ? 1.0 : 0.6) * (0.78 + 0.22 * sin(3.14159 * across)); }')
+        .replace('#include <color_fragment>', '#include <color_fragment>\n{ vec3 an = abs(vNrm);' +
+          ' vec2 uv = (an.x > an.y && an.x > an.z) ? vPos.yz : ((an.y > an.z) ? vPos.xz : vPos.xy);' +
+          ' diffuseColor.rgb *= twill(uv / 2.2); }');
+    };
+  }
+  function rgb(c) { return new THREE.Color(c[0], c[1], c[2]).convertSRGBToLinear(); }
 
   function stageColor() {
     const v = getComputedStyle(document.documentElement).getPropertyValue('--stage').trim();
@@ -185,9 +226,10 @@
     render();
   }
 
+  function allMats() { const m = []; for (const p of parts) m.push(p.look, p.diag, p.back); return m; }
   function updateClip() {
-    let on = cutMode !== 'none';
-    for (const p of parts) for (const m of p.mats) { m.clippingPlanes = on ? [clip] : []; m.needsUpdate = true; }
+    const on = cutMode !== 'none';
+    for (const m of allMats()) { m.clippingPlanes = on ? [clip] : []; m.needsUpdate = true; }
     if (on && manifest) {
       // A plane in the boot's own frame, moved into the world.
       const ms = manifest.medialSide;
@@ -205,6 +247,15 @@
     render();
   }
 
+  function updateColours() {
+    for (const p of parts) {
+      p.front.material = colourMode === 'look' ? p.look : p.diag;
+      p.back.color.copy((colourMode === 'look' ? p.lookColor : p.diagColor).clone().multiplyScalar(0.8));
+      p.swatch.style.background = swatch(colourMode === 'look' ? p.lookRaw : p.diagRaw);
+    }
+    render();
+  }
+
   let pending = false;
   function render() {
     if (pending) return;
@@ -218,24 +269,29 @@
 
   function buildList() {
     const ul = document.getElementById('parts');
+    ul.textContent = '';
     parts.forEach((p, i) => {
       const li = document.createElement('li');
       const id = 'part-' + i;
       li.innerHTML = '<input type="checkbox" id="' + id + '"' + (p.group.visible ? ' checked' : '') + '>' +
-        '<span class="sw" style="background:' + swatch(p.color) + '"></span>' +
+        '<span class="sw"></span>' +
         '<span class="nm"><label for="' + id + '"></label><small></small></span>' +
         '<span class="g"></span>';
       li.querySelector('label').textContent = p.name.charAt(0).toUpperCase() + p.name.slice(1);
       li.querySelector('small').textContent = p.material;
       li.querySelector('.g').textContent = p.grams > 0 ? p.grams.toFixed(1) + ' g' : '';
-      li.querySelector('input').addEventListener('change', (e) => { p.group.visible = e.target.checked; render(); });
+      p.swatch = li.querySelector('.sw');
+      li.querySelector('input').addEventListener('change', (e) => {
+        p.group.visible = e.target.checked; hidden[p.name] = !e.target.checked; render();
+      });
       ul.appendChild(li);
     });
   }
 
-  async function load() {
-    // The meshes come as base64 text (boot.txt): int16 positions and uint32 indices per part.
-    const [mRes, bRes] = await Promise.all([fetch('manifest.json'), fetch('boot.txt')]);
+  async function load(sfx) {
+    status.hidden = false; status.textContent = 'Loading the boot\u2026';
+    // The meshes come as base64 text: int16 positions and uint32 indices per part.
+    const [mRes, bRes] = await Promise.all([fetch('manifest' + sfx + '.json'), fetch('boot' + sfx + '.txt')]);
     if (!mRes.ok || !bRes.ok) throw new Error('missing data');
     manifest = await mRes.json();
     const b64 = (await bRes.text()).replace(/\s+/g, '');
@@ -243,6 +299,8 @@
     const bytes = new Uint8Array(raw.length);
     for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
     const buf = bytes.buffer;
+    for (const p of parts) { root.remove(p.group); p.front.geometry.dispose(); for (const m of [p.look, p.diag, p.back]) m.dispose(); }
+    parts = [];
     const box = new THREE.Box3();
     for (const d of manifest.parts) {
       const q = new Int16Array(buf, d.vertexOffset, d.vertexCount * 3);
@@ -252,30 +310,36 @@
       geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
       geo.setIndex(new THREE.BufferAttribute(new Uint32Array(buf, d.indexOffset, d.indexCount), 1));
       geo.computeVertexNormals();
-      const color = new THREE.Color(d.color[0], d.color[1], d.color[2]).convertSRGBToLinear();
-      const front = new THREE.MeshStandardMaterial({ color, roughness: d.name === 'eyelets' ? 0.35 : 0.72, metalness: d.name === 'eyelets' ? 0.6 : 0.0 });
+      const lookRaw = d.look || d.color, diagRaw = d.color;
+      const [rough, metal] = FINISH[d.finish] || FINISH.matte;
+      const look = new THREE.MeshStandardMaterial({ color: rgb(lookRaw), roughness: rough, metalness: metal });
+      if (d.finish === 'carbon') addWeave(look);
+      const diag = new THREE.MeshStandardMaterial({ color: rgb(diagRaw), roughness: 0.72, metalness: 0.0 });
       // Inside faces, seen where a cut opens a part: drawn flat (unlit), so a cut reads as solid.
       // Close to the part's own colour, so the light meshes' few pinholes don't show as specks.
-      const back = new THREE.MeshBasicMaterial({ color: color.clone().multiplyScalar(0.8), side: THREE.BackSide });
+      const back = new THREE.MeshBasicMaterial({ color: rgb(lookRaw).multiplyScalar(0.8), side: THREE.BackSide });
+      const front = new THREE.Mesh(geo, look);
       const group = new THREE.Group();
-      group.add(new THREE.Mesh(geo, front), new THREE.Mesh(geo, back));
-      group.visible = !d.name.startsWith('foot');
+      group.add(front, new THREE.Mesh(geo, back));
+      group.visible = !hidden[d.name];
       root.add(group);
       geo.computeBoundingBox();
-      if (group.visible) box.union(geo.boundingBox);
-      parts.push({ name: d.name, color: d.color, grams: d.grams, material: d.material, explode: d.explode, group, mats: [front, back] });
+      if (!d.name.startsWith('foot')) box.union(geo.boundingBox);
+      parts.push({ name: d.name, grams: d.grams, material: d.material, explode: d.explode, group, front, look, diag, back,
+        lookRaw, diagRaw, lookColor: rgb(lookRaw), diagColor: rgb(diagRaw) });
     }
     // Centre of the boot, in world space (the root turns z-up into y-up).
     const c = box.getCenter(new THREE.Vector3());
     center.set(c.x, c.z, -c.y);
     radius = box.getSize(new THREE.Vector3()).length() / 2;
     document.getElementById('total').textContent = Math.round(manifest.totalGrams);
-    document.getElementById('carbon').textContent = 'In carbon/epoxy the shell alone would be ' + Math.round(manifest.shellCarbonGrams) + ' g.';
+    document.getElementById('carbon').textContent = 'In carbon/epoxy at the same 2.5 mm the shell alone would be ' + Math.round(manifest.shellCarbonGrams) + ' g.';
     buildList();
+    updateColours(); updateExplode(); updateClip();
     status.hidden = true;
     document.getElementById('hint').hidden = false;
     resize();
-    frame();
+    if (!framed) { frame(); framed = true; }
   }
 
   const ex = document.getElementById('explode');
@@ -292,8 +356,21 @@
     });
   }
   document.getElementById('reset').addEventListener('click', frame);
+  function seg(ids, pick) {
+    for (const id of ids) document.getElementById(id).addEventListener('click', () => {
+      for (const k of ids) document.getElementById(k).setAttribute('aria-pressed', String(k === id));
+      pick(id);
+    });
+  }
+  seg(['cLook', 'cLayers'], (id) => { colourMode = id === 'cLook' ? 'look' : 'layers'; updateColours(); });
+  seg(['vIce', 'vRoller'], (id) => {
+    const sfx = id === 'vIce' ? '' : '_roller';
+    if (sfx === variant) return;
+    variant = sfx;
+    load(sfx).catch(() => fail('That boot\u2019s mesh files did not load. Reload the page to try again.'));
+  });
 
   applyTheme();
-  load().catch(() => fail('The boot’s mesh files did not load. Reload the page to try again.'));
+  load('').catch(() => fail('The boot’s mesh files did not load. Reload the page to try again.'));
 })();
 </script>

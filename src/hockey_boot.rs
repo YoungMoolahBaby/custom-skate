@@ -55,12 +55,33 @@ pub struct HockeyParams {
     pub liner: f64,
     /// Shell wall (round 1).
     pub wall: f64,
+    /// The shell's outer surface is built on the base closed by this much more (hollows up to
+    /// about twice this wide filled), above the sole: a taut outside; the inside still follows
+    /// the foot. The shell is thicker over the hollows.
+    pub fair_closing: f64,
     /// Outsole under the shell.
     pub sole: f64,
-    /// Cuff top above the higher ankle bone, at the leg's centre line. Estimate.
+    /// The outsole sits this far inside the shell's outline, tucked under its rounded bottom edge.
+    pub sole_inset: f64,
+    /// The cuff's top at the sides: this far above the outer (lateral) ankle bone, just above
+    /// the ankle pocket (Jon, 2026-11-11: skates "usually go just above that exterior ankle
+    /// bulge. to protect the ankles just enough, but the offer max mobility"). Estimate.
     pub cuff_above_ankle: f64,
-    /// The cuff's top edge rises toward the back by this angle. Estimate.
-    pub trim_tilt_deg: f64,
+    /// The cuff's top line, round the leg: low at the sides (just above the ankle bone), rising
+    /// this much toward the front (the eyelet panels carry the lacing up the shin) and
+    /// `trim_back_rise` toward the back (into the tendon guard). Estimates.
+    pub trim_front_rise: f64,
+    pub trim_back_rise: f64,
+    /// The heel-lock eyelets (Jon, 2026-11-11: "the most important one, to lock in heel
+    /// pressure"): the pair nearest the ankle crease, heavy duty: barrel radius `lock_r`, on a
+    /// boss `lock_boss` mm proud of the eyelet facing.
+    pub lock_r: f64,
+    pub lock_boss: f64,
+    /// The padded collar: the liner rises this far above the shell's top edge and covers it.
+    pub collar: f64,
+    /// Forward lean of the cuff, degrees: above the ankle bones everything is sheared forward (a
+    /// shear keeps volumes and horizontal sections). Estimate (MEASURE.md B7).
+    pub lean_deg: f64,
     /// The cuff's flare at its top edge, mm: how far the liner and shell stand off the leg there,
     /// on top of the fit allowance. At the sides (both the same), at the front, and at the back
     /// (negative: the liner presses the calf, pitching the leg forward). In between, blended by
@@ -78,9 +99,13 @@ pub struct HockeyParams {
     pub ankle_pad_r: f64,
     /// The throat starts here, as a fraction of the foot's length (round 1's throat ended at 0.70).
     pub throat_front: f64,
-    /// Throat gap between the quarters' edges: at the front, and at the cuff top. Estimate.
+    /// Throat gap between the quarters' edges: at the front, and at the cuff top. It widens as
+    /// t^`throat_splay` along the throat, so the upper eyelets swing out into a V: room for the
+    /// shin to drive forward (Jon, 2026-11-11, from a skate whose upper eyelets splay out).
+    /// Estimates.
     pub throat_w0: f64,
     pub throat_w1: f64,
+    pub throat_splay: f64,
     /// How far from the dorsal line (in the side view) the throat and tongue reach.
     pub reach: f64,
     /// Eyelet facing: width beyond the throat's edge, and the extra thickness. Estimate.
@@ -94,6 +119,9 @@ pub struct HockeyParams {
     pub tongue_overlap: f64,
     pub tongue_above_cuff: f64,
     pub tongue_proud: f64,
+    /// How far the tongue's top flares out (forward) beyond its thickness, growing over the part
+    /// above the cuff. Estimate.
+    pub tongue_curl: f64,
     /// Tendon guard: height above the cuff at the back, thickness, how far its top kicks back
     /// off the leg. Estimate.
     pub guard_above_cuff: f64,
@@ -103,6 +131,9 @@ pub struct HockeyParams {
     pub toe_cap_t: f64,
     /// Lace radius (drawn round).
     pub lace_r: f64,
+    /// Vents: slots through the toe cap, the quarters and the liner. The roller boot is vented,
+    /// the ice boot sealed (Jon, 2026-11-11: cold rink, ice gets in and melts).
+    pub vented: bool,
 }
 
 impl Default for HockeyParams {
@@ -111,9 +142,16 @@ impl Default for HockeyParams {
             ease: 1.0,
             liner: 4.0,
             wall: 2.5,
+            fair_closing: 18.0,
             sole: 3.0,
-            cuff_above_ankle: 75.0,
-            trim_tilt_deg: 8.0,
+            sole_inset: 2.0,
+            cuff_above_ankle: 40.0,
+            trim_front_rise: 28.0,
+            trim_back_rise: 18.0,
+            lock_r: 4.2,
+            lock_boss: 1.5,
+            collar: 4.0,
+            lean_deg: 6.0,
             flare_side: 12.0,
             flare_front: 6.0,
             flare_back: -2.0,
@@ -123,7 +161,8 @@ impl Default for HockeyParams {
             ankle_pad_r: 24.0,
             throat_front: 0.70,
             throat_w0: 26.0,
-            throat_w1: 32.0,
+            throat_w1: 48.0,
+            throat_splay: 2.2,
             reach: 32.0,
             facing_w: 18.0,
             facing_t: 1.5,
@@ -132,11 +171,13 @@ impl Default for HockeyParams {
             tongue_overlap: 10.0,
             tongue_above_cuff: 40.0,
             tongue_proud: 1.5,
-            guard_above_cuff: 55.0,
+            tongue_curl: 8.0,
+            guard_above_cuff: 70.0,
             guard_t: 2.5,
-            guard_kick: 12.0,
+            guard_kick: 20.0,
             toe_cap_t: 1.5,
             lace_r: 1.6,
+            vented: false,
         }
     }
 }
@@ -380,30 +421,65 @@ pub struct PartSpec {
     pub kind: PartKind,
     pub name: &'static str,
     pub material: Material,
+    /// Diagram colour (the sections, where the layers must read apart).
     pub color: [f64; 3],
+    /// The look (Jon, 2026-11-11: black carbon against black thermoplastic and leather, a black
+    /// tongue), and its finish (the viewer's material; the renders' sheen).
+    pub look: [f64; 3],
+    pub finish: &'static str,
     pub cell: f64,
+}
+
+/// The eyelets (gunmetal) and laces (black) in the look.
+pub const EYELET_LOOK: [f64; 3] = [0.42, 0.43, 0.46];
+pub const LACE_LOOK: [f64; 3] = [0.08, 0.08, 0.09];
+
+/// Sheen in the renders, by finish.
+pub fn finish_spec(finish: &str) -> f64 {
+    match finish {
+        "carbon" => 0.55,
+        "gloss" => 0.6,
+        "metal" => 0.8,
+        "leather" => 0.3,
+        "matte" => 0.12,
+        _ => 0.04,
+    }
 }
 
 pub fn part_specs() -> Vec<PartSpec> {
     use PartKind::*;
     vec![
-        PartSpec { kind: Shell, name: "shell", material: PA12_MJF, color: [0.16, 0.25, 0.42], cell: 0.75 },
-        PartSpec { kind: ToeCap, name: "toe cap", material: PA12_MJF, color: [0.13, 0.13, 0.15], cell: 0.3 },
-        PartSpec { kind: Outsole, name: "outsole", material: PA12_MJF, color: [0.09, 0.09, 0.10], cell: 0.75 },
-        PartSpec { kind: Liner, name: "liner", material: LINER_FOAM, color: [0.42, 0.44, 0.48], cell: 1.0 },
-        PartSpec { kind: AnklePads, name: "ankle pads", material: LINER_FOAM, color: [0.78, 0.36, 0.22], cell: 1.0 },
-        PartSpec { kind: Footbed, name: "footbed", material: LINER_FOAM, color: [0.22, 0.55, 0.45], cell: 1.0 },
-        PartSpec { kind: Tongue, name: "tongue", material: LINER_FOAM, color: [0.90, 0.90, 0.87], cell: 1.0 },
-        PartSpec { kind: TendonGuard, name: "tendon guard", material: TPU, color: [0.22, 0.22, 0.25], cell: 0.6 },
+        PartSpec { kind: Shell, name: "shell", material: PA12_MJF, color: [0.16, 0.25, 0.42], look: [0.16, 0.16, 0.18], finish: "carbon", cell: 0.75 },
+        PartSpec { kind: ToeCap, name: "toe cap", material: PA12_MJF, color: [0.13, 0.13, 0.15], look: [0.09, 0.09, 0.10], finish: "gloss", cell: 0.3 },
+        PartSpec { kind: Outsole, name: "outsole", material: PA12_MJF, color: [0.09, 0.09, 0.10], look: [0.07, 0.07, 0.075], finish: "matte", cell: 0.75 },
+        PartSpec { kind: Liner, name: "liner", material: LINER_FOAM, color: [0.42, 0.44, 0.48], look: [0.23, 0.23, 0.25], finish: "fabric", cell: 1.0 },
+        PartSpec { kind: AnklePads, name: "ankle pads", material: LINER_FOAM, color: [0.78, 0.36, 0.22], look: [0.27, 0.27, 0.29], finish: "fabric", cell: 1.0 },
+        PartSpec { kind: Footbed, name: "footbed", material: LINER_FOAM, color: [0.22, 0.55, 0.45], look: [0.19, 0.19, 0.21], finish: "fabric", cell: 1.0 },
+        PartSpec { kind: Tongue, name: "tongue", material: LINER_FOAM, color: [0.90, 0.90, 0.87], look: [0.12, 0.12, 0.13], finish: "leather", cell: 1.0 },
+        PartSpec { kind: TendonGuard, name: "tendon guard", material: TPU, color: [0.22, 0.22, 0.25], look: [0.10, 0.10, 0.11], finish: "gloss", cell: 0.6 },
     ]
 }
 
+/// A vent: a slot through the toe cap or shell and the liner, centred on the outer surface at
+/// `c`, cut along the normal `n`, long along `t`.
+#[derive(Debug, Clone, Copy)]
+pub struct Vent {
+    pub c: Point3<f64>,
+    pub n: Vector3<f64>,
+    pub t: Vector3<f64>,
+    pub half_len: f64,
+    pub r: f64,
+}
+
 /// The boot's shared geometry: the last's base with the leg extended, the landmarks, the dorsal
-/// line and the stations along it, the eyelets and the lace path.
+/// line and the stations along it, the eyelets and the lace path. Built upright; the forward
+/// lean is applied when a part is made a solid (`solid`, `leaned`).
 pub struct BootGeom {
     pub p: HockeyParams,
     pub lm: Landmarks,
     base: Solid,
+    /// The base with its hollows filled more (`fair_closing`), for the shell's outer surface.
+    base_fair: Solid,
     /// Above this height the leg is the prism of its section here.
     pub z_ext: f64,
     pub prof: Profile,
@@ -423,17 +499,23 @@ pub struct BootGeom {
     pub eyelets: Vec<(Point3<f64>, Vector3<f64>)>,
     /// The lace: the criss-cross with its knot, then the bow's loops and tails.
     pub lace_paths: Vec<Vec<Point3<f64>>>,
+    /// Vents (the roller boot).
+    pub vents: Vec<Vent>,
+    /// The heel-lock eyelet pair (level from the toe end), and the ankle crease's height.
+    pub lock: Option<usize>,
+    pub z_crease: f64,
+    /// The tongue's top, z.
+    pub z_tongue_top: f64,
     pub bounds: Aabb,
     /// The outsole's bottom (the chassis or holder mounts here).
     pub sole_bottom: f64,
 }
 
 impl BootGeom {
-    pub fn new(base: Solid, base_bounds: Aabb, lm: Landmarks, p: HockeyParams) -> Self {
+    pub fn new(base: Solid, base_fair: Solid, base_bounds: Aabb, lm: Landmarks, p: HockeyParams) -> Self {
         let z_ext = lm.leg_top - 15.0;
-        let z_cuff = lm.medial.z.max(lm.lateral.z) + p.cuff_above_ankle;
-        let tilt = p.trim_tilt_deg.to_radians().tan();
-        let z_trim_back = z_cuff + (lm.leg_c.0 - lm.heel_back_x) * tilt;
+        let z_cuff = lm.lateral.z + p.cuff_above_ankle;
+        let z_trim_back = z_cuff + p.trim_back_rise;
         let oo_c = p.ease + p.liner + p.wall;
         let sole_bottom = -oo_c - p.sole;
         let top = z_trim_back + p.guard_above_cuff + 10.0;
@@ -445,6 +527,7 @@ impl BootGeom {
             p,
             lm,
             base,
+            base_fair,
             z_ext,
             prof: Profile::new(vec![Point3::origin(), Point3::new(1.0, 0.0, 0.0)]),
             s_front: 0.0,
@@ -456,6 +539,10 @@ impl BootGeom {
             toe_cap_y: 0.0,
             eyelets: Vec::new(),
             lace_paths: Vec::new(),
+            vents: Vec::new(),
+            lock: None,
+            z_crease: 0.0,
+            z_tongue_top: 0.0,
             bounds,
             sole_bottom,
         };
@@ -495,12 +582,15 @@ impl BootGeom {
         g.prof = Profile::new(smooth);
         let x_front = p.throat_front * lm.length;
         g.s_front = g.prof.find(|q| q.x <= x_front).unwrap_or(0.0);
-        g.s_cuff = g.prof.find(|q| q.z >= g.z_trim(q.x)).unwrap_or(g.prof.len());
-        g.s_tongue_top = g.prof.find(|q| q.z >= g.z_trim(q.x) + p.tongue_above_cuff).unwrap_or(g.prof.len());
+        g.s_cuff = g.prof.find(|q| q.z >= g.z_trim(*q)).unwrap_or(g.prof.len());
+        g.s_tongue_top = g.prof.find(|q| q.z >= g.z_trim(*q) + p.tongue_above_cuff).unwrap_or(g.prof.len());
+        g.z_tongue_top = g.prof.at(g.s_tongue_top).0.z;
         let (front, _) = g.prof.at(g.s_front);
         g.toe_cap_x = front.x + 2.0;
         g.toe_cap_y = front.y;
         g.place_eyelets();
+        g.place_lock();
+        g.place_vents();
         g.lace();
         g
     }
@@ -508,6 +598,18 @@ impl BootGeom {
     /// The last's base, the leg carried up as a prism above `z_ext`.
     pub fn d(&self, q: Point3<f64>) -> f64 {
         self.base.evaluate(&Point3::new(q.x, q.y, q.z.min(self.z_ext)))
+    }
+
+    /// The field the shell's outer surface is built on: the fair base above the sole (blended in
+    /// from 5 to 25 mm up, so the arch isn't filled with shell), never inside the base.
+    pub fn d_out(&self, q: Point3<f64>) -> f64 {
+        let d = self.d(q);
+        let w = smoothstep(5.0, 25.0, q.z);
+        if w <= 0.0 {
+            return d;
+        }
+        let f = self.base_fair.evaluate(&Point3::new(q.x, q.y, q.z.min(self.z_ext)));
+        d + w * (f.min(d) - d)
     }
 
     /// Unit outward normal of the base (central differences).
@@ -521,9 +623,57 @@ impl BootGeom {
         if g.norm() > 1e-12 { g.normalize() } else { Vector3::z() }
     }
 
-    /// The cuff's top edge, rising toward the back.
-    pub fn z_trim(&self, x: f64) -> f64 {
-        self.z_cuff + (self.lm.leg_c.0 - x) * self.p.trim_tilt_deg.to_radians().tan()
+    /// The cuff's top line at a point (upright frame): `z_cuff` at the sides, higher by
+    /// `trim_front_rise` at the front and by `trim_back_rise` at the back, blended by the
+    /// direction round the leg (cos^2).
+    pub fn z_trim(&self, q: Point3<f64>) -> f64 {
+        let (dx, dy) = (q.x - self.lm.leg_c.0, q.y - self.lm.leg_c.1);
+        let c2 = dx * dx / (dx * dx + dy * dy).max(1e-18);
+        self.z_cuff + c2 * if dx > 0.0 { self.p.trim_front_rise } else { self.p.trim_back_rise }
+    }
+
+    /// The forward lean as a shear: above the ankle bones x moves forward by this much (ramped in
+    /// from 10 mm below to 30 mm above their height, so there's no kink).
+    pub fn lean_dx(&self, z: f64) -> f64 {
+        let zp = 0.5 * (self.lm.medial.z + self.lm.lateral.z);
+        smoothstep(zp - 10.0, zp + 30.0, z) * (z - zp) * self.p.lean_deg.to_radians().tan()
+    }
+
+    pub fn lean(&self, q: Point3<f64>) -> Point3<f64> {
+        Point3::new(q.x + self.lean_dx(q.z), q.y, q.z)
+    }
+
+    pub fn unlean(&self, q: Point3<f64>) -> Point3<f64> {
+        Point3::new(q.x - self.lean_dx(q.z), q.y, q.z)
+    }
+
+    /// A box in the upright frame, widened to hold its leaned image.
+    pub fn leaned_bounds(&self, b: Aabb) -> Aabb {
+        let (mut lo, mut hi) = (0.0f64, 0.0f64);
+        let mut z = b.min.z;
+        while z <= b.max.z + 1.0 {
+            let dx = self.lean_dx(z.min(b.max.z));
+            lo = lo.min(dx);
+            hi = hi.max(dx);
+            z += 1.0;
+        }
+        Aabb::new(Point3::new(b.min.x + lo - 0.5, b.min.y, b.min.z), Point3::new(b.max.x + hi + 0.5, b.max.y, b.max.z))
+    }
+
+    /// A solid built upright, leaned (grommets, laces, the foot).
+    pub fn leaned(self: &Arc<Self>, s: Solid, bounds: Aabb) -> Solid {
+        let g = self.clone();
+        let lb = self.leaned_bounds(bounds);
+        Solid::user_fn(move |q: Point3<f64>| s.evaluate(&g.unlean(q)), lb)
+    }
+
+    /// A mesh built upright, leaned.
+    pub fn lean_mesh(&self, m: &IndexedMesh) -> IndexedMesh {
+        let mut out = m.clone();
+        for v in &mut out.vertices {
+            *v = self.lean(*v);
+        }
+        out
     }
 
     /// The cuff's flare: grows (as t^1.5, so it opens soon above the bones) from `flare_from`
@@ -531,7 +681,7 @@ impl BootGeom {
     /// in front, `flare_back` behind, blended by the direction round the leg (cos^2, sin^2).
     fn flare(&self, q: Point3<f64>) -> f64 {
         let z0 = self.lm.medial.z.max(self.lm.lateral.z) + self.p.flare_from;
-        let t = ((q.z - z0) / (self.z_trim(q.x) - z0)).clamp(0.0, 1.0);
+        let t = ((q.z - z0) / (self.z_trim(q) - z0)).clamp(0.0, 1.0);
         let (dx, dy) = (q.x - self.lm.leg_c.0, q.y - self.lm.leg_c.1);
         let r2 = (dx * dx + dy * dy).max(1e-18);
         let (c2, s2) = (dx * dx / r2, dy * dy / r2);
@@ -556,7 +706,7 @@ impl BootGeom {
 
     fn throat_w(&self, s: f64) -> f64 {
         let t = ((s - self.s_front) / (self.s_cuff - self.s_front).max(1.0)).clamp(0.0, 1.0);
-        self.p.throat_w0 + (self.p.throat_w1 - self.p.throat_w0) * t
+        self.p.throat_w0 + (self.p.throat_w1 - self.p.throat_w0) * t.powf(self.p.throat_splay)
     }
 
     /// The throat's outline in (arc length, y): negative inside; a round front end, open at the
@@ -595,7 +745,7 @@ impl BootGeom {
         let u = ((q.z - zb) / (z1 - zb)).clamp(0.0, 1.0);
         let off = self.inner_off(q) + p.wall + p.guard_kick * u * u;
         let band = (d - (off + p.guard_t)).max(off - d);
-        let hw = 22.0 - 5.0 * ((q.z - z0) / (z1 - z0)).clamp(0.0, 1.0);
+        let hw = 22.0 - 9.0 * ((q.z - z0) / (z1 - z0)).clamp(0.0, 1.0);
         let rect = rounded_rect(q.z - 0.5 * (z0 + z1), q.y - self.lm.leg_c.1, 0.5 * (z1 - z0), hw, 8.0);
         let back = q.x - (self.lm.leg_c.0 - 10.0);
         band.max(rect).max(back)
@@ -614,46 +764,55 @@ impl BootGeom {
         }
         let io = self.inner_off(q);
         let li = self.liner_in(q);
-        let zt = self.z_trim(q.x);
+        let zt = self.z_trim(q);
         match k {
             PartKind::Shell => {
                 let n = self.prof.closest(q.x, q.z);
                 let th = self.throat(&n, q.y);
-                let oo = io + p.wall + self.facing(&n, th);
-                let mut s = (d - oo).max(io - d).max(q.z - zt);
+                let mut oo = io + p.wall + self.facing(&n, th);
+                if let Some(k) = self.lock {
+                    for i in [2 * k, 2 * k + 1] {
+                        let r = (q - self.eyelets[i].0).norm();
+                        oo += p.lock_boss * (1.0 - smoothstep(8.0, 11.0, r));
+                    }
+                }
+                let mut s = (self.d_out(q) - oo).max(io - d).max(q.z - zt);
                 if s > 3.0 {
                     return s;
                 }
                 s = s.max(-(th.max(n.d - p.reach)));
-                for (c, a) in &self.eyelets {
+                for (i, (c, a)) in self.eyelets.iter().enumerate() {
                     let v = q - c;
-                    if v.norm_squared() < 144.0 {
+                    if v.norm_squared() < 196.0 {
                         let along = v.dot(a);
                         let r = (v - a * along).norm();
-                        s = s.max(-((r - 3.4).max(along.abs() - 8.0)));
+                        s = s.max(-((r - self.grommet_size(i).0).max(along.abs() - 9.0)));
                     }
                 }
-                s
+                s.max(-self.vent_cut(q))
             }
             PartKind::ToeCap => {
                 let n = self.prof.closest(q.x, q.z);
                 let oo = self.outer_off(q, &n);
-                let band = (d - (oo + p.toe_cap_t)).max(oo - d);
+                let dout = self.d_out(q);
+                let band = (dout - (oo + p.toe_cap_t)).max(oo - dout);
                 let edge = self.toe_cap_x + 25.0 * ((q.y - self.toe_cap_y) / 45.0).powi(2) - q.x;
                 let low = -(p.ease + p.liner + p.wall) - q.z;
                 let throat = self.throat(&n, q.y).max(n.d - p.reach);
-                band.max(edge).max(low).max(-throat)
+                band.max(edge).max(low).max(-throat).max(-self.vent_cut(q))
             }
             PartKind::Outsole => {
                 let oo_c = p.ease + p.liner + p.wall;
-                let outline = self.d(Point3::new(q.x, q.y, 3.0)) - oo_c;
-                let slab = (self.sole_bottom - q.z).max(q.z - (-oo_c + 1.5));
+                let outline = self.d_out(Point3::new(q.x, q.y, 3.0)) - (oo_c - p.sole_inset);
+                let slab = (self.sole_bottom - q.z).max(q.z - (-oo_c + 0.5));
                 let n = self.prof.closest(q.x, q.z);
-                let outside_shell = self.outer_off(q, &n) - d;
+                let outside_shell = self.outer_off(q, &n) - self.d_out(q);
                 outline.max(slab).max(outside_shell)
             }
             PartKind::Liner | PartKind::AnklePads | PartKind::Footbed => {
-                let band = (d - io).max(li - d).max(q.z - (zt + 3.0));
+                // Up to the shell's top edge the liner fills [li, io]; above it the collar rises
+                // `collar` mm and covers the shell's edge (out to 1 mm past the shell).
+                let band = (if q.z > zt { self.d_out(q) - (io + p.wall + 1.0) } else { d - io }).max(li - d).max(q.z - (zt + p.collar));
                 let pad = [self.lm.medial, self.lm.lateral].iter().map(|m| (q - m).norm() - p.ankle_pad_r).fold(f64::MAX, f64::min);
                 let below = q.z + p.ease; // < 0 under the foot
                 match k {
@@ -665,7 +824,7 @@ impl BootGeom {
                         }
                         let n = self.prof.closest(q.x, q.z);
                         let tongue = self.tongue_outline(&n, q.y).max(n.d - p.reach);
-                        band.max(-pad).max(-below).max(-tongue)
+                        band.max(-pad).max(-below).max(-tongue).max(-self.vent_cut(q))
                     }
                 }
             }
@@ -676,11 +835,12 @@ impl BootGeom {
                     return outline;
                 }
                 let pad = (d - io).max(li - d);
-                let raised = (d - (io + p.wall + p.tongue_proud)).max(li - d);
+                let curl = p.tongue_curl * ((q.z - zt) / (self.z_tongue_top - zt).max(1.0)).clamp(0.0, 1.0).powi(2);
+                let raised = (d - (io + p.wall + p.tongue_proud + curl)).max(li - d);
                 let open = (self.throat(&n, q.y) + 1.0).min(zt + 0.5 - q.z);
                 pad.min(raised.max(open)).max(outline)
             }
-            PartKind::TendonGuard => self.guard(q, d),
+            PartKind::TendonGuard => self.guard(q, self.d_out(q)),
         }
     }
 
@@ -724,10 +884,10 @@ impl BootGeom {
     /// One part as a solid, optionally cut to the half-space `n . x < off`.
     pub fn solid(self: &Arc<Self>, k: PartKind, cut: Option<(Vector3<f64>, f64)>) -> Solid {
         let g = self.clone();
-        let b = self.part_bounds(k);
+        let b = self.leaned_bounds(self.part_bounds(k));
         Solid::user_fn(
             move |q: Point3<f64>| {
-                let v = g.sdf(k, q);
+                let v = g.sdf(k, g.unlean(q));
                 match cut {
                     Some((n, off)) => v.max(n.dot(&q.coords) - off),
                     None => v,
@@ -735,6 +895,102 @@ impl BootGeom {
             },
             b,
         )
+    }
+
+    /// The ankle crease: where the dorsal line, climbing from the instep, turns past 60 degrees
+    /// from horizontal toward the shin. The eyelet pair nearest it is the heel lock: its lace
+    /// pulls the heel back and down into the pocket. Moved out onto its boss.
+    fn place_lock(&mut self) {
+        let mut s = self.s_front;
+        let mut crease = None;
+        while s < self.prof.len() {
+            let (pt, t) = self.prof.at(s);
+            if t.z.atan2(-t.x).to_degrees() >= 60.0 {
+                crease = Some((s, pt.z));
+                break;
+            }
+            s += 0.5;
+        }
+        let Some((sc, zc)) = crease else { return };
+        self.z_crease = zc;
+        let n = self.eyelets.len() / 2;
+        let k = (0..n)
+            .min_by(|&a, &b| {
+                let sa = self.prof.closest(self.eyelets[2 * a].0.x, self.eyelets[2 * a].0.z).s;
+                let sb = self.prof.closest(self.eyelets[2 * b].0.x, self.eyelets[2 * b].0.z).s;
+                (sa - sc).abs().total_cmp(&(sb - sc).abs())
+            });
+        if let Some(k) = k {
+            self.lock = Some(k);
+            for i in [2 * k, 2 * k + 1] {
+                let (c, a) = self.eyelets[i];
+                self.eyelets[i] = (c + a * self.p.lock_boss, a);
+            }
+        }
+    }
+
+    fn is_lock(&self, i: usize) -> bool {
+        self.lock == Some(i / 2)
+    }
+
+    /// Barrel radius, flange radius, flange half-thickness of eyelet `i`.
+    fn grommet_size(&self, i: usize) -> (f64, f64, f64) {
+        if self.is_lock(i) { (self.p.lock_r, 6.8, 0.6) } else { (3.4, 5.0, 0.45) }
+    }
+
+    /// The vents' cut: negative inside a slot.
+    fn vent_cut(&self, q: Point3<f64>) -> f64 {
+        let mut m = f64::MAX;
+        for v in &self.vents {
+            let w = q - v.c;
+            if w.norm_squared() > 400.0 {
+                continue;
+            }
+            let a = w.dot(&v.n);
+            let along = w.dot(&v.t);
+            let side = (w - v.n * a - v.t * along).norm();
+            m = m.min(((along.abs() - v.half_len).max(0.0).hypot(side) - v.r).max(a.abs() - 12.0));
+        }
+        m
+    }
+
+    /// The roller boot's vents: four slots across the toe box, and three a side low on the
+    /// quarters (forefoot and midfoot), all lengthwise; the liner is cut under them.
+    fn place_vents(&mut self) {
+        if !self.p.vented {
+            return;
+        }
+        let along_x = |n: Vector3<f64>| {
+            let t = Vector3::x() - n * n.x;
+            if t.norm() > 1e-6 { t.normalize() } else { Vector3::y() }
+        };
+        let x = self.toe_cap_x + 24.0;
+        for k in 0..4 {
+            let y = self.toe_cap_y + (k as f64 - 1.5) * 11.0;
+            let mut z = 120.0;
+            while z > 0.0 && self.sdf(PartKind::ToeCap, Point3::new(x, y, z)) > 0.0 {
+                z -= 0.25;
+            }
+            if z > 0.0 {
+                let c = Point3::new(x, y, z);
+                let n = self.grad(c);
+                self.vents.push(Vent { c, n, t: along_x(n), half_len: 6.0, r: 2.0 });
+            }
+        }
+        for side in [-1.0, 1.0] {
+            for f in [0.42, 0.50, 0.58] {
+                let (x, z) = (f * self.lm.length, 24.0);
+                let mut y = side * 120.0;
+                while y * side > 0.0 && self.sdf(PartKind::Shell, Point3::new(x, y, z)) > 0.0 {
+                    y -= side * 0.25;
+                }
+                if y * side > 0.0 {
+                    let c = Point3::new(x, y, z);
+                    let n = self.grad(c);
+                    self.vents.push(Vent { c, n, t: along_x(n), half_len: 7.0, r: 2.2 });
+                }
+            }
+        }
     }
 
     fn place_eyelets(&mut self) {
@@ -758,7 +1014,7 @@ impl BootGeom {
                 let f = |t: f64| {
                     let q = at(t);
                     let near = self.prof.closest(q.x, q.z);
-                    self.d(q) - self.outer_off(q, &near)
+                    self.d_out(q) - self.outer_off(q, &near)
                 };
                 let mut t = 45.0;
                 while t > -30.0 && f(t) > 0.0 {
@@ -786,9 +1042,12 @@ impl BootGeom {
         let r = self.p.lace_r;
         let dir = self.grad(q);
         let mut q = q;
-        for _ in 0..200 {
+        // Outside the liner layer too: inside the foot every part's field reads "clear" (the
+        // early-out in `sdf`), a chord between the splayed top eyelets runs ~12 mm inside the leg,
+        // and the open cuff's room between the leg and the tongue would also read clear.
+        for _ in 0..320 {
             let env = self.sdf(PartKind::Shell, q).min(self.sdf(PartKind::Tongue, q));
-            if env >= r + 0.4 {
+            if env >= r + 0.4 && self.d(q) > self.inner_off(q) {
                 break;
             }
             q += dir * 0.25;
@@ -806,8 +1065,9 @@ impl BootGeom {
         }
         let r = self.p.lace_r;
         let top = |k: usize, side: usize| {
-            let (c, a) = self.eyelets[2 * k + side];
-            c + a * (0.9 + r)
+            let i = 2 * k + side;
+            let (c, a) = self.eyelets[i];
+            c + a * (2.0 * self.grommet_size(i).2 + r)
         };
         let strand = |start: usize| -> Vec<Point3<f64>> { (0..n).map(|k| top(k, (start + k) % 2)).collect() };
         let mut nodes: Vec<Point3<f64>> = strand(1).into_iter().rev().collect();
@@ -852,13 +1112,15 @@ impl BootGeom {
 
     /// The eyelets as solids: a grommet each (barrel through the facing, flange outside, bore).
     pub fn grommets(&self) -> Vec<Solid> {
-        let depth = self.p.wall + self.p.facing_t + 0.4;
         self.eyelets
             .iter()
-            .map(|(c, a)| {
+            .enumerate()
+            .map(|(i, (c, a))| {
+                let (rb, rf, hf) = self.grommet_size(i);
+                let depth = self.p.wall + self.p.facing_t + 0.4 + if self.is_lock(i) { self.p.lock_boss } else { 0.0 };
                 let rot = UnitQuaternion::rotation_between(&Vector3::z(), a).unwrap_or_else(UnitQuaternion::identity);
-                let barrel = Solid::cylinder(3.4, 0.5 * depth).translate(Vector3::new(0.0, 0.0, -0.5 * depth));
-                let flange = Solid::cylinder(5.0, 0.45).translate(Vector3::new(0.0, 0.0, 0.45));
+                let barrel = Solid::cylinder(rb, 0.5 * depth).translate(Vector3::new(0.0, 0.0, -0.5 * depth));
+                let flange = Solid::cylinder(rf, hf).translate(Vector3::new(0.0, 0.0, hf));
                 let bore = Solid::cylinder(2.2, depth + 5.0);
                 barrel.union(flange).subtract(bore).rotate(rot).translate(c.coords)
             })
@@ -1027,8 +1289,9 @@ fn mesh_bounds(m: &IndexedMesh) -> (Vector3<f64>, Vector3<f64>) {
     m.vertices.iter().fold((Vector3::repeat(f64::MAX), Vector3::repeat(f64::MIN)), |(lo, hi), v| (lo.inf(&v.coords), hi.sup(&v.coords)))
 }
 
-/// `boot <scan> [out]`: the hockey boot on a foot, every part meshed, weighed, saved, drawn.
-pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
+/// `boot <scan> [out] [ice|roller]`: the hockey boot on a foot, every part meshed, weighed, saved,
+/// drawn. The roller boot is vented, the ice boot sealed.
+pub fn run(scan_path: &Path, out: &Path, vented: bool) -> Result<(), String> {
     std::fs::create_dir_all(out).map_err(|e| e.to_string())?;
     let t0 = Instant::now();
     let (raw, _, _) = scan::load(scan_path)?;
@@ -1043,9 +1306,13 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
         "landmarks: medial ankle bone ({:.0}, {:.0}, {:.0}) on the {} side, lateral ({:.0}, {:.0}, {:.0}); heel back x {:.0}; leg centre ({:.0}, {:.0}) at the scan's top, z {:.0}",
         lm.medial.x, lm.medial.y, lm.medial.z, side(lm.medial_side), lm.lateral.x, lm.lateral.y, lm.lateral.z, lm.heel_back_x, lm.leg_c.0, lm.leg_c.1, lm.leg_top
     );
-    let p = HockeyParams::default();
+    let p = HockeyParams { vented, ..HockeyParams::default() };
+    let variant = if vented { "roller (vented)" } else { "ice (sealed)" };
     let t = Instant::now();
-    let g = BootGeom::new(lb.solid, lb.bounds, lm, p);
+    // The fair base for the shell's outside: the closed foot closed again, plus the toe box.
+    let fair = lb.closed.closed_with_margin(p.fair_closing, 1.5, 20.0)?;
+    let base_fair = fair.solid().smooth_union(lb.toe.clone(), foot::BLEND);
+    let g = BootGeom::new(lb.solid, base_fair, lb.bounds, lm, p);
     let (front, _) = g.prof.at(g.s_front);
     let (cuff, _) = g.prof.at(g.s_cuff);
     let (ttop, _) = g.prof.at(g.s_tongue_top);
@@ -1070,9 +1337,9 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
     let room: Vec<(&str, f64, f64)> = [("sides", 0.0, 1.0), ("front", 1.0, 0.0), ("back", -1.0, 0.0)]
         .iter()
         .map(|&(name, c, s)| {
-            let x = lm.leg_c.0 + 35.0 * c;
-            let top = g.z_trim(x);
-            let r = g.liner_in(Point3::new(x, lm.leg_c.1 + 35.0 * s, top));
+            let q0 = Point3::new(lm.leg_c.0 + 35.0 * c, lm.leg_c.1 + 35.0 * s, 0.0);
+            let top = g.z_trim(q0);
+            let r = g.liner_in(Point3::new(q0.x, q0.y, top));
             (name, r, (r / (top - z_ank)).atan().to_degrees())
         })
         .collect();
@@ -1084,6 +1351,19 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
             .join(", ")
     );
     println!("{room_line}");
+    let shape_line = format!(
+        "{variant}; forward lean {:.0} deg; cuff top line z {:.0} at the front, {:.0} at the sides ({:.0} above the outer ankle bone), {:.0} at the back, padded collar {:.0} mm; {} vents; heel-lock eyelets: pair {} from the top, at the ankle crease (z {:.0})",
+        p.lean_deg,
+        g.z_cuff + p.trim_front_rise,
+        g.z_cuff,
+        p.cuff_above_ankle,
+        g.z_trim_back,
+        p.collar,
+        g.vents.len(),
+        g.lock.map_or(0, |k| g.eyelets.len() / 2 - k),
+        g.z_crease
+    );
+    println!("{shape_line}");
     if std::env::var_os("BOOT_DEBUG").is_some() {
         for (i, (c, a)) in g.eyelets.iter().enumerate() {
             let near = g.prof.closest(c.x, c.z);
@@ -1104,8 +1384,18 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
     // Mesh every part, in parallel.
     let t = Instant::now();
     let specs = part_specs();
-    let grommets = g.grommets();
-    let laces = g.laces();
+    let grommets: Vec<Solid> = g
+        .grommets()
+        .into_iter()
+        .map(|s| {
+            let b = s.bounds().unwrap_or(g.bounds);
+            g.leaned(s, b)
+        })
+        .collect();
+    let laces = g.laces().map(|s| {
+        let b = s.bounds().unwrap_or(g.bounds);
+        g.leaned(s, b)
+    });
     let (meshes, eyelet_mesh, lace_mesh) = std::thread::scope(|sc| {
         let hs: Vec<_> = specs
             .iter()
@@ -1123,7 +1413,7 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
 
     // Weigh (from the meshes' enclosed volumes), save.
     let mut summary = String::new();
-    let _ = writeln!(summary, "hockey boot (track B, round 2 of the boot), {}", scan_path.display());
+    let _ = writeln!(summary, "hockey boot (track B, round 2 of the boot), {variant}, {}", scan_path.display());
     let _ = writeln!(summary, "foot {:.1} x {:.1} mm; scan {:.0} mm tall, leg carried up as a prism above z {:.0}", foot.length, foot.width, foot.height, g.z_ext);
     let _ = writeln!(
         summary,
@@ -1141,6 +1431,7 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
         g.eyelets.len() / 2
     );
     let _ = writeln!(summary, "{room_line}");
+    let _ = writeln!(summary, "{shape_line}");
     let _ = writeln!(summary, "parts (mass from each mesh's enclosed volume):");
     let mut total = 0.0;
     let save = |name: &str, mesh: &IndexedMesh| -> Result<(), String> {
@@ -1206,9 +1497,10 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
     // Draw.
     let t = Instant::now();
     let pretty = Style::pretty();
-    let mut layers: Vec<Layer> = specs.iter().zip(&meshes).map(|(sp, m)| Layer::solid(m, sp.color)).collect();
-    layers.push(Layer::solid(&eyelet_mesh, [0.80, 0.81, 0.84]));
-    layers.push(Layer::solid(&lace_mesh, [0.96, 0.96, 0.94]));
+    let mut layers: Vec<Layer> =
+        specs.iter().zip(&meshes).map(|(sp, m)| Layer::solid(m, sp.look).with_spec(finish_spec(sp.finish))).collect();
+    layers.push(Layer::solid(&eyelet_mesh, EYELET_LOOK).with_spec(finish_spec("metal")));
+    layers.push(Layer::solid(&lace_mesh, LACE_LOOK).with_spec(finish_spec("fabric")));
     let e = |e: std::io::Error| e.to_string();
     render_styled(&layers, &standard_views(), 2.0, &out.join("boot.png"), pretty).map_err(e)?;
     let ms = lm.medial_side;
@@ -1227,8 +1519,8 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
         (vec![8, 9], "eyelets, laces"),
     ];
     let all: Vec<&IndexedMesh> = meshes.iter().chain([&eyelet_mesh, &lace_mesh]).collect();
-    let colors: Vec<[f64; 3]> = layers.iter().map(|l| l.color).collect();
-    let mut placed: Vec<(IndexedMesh, [f64; 3])> = Vec::new();
+    let colors: Vec<([f64; 3], f64)> = layers.iter().map(|l| (l.color, l.spec)).collect();
+    let mut placed: Vec<(IndexedMesh, ([f64; 3], f64))> = Vec::new();
     let mut x = 0.0;
     for (ids, _) in &groups {
         let (lo, hi) = ids.iter().fold((Vector3::repeat(f64::MAX), Vector3::repeat(f64::MIN)), |(lo, hi), i| {
@@ -1240,7 +1532,7 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
         }
         x += hi.x - lo.x + 40.0;
     }
-    let lineup: Vec<Layer> = placed.iter().map(|(m, c)| Layer::solid(m, *c)).collect();
+    let lineup: Vec<Layer> = placed.iter().map(|(m, (c, sp))| Layer::solid(m, *c).with_spec(*sp)).collect();
     render_styled(&lineup, &[View::looking(Vector3::new(-0.35, 0.75 * ms, -0.45), Vector3::z())], 1.6, &out.join("boot_parts.png"), pretty)
         .map_err(e)?;
 
@@ -1253,7 +1545,7 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
     ];
     let mut cut_meshes: Vec<Vec<(IndexedMesh, [f64; 3])>> = Vec::new();
     for (n, off, _) in cuts {
-        let foot_cut = foot.solid().intersect(Solid::plane(n, off));
+        let foot_cut = g.leaned(foot.solid(), foot.bounds).intersect(Solid::plane(n, off));
         let ms_cut: Vec<(IndexedMesh, [f64; 3])> = std::thread::scope(|sc| {
             let mut hs: Vec<_> = specs
                 .iter()
@@ -1271,7 +1563,8 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
             let mut lb = g.part_bounds(PartKind::Shell);
             lb.min.z = top - 1.0;
             lb.max.z = g.z_trim_back + p.guard_above_cuff;
-            let leg = Solid::user_fn(move |q: Point3<f64>| gl.d(q).max(top - q.z).max(n.dot(&q.coords) - off), lb);
+            let lb = g.leaned_bounds(lb);
+            let leg = Solid::user_fn(move |q: Point3<f64>| gl.d(gl.unlean(q)).max(top - q.z).max(n.dot(&q.coords) - off), lb);
             hs.push(sc.spawn(move || (mesh_of(&leg, 1.0), [0.93, 0.83, 0.77])));
             hs.into_iter().map(|h| h.join().unwrap()).collect()
         });
@@ -1302,7 +1595,7 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
                 .map(|((sp, m), cell)| {
                     let g = g.clone();
                     let kind = sp.kind;
-                    sc.spawn(move || cluster_decimate(m, cell, Some(&|q| g.sdf(kind, q))))
+                    sc.spawn(move || cluster_decimate(m, cell, Some(&|q| g.sdf(kind, g.unlean(q)))))
                 })
                 .collect();
             let gu = grommet_union.as_ref();
@@ -1317,7 +1610,7 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
             }));
             hs.into_iter().map(|h| h.join().unwrap()).collect()
         });
-        display.push(foot.mesh.clone());
+        display.push(g.lean_mesh(&foot.mesh));
         let lat = -lm.medial_side;
         let explode: [[f64; 3]; 11] = [
             [0.0, 0.0, 0.0],
@@ -1332,11 +1625,15 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
             [130.0, 0.0, 130.0],
             [0.0, 0.0, 0.0],
         ];
-        let mut names: Vec<(String, [f64; 3], f64, String)> =
-            specs.iter().zip(&rows).map(|(sp, r)| (sp.name.to_string(), sp.color, r.3, sp.material.name.to_string())).collect();
-        names.push(("eyelets".into(), [0.80, 0.81, 0.84], rows[8].3, AL_6061_T6.name.into()));
-        names.push(("laces".into(), [0.96, 0.96, 0.94], rows[9].3, LACE.name.into()));
-        names.push(("foot (stand-in scan)".into(), skin, 0.0, "".into()));
+        type Row = (String, [f64; 3], [f64; 3], &'static str, f64, String);
+        let mut names: Vec<Row> = specs
+            .iter()
+            .zip(&rows)
+            .map(|(sp, r)| (sp.name.to_string(), sp.color, sp.look, sp.finish, r.3, sp.material.name.to_string()))
+            .collect();
+        names.push(("eyelets".into(), [0.80, 0.81, 0.84], EYELET_LOOK, "metal", rows[8].3, AL_6061_T6.name.into()));
+        names.push(("laces".into(), [0.96, 0.96, 0.94], LACE_LOOK, "fabric", rows[9].3, LACE.name.into()));
+        names.push(("foot (stand-in scan)".into(), skin, skin, "skin", 0.0, "".into()));
         let dir = out.join("viewer");
         std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
         let mut bin: Vec<u8> = Vec::new();
@@ -1358,13 +1655,16 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
                     bin.extend_from_slice(&ix.to_le_bytes());
                 }
             }
-            let (name, col, grams, mat) = &names[i];
+            let (name, col, look, finish, grams, mat) = &names[i];
             let e = explode[i];
             parts_json.push(format!(
-                "{{\"name\":\"{name}\",\"color\":[{:.3},{:.3},{:.3}],\"grams\":{grams:.1},\"material\":\"{mat}\",\"explode\":[{},{},{}],\"vertexOffset\":{vo},\"vertexCount\":{},\"indexOffset\":{io},\"indexCount\":{}}}",
+                "{{\"name\":\"{name}\",\"color\":[{:.3},{:.3},{:.3}],\"look\":[{:.3},{:.3},{:.3}],\"finish\":\"{finish}\",\"grams\":{grams:.1},\"material\":\"{mat}\",\"explode\":[{},{},{}],\"vertexOffset\":{vo},\"vertexCount\":{},\"indexOffset\":{io},\"indexCount\":{}}}",
                 col[0],
                 col[1],
                 col[2],
+                look[0],
+                look[1],
+                look[2],
                 e[0],
                 e[1],
                 e[2],
@@ -1373,15 +1673,18 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
             ));
         }
         let manifest = format!(
-            "{{\"units\":\"mm\",\"scale\":{scale},\"up\":\"z\",\"shellCarbonGrams\":{shell_cf:.1},\"medialSide\":{},\"cuts\":{{\"ankleX\":{:.1},\"legY\":{:.1}}},\"totalGrams\":{total:.1},\"parts\":[\n{}\n]}}\n",
+            "{{\"units\":\"mm\",\"scale\":{scale},\"up\":\"z\",\"variant\":\"{variant}\",\"vents\":{},\"leanDeg\":{},\"shellCarbonGrams\":{shell_cf:.1},\"medialSide\":{},\"cuts\":{{\"ankleX\":{:.1},\"legY\":{:.1}}},\"totalGrams\":{total:.1},\"parts\":[\n{}\n]}}\n",
+            g.vents.len(),
+            p.lean_deg,
             lm.medial_side,
             0.5 * (lm.medial.x + lm.lateral.x),
             lm.leg_c.1,
             parts_json.join(",\n")
         );
         // Base64 text: the artifact host serves text and images, not raw binary.
-        std::fs::write(dir.join("boot.txt"), base64(&bin)).map_err(|e| e.to_string())?;
-        std::fs::write(dir.join("manifest.json"), &manifest).map_err(|e| e.to_string())?;
+        let sfx = if vented { "_roller" } else { "" };
+        std::fs::write(dir.join(format!("boot{sfx}.txt")), base64(&bin)).map_err(|e| e.to_string())?;
+        std::fs::write(dir.join(format!("manifest{sfx}.json")), &manifest).map_err(|e| e.to_string())?;
         std::fs::write(dir.join("index.html"), include_str!("../viewer/boot.html")).map_err(|e| e.to_string())?;
         println!(
             "viewer: {} triangles in {:.1} MB -> {} ({:.1} s)",

@@ -151,6 +151,9 @@ pub struct LastBase {
     pub bounds: Aabb,
     /// The toe box starts here, mm from the heel.
     pub toe_from: f64,
+    /// The pieces: the closed foot, and the faded toe box (to build other bases from).
+    pub closed: Foot,
+    pub toe: Solid,
 }
 
 pub const CLOSING: f64 = 12.0;
@@ -187,8 +190,8 @@ pub fn last_base(foot: &Foot, margin: f64) -> Result<LastBase, String> {
         },
         toe.bounds,
     );
-    let solid = closed.solid().smooth_union(faded_toe, BLEND);
-    Ok(LastBase { solid, bounds: closed.bounds, toe_from })
+    let solid = closed.solid().smooth_union(faded_toe.clone(), BLEND);
+    Ok(LastBase { solid, bounds: closed.bounds, toe_from, closed, toe: faded_toe })
 }
 
 /// `Arc<CachedGridSdf>` as an `Sdf`, so several solids share one grid.

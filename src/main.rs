@@ -5,7 +5,8 @@
 //! - `scan <file>`: load a foot scan (OBJ, STL, PLY) and measure it.
 //! - `round1 <scan> [out]`: the whole skate on one foot, round-1 quality.
 //! - `chassis [foot length mm] [out]`: the round-2 roller chassis on its own, weighed and checked.
-//! - `boot <scan> [out]`: the hockey boot on one foot, every part meshed, weighed and drawn.
+//! - `boot <scan> [out] [ice|roller]`: the hockey boot on one foot (ice sealed, roller vented),
+//!   every part meshed, weighed and drawn.
 
 use custom_skate::check;
 use custom_skate::pitch::{FT, Rocker, fixed_alpha, passive_rocking_stiffness, roller_alpha};
@@ -59,11 +60,19 @@ fn main() {
         }
         "boot" => {
             let Some(path) = std::env::args().nth(2) else {
-                eprintln!("usage: boot <scan> [out dir]");
+                eprintln!("usage: boot <scan> [out dir] [ice|roller]");
                 std::process::exit(2);
             };
             let out = std::env::args().nth(3).unwrap_or_else(|| "out/boot".into());
-            if let Err(e) = custom_skate::hockey_boot::run(std::path::Path::new(&path), std::path::Path::new(&out)) {
+            let vented = match std::env::args().nth(4).as_deref() {
+                None | Some("ice") => false,
+                Some("roller") => true,
+                Some(other) => {
+                    eprintln!("boot variant {other:?}: ice (sealed, the default) or roller (vented)");
+                    std::process::exit(2);
+                }
+            };
+            if let Err(e) = custom_skate::hockey_boot::run(std::path::Path::new(&path), std::path::Path::new(&out), vented) {
                 eprintln!("{e}");
                 std::process::exit(1);
             }

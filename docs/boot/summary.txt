@@ -1,20 +1,21 @@
-hockey boot (track B, round 2 of the boot), scans/stand-in/022_fBW_R.ply
+hockey boot (track B, round 2 of the boot), ice (sealed), scans/stand-in/022_fBW_R.ply
 foot 252.4 x 104.5 mm; scan 125 mm tall, leg carried up as a prism above z 110
 landmarks: medial ankle bone (66, 46, 84), lateral (48, -23, 78), medial side +y
-cuff top z 159 (leg centre) to 166 (back); throat from x 177; tongue top z 193; tendon guard top z 221; 7 eyelets a side
-cuff room at the top, leg to liner: sides 13.0 mm (9.4 deg of tip), front 7.0 mm (5.5 deg of tip), back -1.0 mm (presses the calf)
+cuff top z 118 (leg centre) to 136 (back); throat from x 177; tongue top z 186; tendon guard top z 206; 7 eyelets a side
+cuff room at the top, leg to liner: sides 13.0 mm (19.4 deg of tip), front 7.0 mm (6.2 deg of tip), back -1.0 mm (presses the calf)
+ice (sealed); forward lean 6 deg; cuff top line z 146 at the front, 118 at the sides (40 above the outer ankle bone), 136 at the back, padded collar 4 mm; 0 vents; heel-lock eyelets: pair 3 from the top, at the ankle crease (z 94)
 parts (mass from each mesh's enclosed volume):
-  shell           235.2 cm3   237.6 g  (PA 12 (MJF))
+  shell           212.9 cm3   215.0 g  (PA 12 (MJF))
   toe cap          20.8 cm3    21.0 g  (PA 12 (MJF))
-  outsole          82.2 cm3    83.0 g  (PA 12 (MJF))
-  liner           235.9 cm3    35.4 g  (liner foam (assumed))
+  outsole          67.4 cm3    68.0 g  (PA 12 (MJF))
+  liner           209.1 cm3    31.4 g  (liner foam (assumed))
   ankle pads       19.9 cm3     3.0 g  (liner foam (assumed))
   footbed          54.0 cm3     8.1 g  (liner foam (assumed))
-  tongue           76.6 cm3    11.5 g  (liner foam (assumed))
-  tendon guard      9.4 cm3    11.3 g  (TPU (assumed))
-  eyelets           2.1 cm3     5.6 g  (6061-T6)
-  laces             7.4 cm3     6.0 g  (lace (assumed))
-  total 422 g (shell in PA 12 (MJF); in carbon/epoxy the shell alone would be 365 g); foam and lace densities assumed
-  check: shell 237.55 g at 0.75 mm cells, 237.64 g at 0.5 mm (+0.0%)
-  check: tendon guard 11.34 g at 0.6 mm cells, 11.37 g at 0.3 mm (+0.3%)
-  check: tendon guard by mass_properties at 0.3 mm: 11.39 g
+  tongue           99.8 cm3    15.0 g  (liner foam (assumed))
+  tendon guard      9.8 cm3    11.8 g  (TPU (assumed))
+  eyelets           2.6 cm3     6.9 g  (6061-T6)
+  laces             8.1 cm3     6.5 g  (lace (assumed))
+  total 387 g (shell in PA 12 (MJF); in carbon/epoxy the shell alone would be 330 g); foam and lace densities assumed
+  check: shell 215.04 g at 0.75 mm cells, 215.13 g at 0.5 mm (+0.0%)
+  check: tendon guard 11.78 g at 0.6 mm cells, 11.82 g at 0.3 mm (+0.4%)
+  check: tendon guard by mass_properties at 0.3 mm: 11.84 g

@@ -500,6 +500,86 @@ Its meshes are the uniform ones decimated by our own `cluster_decimate`: cf-desi
   puck protection (item 7, the air-gapped shield); a sensor bay (item 8); the fit simulation
   (B5). And the sole that becomes the roller chassis's upper or the ice holder (track C).
 
+### Toward an elite skate's look (2026-11-11)
+
+Jon: "so how do we make this look more like an elite/pro level hockey skate? lets discuss".
+What made round 2 read as a shoe, and the plan, in order:
+1. **The shape:** a fair (taut) shell; a forward lean; a sculpted top line with a padded
+   collar roll; a taller tendon guard that kicks back; a thin outsole tucked under the shell; a
+   shaped tongue that curls forward; a tight, low toe cap.
+2. **Panels and character lines:** shallow grooves along chosen curves, so the quarter, the
+   heel counter and the ankle zone read as designed panels.
+3. **The finish** (in the viewer): colours, a carbon weave, lighting, a place for our own mark.
+4. **The holder under it**, which also gives the heel lift.
+
+Our own look, not a copy: a brand's skate shapes are part of its identity.
+
+**Jon's choices (2026-11-11):**
+- **The look:** "black carbon fiber against black thermoplastic/leather/etc. black toungue
+  too". Stealth black-on-black: the shell in carbon, the toe cap, outsole and tendon guard in
+  black thermoplastic, the tongue black.
+- **Ventilation:** "in roller hockey skates, ventilation helps a ton. in ice hockey, its not
+  good as the rink is already cold and then ice gets in and melts into water." So the two
+  boots differ: **the roller boot is vented** (slots through the toe cap and the quarters,
+  with the liner perforated under them), **the ice boot is sealed**.
+- **Forward flex, from a skate Jon showed** ("looking at the skates that mcdavid uses, look how
+  the eyelits/ankles flare for that y ankle/ankle flexion", against a True he prefers): there
+  the upper eyelets sit on panels that swing out and back, so the throat opens into a V at the
+  top and the shin drives forward into a tall tongue. We keep a True-like body and borrow the V.
+- **The cuff's height:** "i think the boot goes up a little too high on our skate too ... they
+  usually go just above that exterior ankle bulge. to protect the ankles just enough, but the
+  offer max mobility."
+- **The heel lock:** "this 4th to the top eyelit ... this should be a heavy duty eyelit as this
+  is the most important one, to lock in heel pressure."
+
+**Step 1, the shape, done (2026-11-11).** `boot <scan> [out] [ice|roller]`:
+- **The cuff's top line:** at the sides 40 mm above the outer ankle bone (z 118, just above the
+  ankle pocket), rising 28 mm toward the front (z 146: the eyelet panels carry the lacing up the
+  shin) and 18 mm toward the back (z 136, into the tendon guard). With the open cuff's 13 mm of
+  room at the sides now only ~37 mm above the ankle bones, **the ankle can tip about 19° each
+  way** before the leg meets the liner (9° with the old 75 mm cuff). Front: 7 mm, 6°.
+- **The V:** the throat widens as t^2.2 along its length, 26 mm at the front to 48 mm at the
+  top, so the upper eyelets swing out.
+- **The heel lock:** the eyelet pair nearest the ankle crease (where the line over the foot
+  turns past 60° toward the shin, z 94 on stand-in 022): heavy-duty grommets (4.2 mm barrel,
+  6.8 mm flange, against 3.4 / 5.0) on a 1.5 mm boss in the facing. On this boot, with 7 pairs,
+  it's the 3rd from the top; Jon's reference skate has one more pair above the crease.
+- **A taut outside:** the shell's outer surface is built on the base closed by another 18 mm
+  (hollows up to ~36 mm wide filled), above the sole only (blended in from 5 to 25 mm up, so
+  the arch isn't filled with shell). The inside still follows the foot, so the fit from heel to
+  toe is unchanged; the shell is thicker over the hollows.
+- **Forward lean** 6° (a shear above the ankle bones, ramped in over 40 mm; it keeps volumes).
+- **A padded collar:** the liner rises 4 mm above the shell's top edge and covers it.
+- **The tendon guard** 70 mm above the cuff at the back, kicking 20 mm back at its top,
+  narrowing from 44 to 26 mm wide. **The tongue's top** curls 8 mm forward. **The outsole** is
+  tucked 2 mm inside the shell's outline.
+- **The look:** carbon shell, black thermoplastic toe cap, outsole and tendon guard, black
+  leather-look tongue, gunmetal eyelets, black laces (renders with sheen by finish; the viewer
+  draws a twill weave on the shell). Sections keep the diagram colours.
+- **Vents (roller):** four slots across the toe box and three a side low on the quarters, cut
+  through the liner too: 10 in all.
+
+| Part | Ice, g | Roller, g |
+|---|---|---|
+| shell | 215.0 | 213.1 |
+| toe cap | 21.0 | 20.6 |
+| outsole | 68.0 | 68.0 |
+| liner | 31.4 | 30.9 |
+| ankle pads | 3.0 | 3.0 |
+| footbed | 8.1 | 8.1 |
+| tongue | 15.0 | 15.0 |
+| tendon guard | 11.8 | 11.8 |
+| eyelets | 6.9 | 6.9 |
+| laces | 6.5 | 6.5 |
+| **total** | **387** | **384** |
+
+Lighter than round 2 (422 g) although the taut shell is thicker over the hollows: the lower
+cuff takes more shell away than the fairing adds. Shell, toe cap and outsole weighed in PA 12;
+in carbon/epoxy at the same 2.5 mm the ice shell would be 330 g (a laid-up shell would be
+thinner). The shell converges (+0.0% at 0.5 mm cells), the tendon guard within 0.4%.
+
+**Next:** step 2, panels and character lines; the holder under it (track C); then Jon's scans.
+
 ## Phase 0: the science and the tools (DONE 2026-11-10)
 
 - Sources found and read (docs/RESEARCH.md): the Brock / George Brown poster (2023), the GIH model

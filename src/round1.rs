@@ -137,7 +137,7 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
     let colors: Vec<[f64; 3]> =
         gaps.iter().map(|g| g.map_or([0.75, 0.75, 0.75], |g| diverging((g - p.ease) / 10.0))).collect();
     render(
-        &[Layer { mesh: &foot.mesh, color: skin, vertex_colors: Some(&colors) }],
+        &[Layer { mesh: &foot.mesh, color: skin, vertex_colors: Some(&colors), spec: 0.0 }],
         &views,
         2.0,
         &out.join("fit_map.png"),
