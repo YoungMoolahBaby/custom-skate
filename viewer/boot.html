@@ -121,6 +121,7 @@
       <ul class="notes">
         <li>Built on a stand-in foot (a CC0 research scan) until Jon's own scans exist.</li>
         <li>Lines placed from the scan: the ankle bones set the cuff and the ankle pockets; the ridge from the toes up the shin sets the throat, tongue and eyelets.</li>
+        <li>Tight from heel to toe, open at the top: above the ankle bones the liner and shell flare out together, leaving 13 mm at the sides (about 9° of ankle tip each way), 7 mm in front, and a slight press at the back to pitch the leg forward. Cut through the ankle to see it.</li>
         <li>Cuff, tongue and tendon guard heights are estimates until measured on the TF9.</li>
         <li>Foam, felt and lace densities are assumed; the shell, toe cap and outsole are 3D-printed nylon (PA 12).</li>
       </ul>
@@ -253,8 +254,9 @@
       geo.computeVertexNormals();
       const color = new THREE.Color(d.color[0], d.color[1], d.color[2]).convertSRGBToLinear();
       const front = new THREE.MeshStandardMaterial({ color, roughness: d.name === 'eyelets' ? 0.35 : 0.72, metalness: d.name === 'eyelets' ? 0.6 : 0.0 });
-      // Inside faces, seen only where a cut opens a part: drawn flat and darker, so a cut reads as solid.
-      const back = new THREE.MeshBasicMaterial({ color: color.clone().multiplyScalar(0.55), side: THREE.BackSide });
+      // Inside faces, seen where a cut opens a part: drawn flat (unlit), so a cut reads as solid.
+      // Close to the part's own colour, so the light meshes' few pinholes don't show as specks.
+      const back = new THREE.MeshBasicMaterial({ color: color.clone().multiplyScalar(0.8), side: THREE.BackSide });
       const group = new THREE.Group();
       group.add(new THREE.Mesh(geo, front), new THREE.Mesh(geo, back));
       group.visible = !d.name.startsWith('foot');

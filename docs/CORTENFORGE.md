@@ -48,14 +48,23 @@ type (bug, docs, API, perf, setup, works), date, file:line under
 
 - **API** (2026-11-11, the boot): the QEM decimator (simplify.rs:681, `simplify_mesh`) is not
   exported (lib.rs has no `pub mod simplify`), so an existing mesh can't be decimated. The public
-  route is `Solid::mesh_simplified` (query.rs:277), which re-meshes with the adaptive octree and
-  then decimates. The octree prunes by `evaluate_interval` (adaptive_dc.rs:253), and a plain
-  `user_fn` answers (-inf, +inf), so nothing is pruned. Giving each part a Lipschitz interval
-  (centre value +- 3 x half-diagonal, `user_fn_with_interval`; `hockey_boot::solid_bounded`) makes
-  it work.
+  route is `Solid::mesh_simplified` (query.rs:277): re-mesh with the adaptive octree, then
+  decimate. The octree prunes by `evaluate_interval` (adaptive_dc.rs:253), and a plain `user_fn`
+  answers (-inf, +inf), so nothing is pruned without a hand-written interval.
+- **bug** (2026-11-11, the boot): `mesh_simplified` threw vertices off the surface. On the boot's
+  parts (a Lipschitz interval given, ~18 min for ten parts on 12 threads), vertices sat up to
+  ~330 mm off the toe cap and outsole and 20 mm off the liner, and triangles spanned 150-390 mm:
+  spikes and dark slivers in the 3D viewer (Jon saw them). Dual contouring clamps its vertices
+  to their cells (adaptive_dc.rs:460), so it's the decimation. `optimal_point`
+  (simplify.rs:59, used at :281) takes the quadric's minimum whenever the determinant is above
+  an absolute 1e-15; on flat patches the quadric is near-singular but in mm its determinant
+  clears that easily, so the minimum lands far along the flat direction. And no collapse is
+  checked for flipping triangles. Instead: `hockey_boot::cluster_decimate` on the uniform mesh
+  (seconds, every vertex snapped back onto the part's field).
 - **works** (2026-11-11, the boot): ten parts of a hockey boot as layered offsets of one scan
   field (`user_fn`s sharing an `Arc`), plus primitives (grommets as cylinders, laces as a
-  `pipe`), meshed in parallel threads.
+  `pipe`), meshed in parallel threads (the uniform mesher; weights converge, shell +0.0% from
+  0.75 to 0.5 mm cells).
 
 ## sim-opt
 
@@ -88,6 +97,11 @@ type (bug, docs, API, perf, setup, works), date, file:line under
 
 ## mesh (measure, io, repair)
 
+- **note** (2026-11-11, the boot): `weld_vertices` (repair.rs:310) merges duplicates by
+  remapping the faces but leaves the merged-away copies in the vertex list, unreferenced (1,284
+  of 85,104 on a meshed 2 mm shell). Harmless for STL and volumes; but anything that walks the
+  vertex list (per-vertex normals, clustering) sees zero-normal strays. Follow it with
+  `remove_unreferenced_vertices` (repair.rs:424), as `round1::mesh_of` now does.
 - **bug** (2026-11-10): `mesh_measure::cross_section` (cross_section.rs:156) returns broken
   loops when the plane passes through or within ~1e-5 mm of vertices. A vertex on the plane
   gives `d_a * d_b == 0`, which counts as a crossing (line 459), so a triangle can yield the same
@@ -221,11 +235,13 @@ Nice-to-haves for CortenForge, with what this project built instead.
   so an assembly like the rocker's upper on its lower is one model and the contact forces
   redistribute as the parts give. Instead: two substructures, the upper loaded by the lower's
   reaction forces (one way).
-- **Decimate a mesh, and a Lipschitz bound for `user_fn`** (2026-11-11, the boot): export
-  `simplify_mesh` so an existing mesh (a scan, a uniform mesh already made) can be decimated for
-  display or a web viewer; and a `user_fn_lipschitz(f, l, bounds)` whose interval is the centre
-  value +- l x half-diagonal, so adaptive meshing prunes scan-derived parts without a hand-written
-  interval. Instead: `hockey_boot::solid_bounded`.
+- **Decimate a mesh, safely** (2026-11-11, the boot): export `simplify_mesh` so an existing mesh
+  (a scan, a uniform mesh) can be decimated; in it, a relative singularity test for the quadric
+  (or keep the new vertex near the collapsed edge, falling back to its ends or midpoint) and a
+  flip check per collapse. And `user_fn_lipschitz(f, l, bounds)`, whose interval is the centre
+  value +- l x half-diagonal, so adaptive meshing prunes scan-derived parts. Instead:
+  `hockey_boot::cluster_decimate`.
+- **`weld_vertices` that compacts** (2026-11-11), or a flag for it.
 - **Section properties and interference** (2026-11-10, round 2): `Solid::section(plane)` (area,
   centroid, second moments) for beam checks, and `Solid::overlap_volume(&other)` that ignores the
   partial-cell band, for clash checks. Instead: `strength::section`, `round2::overlap_mm3`.

@@ -92,6 +92,21 @@ fn boot_checks(t: &mut Tally) {
     let exact = 4.0 / 3.0 * PI * r.powi(3);
     let err = v / exact - 1.0;
     t.item("mesh volume: sphere r 20 at 0.5 mm", err.abs() < 0.01, format!("{v:.0} vs {exact:.0} mm3 ({:+.2}%)", err * 100.0));
+    // The viewer's decimation on a thin wall coarser than its cells: a spherical shell, r 20,
+    // 2 mm wall, meshed at 0.4 mm and clustered at 2.5 mm. Both faces must survive (volume),
+    // every vertex must sit on the surface, and no sliver may span the part.
+    let shell = Solid::sphere(20.0).subtract(Solid::sphere(18.0));
+    let fine = crate::round1::mesh_of(&shell, 0.4);
+    let coarse = crate::hockey_boot::cluster_decimate(&fine, 2.5, Some(&|q| shell.evaluate(&q)));
+    let exact = 4.0 / 3.0 * PI * (20f64.powi(3) - 18f64.powi(3));
+    let err = mesh_volume(&coarse) / exact - 1.0;
+    let off = coarse.vertices.iter().map(|v| shell.evaluate(v).abs()).fold(0.0, f64::max);
+    let edge = coarse.faces.iter().flat_map(|f| [(f[0], f[1]), (f[1], f[2]), (f[2], f[0])]).map(|(a, b)| (coarse.vertices[a as usize] - coarse.vertices[b as usize]).norm()).fold(0.0, f64::max);
+    t.item(
+        "viewer decimation: 2 mm shell at 2.5 mm cells keeps both faces, on the surface",
+        err.abs() < 0.03 && off < 0.05 && edge < 8.0,
+        format!("{} -> {} triangles, volume {:+.2}%, worst vertex {off:.3} mm off, longest edge {edge:.1} mm", fine.faces.len(), coarse.faces.len(), err * 100.0),
+    );
     // The viewer's mesh file: base64 against RFC 4648's test vectors.
     let vectors = [("", ""), ("f", "Zg=="), ("fo", "Zm8="), ("foo", "Zm9v"), ("foob", "Zm9vYg=="), ("fooba", "Zm9vYmE="), ("foobar", "Zm9vYmFy")];
     let bad: Vec<&str> = vectors.iter().filter(|(i, o)| crate::hockey_boot::base64(i.as_bytes()) != *o).map(|(i, _)| *i).collect();

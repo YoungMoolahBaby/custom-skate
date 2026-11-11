@@ -10,7 +10,7 @@ use std::time::Instant;
 use cortenforge::cf_design::Solid;
 use cortenforge::cf_design::mechanism::mass::mass_properties;
 use cortenforge::mesh::io::save_mesh;
-use cortenforge::mesh::repair::weld_vertices;
+use cortenforge::mesh::repair::{remove_unreferenced_vertices, weld_vertices};
 use cortenforge::mesh::types::IndexedMesh;
 
 use crate::boot::{self, BootParams};
@@ -22,6 +22,8 @@ use crate::{fit, foot, scan};
 pub fn mesh_of(solid: &Solid, cell: f64) -> IndexedMesh {
     let mut m = solid.mesh(cell).geometry;
     weld_vertices(&mut m, 1e-5);
+    // Welding leaves the merged-away copies in the vertex list, unreferenced (docs/CORTENFORGE.md).
+    remove_unreferenced_vertices(&mut m);
     m
 }
 

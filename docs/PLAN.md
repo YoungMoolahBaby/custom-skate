@@ -427,9 +427,11 @@ rocker table above reads somewhat soft.
 Jon: "lets not use anything proprietary, so no i2 inserts. can we work on the boot first? it
 would be cool to see the full boot in its glory then go back to the bladeholder".
 `cargo run --release -- boot scans/stand-in/022_fBW_R.ply` (~6 min; `BOOT_VIEWER=1` adds the
-3D viewer's meshes, ~18 min more) builds the whole boot on stand-in 022 (`src/hockey_boot.rs`).
+3D viewer's light meshes, seconds more) builds the whole boot on stand-in 022 (`src/hockey_boot.rs`).
 Renders and the summary are in `docs/boot/`; STLs and the viewer's files go to `out/boot/`. The
 viewer page is `viewer/boot.html` (turn, explode, cut through the ankle or lengthwise).
+Its meshes are the uniform ones decimated by our own `cluster_decimate`: cf-design's
+`mesh_simplified` left spikes and slivers that Jon spotted in the first viewer (CORTENFORGE.md).
 
 ![The hockey boot, round 2, three-quarter views from the outside front and the inside back](boot/boot_hero.png)
 
@@ -450,27 +452,48 @@ viewer page is `viewer/boot.html` (turn, explode, cut through the ankle or lengt
 
 | Part | g | Material | What it is |
 |---|---|---|---|
-| shell | 236.6 | PA 12 | 2.5 mm, cuff trimmed 75 mm above the higher ankle bone (z 159 at the leg's centre, rising 8° to 166 at the back), flared up to 8 mm at its top edge (mostly at the sides, for ankle mobility), ankle pockets bulging 3 mm, an eyelet facing (+1.5 mm) along each side of the throat |
+| shell | 237.6 | PA 12 | 2.5 mm, cuff trimmed 75 mm above the higher ankle bone (z 159 at the leg's centre, rising 8° to 166 at the back), flaring with the liner at the top (below), ankle pockets bulging 3 mm, an eyelet facing (+1.5 mm) along each side of the throat |
 | toe cap | 21.0 | PA 12 | 1.5 mm over the shell's front, ending at the throat |
 | outsole | 83.0 | PA 12 | 3 mm flat plate under the shell with a small welt; where track C takes over (the roller's sole becomes the chassis's upper) |
-| liner | 38.8 | foam | 4 mm, thickening into a padded collar where the cuff flares |
+| liner | 35.4 | foam | 4 mm, following the shell's flare at the top, so the room is between the leg and the liner |
 | ankle pads | 3.0 | foam | the liner within 24 mm of each ankle bone, 7 mm thick in the pockets |
 | footbed | 8.1 | foam | the liner under the foot |
-| tongue | 14.6 | foam | from under the toe cap to 40 mm above the cuff, padding under the eyelet rows and a raised core filling the throat |
-| tendon guard | 11.0 | TPU | 2.5 mm, overlapping the shell's back, 55 mm above the cuff, kicking 12 mm back at its top |
+| tongue | 11.5 | foam | from under the toe cap to 40 mm above the cuff, padding under the eyelet rows and a raised core filling the throat |
+| tendon guard | 11.3 | TPU | 2.5 mm, overlapping the shell's back, 55 mm above the cuff, kicking 12 mm back at its top |
 | eyelets | 5.6 | 6061 | 7 a side, grommets through the facing |
-| laces | 6.3 | lace | criss-cross, tied in a bow |
-| **total** | **428** | | the same shell in carbon/epoxy at 2.5 mm would weigh 363 g; a laid-up shell would be thinner |
+| laces | 6.0 | lace | criss-cross, tied in a bow |
+| **total** | **422** | | the same shell in carbon/epoxy at 2.5 mm would weigh 365 g; a laid-up shell would be thinner |
 
-- **Layers (item 6), from the foot out:** 1 mm fit allowance, 4 mm liner (more at the collar
-  and the ankle pads), 2.5 mm shell (+1.5 mm facing), 1.5 mm toe cap. The two sections
+- **Layers (item 6), from the foot out:** 1 mm fit allowance (plus the flare's room at the
+  top), 4 mm liner (more at the ankle pads), 2.5 mm shell (+1.5 mm facing), 1.5 mm toe cap. The two sections
   (`docs/boot/boot_section_*.png`) show the stack.
+- **The cuff: tight from heel to toe, open at the top (Jon, 2026-11-11).** "my favorite/go to
+  for skating mechanics is train 2.0. a lot of it is able ankle flexion ... so having a bit of
+  flare at the top of the skate help a lot to get the mobility. then tight from heels to toe.
+  so like basically you theoretically wouldnt even have to tie the skate, and it would stay
+  on/performant, and youd have near full range ankle mobility." He found the first version
+  tight and restrictive going into the lower leg, "at least for shorter players". His reference
+  (a photo of a player skate): flare at the top to both sides, a little room in front, and a
+  slight negative flare at the back "to pitch you forward a little bit".
+  - **What was wrong:** the first version flared only the shell, and the liner filled the
+    flare with collar foam, so the leg met foam after ~1 mm (0.7° of tip).
+  - **Now** the liner and shell flare out together above the ankle bones (from 5 mm above the
+    higher one, growing as t^1.5 to the top), leaving room between the leg and the liner:
+    **sides 13 mm, about 9.4° of tip each way** before the leg meets the liner (pivoting at the
+    ankle bones' height; the liner's own give comes on top); **front 7 mm, 5.5°** before the
+    tongue; **back -1 mm**, the liner pressing the calf to pitch the leg forward. Below the
+    ankle bones nothing changed: the 1 mm fit allowance from heel to toe.
+  - **To tune with Jon:** the angle is atan(room / height above the ankle bones). At this
+    cuff height (78 mm from the ankle bones to the top at the sides), 15° each way needs
+    ~21 mm of room and 20° ~28 mm, which starts to lose the cuff's support. A lower cuff gets
+    the same angle with less flare: at 60 mm, 15° needs ~16 mm. So the cuff height (B1 on the
+    TF9) and the flare are one choice.
 - **The throat (item 3):** runs from the toe cap up the instep and the front of the leg to the
   top, 26 mm wide at the front, 32 mm at the cuff.
 - **Weights:** each part is weighed from its mesh's enclosed volume. At a finer mesh the shell
-  is unchanged (236.6 g at 0.75 mm cells, 236.7 at 0.5) and the tendon guard is within 0.3%.
+  is unchanged (237.55 g at 0.75 mm cells, 237.64 at 0.5) and the tendon guard is within 0.3%.
   The toe cap needed 0.3 mm cells: it came out 3.9% light at 0.5. `mass_properties` agrees
-  on the tendon guard (11.08 g against 11.02). Foam, TPU and lace densities are assumed.
+  on the tendon guard (11.39 g against 11.34). Foam, TPU and lace densities are assumed.
 - **Estimates until measured on the TF9** (MEASURE.md B1-B7): the cuff, tongue and tendon guard
   heights, the throat widths, and the eyelet count and spacing.
 - **Not in yet:** Jon's own foot; a forward lean; a tighter heel lock (the last's round 2);

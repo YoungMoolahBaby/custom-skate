@@ -154,13 +154,16 @@ Pictures and numbers: `docs/round2/`, and `docs/PLAN.md` (Round 2).
 *Round 2 of the boot, on the stand-in foot: shell, toe cap, outsole, liner with ankle pads and
 footbed, tongue, tendon guard, eyelets and laces. `cargo run --release -- boot <scan>`.*
 
-- **A traditional hockey boot, as Jon asked:** the cuff wraps the ankle and flares at its top
-  edge for ankle mobility, and the throat runs from the toe cap up to the top, with a full tongue.
+- **A traditional hockey boot, as Jon asked:** tight from heel to toe, open at the top. Above the
+  ankle bones the liner and shell flare out together: 13 mm of room at the sides at the top
+  (about 9° of ankle tip each way before the leg meets the liner), 7 mm in front, and a slight
+  press at the back to pitch the leg forward. The throat runs from the toe cap to the top, with a
+  full tongue.
 - **Placed from the scan.** The ankle bones set the cuff, the ankle pockets and the pads. The
   line over the top of the foot and up the shin sets the throat, the tongue, the eyelets and the
   laces. So the same code fits Jon's foot once it's scanned.
-- **428 g in all**, with the shell, toe cap and outsole in printed nylon (PA 12): shell 237 g,
-  outsole 83 g, toe cap 21 g, liner, ankle pads and footbed 50 g, tongue 15 g, tendon guard 11 g,
+- **422 g in all**, with the shell, toe cap and outsole in printed nylon (PA 12): shell 238 g,
+  outsole 83 g, toe cap 21 g, liner, ankle pads and footbed 47 g, tongue 12 g, tendon guard 11 g,
   eyelets and laces 12 g. The foam, felt and lace densities are assumed.
 - **Estimates until measured:** the heights of the cuff, tongue and tendon guard, and the
   eyelet spacing (`docs/MEASURE.md`, B1-B7, on the TF9).

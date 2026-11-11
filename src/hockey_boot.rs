@@ -11,9 +11,12 @@
 //! The parts are signed-distance functions over one shared geometry (`BootGeom`), in layers
 //! measured out from the last's base surface (`d`, mm; negative inside):
 //!
-//! - `ease` (fit allowance) .. `inner_off`: the liner; thicker where the cuff flares (the collar)
-//!   and round the ankle bones (the ankle pads, in pockets the shell bulges out for). Under the
-//!   foot it is the footbed. Under the throat it is the tongue's padding instead.
+//! - `liner_in` .. `inner_off`: the liner. `liner_in` is the fit allowance (`ease`), plus, above
+//!   the ankle bones, the cuff's flare: the liner and shell flare out together, leaving room
+//!   between the leg and the liner at the top for the ankle to flex (Jon: tight from heel to toe,
+//!   open at the top; a little room in front, a slight press at the back to pitch you forward).
+//!   The liner thickens round the ankle bones (the ankle pads, in pockets the shell bulges out
+//!   for). Under the foot it is the footbed. Under the throat it is the tongue's padding instead.
 //! - `inner_off` .. `outer_off`: the shell, `wall` thick, plus an eyelet facing (a thicker strip
 //!   along each side of the throat that carries the eyelets). Trimmed at the cuff line, opened
 //!   over the dorsal line for the throat, holed for the eyelets.
@@ -58,10 +61,14 @@ pub struct HockeyParams {
     pub cuff_above_ankle: f64,
     /// The cuff's top edge rises toward the back by this angle. Estimate.
     pub trim_tilt_deg: f64,
-    /// How far the cuff's top edge stands off the leg beyond the normal layers, at the sides
-    /// (30% of it at the front and back). Estimate.
-    pub flare: f64,
-    /// The flare starts this far above the higher ankle bone and grows (quadratically) to the top.
+    /// The cuff's flare at its top edge, mm: how far the liner and shell stand off the leg there,
+    /// on top of the fit allowance. At the sides (both the same), at the front, and at the back
+    /// (negative: the liner presses the calf, pitching the leg forward). In between, blended by
+    /// the direction round the leg. Estimates, to tune with Jon.
+    pub flare_side: f64,
+    pub flare_front: f64,
+    pub flare_back: f64,
+    /// The flare starts this far above the higher ankle bone and grows (as t^1.5) to the top.
     pub flare_from: f64,
     /// Ankle pockets: the shell bulges out (and the liner thickens) round each ankle bone by up
     /// to this much, Gaussian with `ankle_sigma`. Estimate.
@@ -107,8 +114,10 @@ impl Default for HockeyParams {
             sole: 3.0,
             cuff_above_ankle: 75.0,
             trim_tilt_deg: 8.0,
-            flare: 8.0,
-            flare_from: 15.0,
+            flare_side: 12.0,
+            flare_front: 6.0,
+            flare_back: -2.0,
+            flare_from: 5.0,
             ankle_pocket: 3.0,
             ankle_sigma: 12.0,
             ankle_pad_r: 24.0,
@@ -517,15 +526,22 @@ impl BootGeom {
         self.z_cuff + (self.lm.leg_c.0 - x) * self.p.trim_tilt_deg.to_radians().tan()
     }
 
-    /// The cuff's flare: grows (quadratically) from `flare_from` above the higher ankle bone to
-    /// the top, and mostly at the sides, where the ankle tips (30% at the front and back, where
-    /// the tongue and the tendon guard are).
+    /// The cuff's flare: grows (as t^1.5, so it opens soon above the bones) from `flare_from`
+    /// above the higher ankle bone to the cuff's top; `flare_side` at the sides, `flare_front`
+    /// in front, `flare_back` behind, blended by the direction round the leg (cos^2, sin^2).
     fn flare(&self, q: Point3<f64>) -> f64 {
         let z0 = self.lm.medial.z.max(self.lm.lateral.z) + self.p.flare_from;
         let t = ((q.z - z0) / (self.z_trim(q.x) - z0)).clamp(0.0, 1.0);
         let (dx, dy) = (q.x - self.lm.leg_c.0, q.y - self.lm.leg_c.1);
-        let side = dy.abs() / (dx * dx + dy * dy).sqrt().max(1e-9);
-        self.p.flare * t * t * (0.3 + 0.7 * side)
+        let r2 = (dx * dx + dy * dy).max(1e-18);
+        let (c2, s2) = (dx * dx / r2, dy * dy / r2);
+        let fb = if dx > 0.0 { self.p.flare_front } else { self.p.flare_back };
+        t.powf(1.5) * (self.p.flare_side * s2 + fb * c2)
+    }
+
+    /// Where the liner starts: the fit allowance plus the flare (offset from the base).
+    pub fn liner_in(&self, q: Point3<f64>) -> f64 {
+        self.p.ease + self.flare(q)
     }
 
     fn pocket(&self, q: Point3<f64>) -> f64 {
@@ -535,7 +551,7 @@ impl BootGeom {
 
     /// Where the liner ends and the shell begins (offset from the base).
     pub fn inner_off(&self, q: Point3<f64>) -> f64 {
-        self.p.ease + self.p.liner + self.flare(q) + self.pocket(q)
+        self.liner_in(q) + self.p.liner + self.pocket(q)
     }
 
     fn throat_w(&self, s: f64) -> f64 {
@@ -597,6 +613,7 @@ impl BootGeom {
             return -d - 5.0;
         }
         let io = self.inner_off(q);
+        let li = self.liner_in(q);
         let zt = self.z_trim(q.x);
         match k {
             PartKind::Shell => {
@@ -636,7 +653,7 @@ impl BootGeom {
                 outline.max(slab).max(outside_shell)
             }
             PartKind::Liner | PartKind::AnklePads | PartKind::Footbed => {
-                let band = (d - io).max(p.ease - d).max(q.z - (zt + 3.0));
+                let band = (d - io).max(li - d).max(q.z - (zt + 3.0));
                 let pad = [self.lm.medial, self.lm.lateral].iter().map(|m| (q - m).norm() - p.ankle_pad_r).fold(f64::MAX, f64::min);
                 let below = q.z + p.ease; // < 0 under the foot
                 match k {
@@ -658,8 +675,8 @@ impl BootGeom {
                 if outline > 3.0 {
                     return outline;
                 }
-                let pad = (d - io).max(p.ease - d);
-                let raised = (d - (io + p.wall + p.tongue_proud)).max(p.ease - d);
+                let pad = (d - io).max(li - d);
+                let raised = (d - (io + p.wall + p.tongue_proud)).max(li - d);
                 let open = (self.throat(&n, q.y) + 1.0).min(zt + 0.5 - q.z);
                 pad.min(raised.max(open)).max(outline)
             }
@@ -717,27 +734,6 @@ impl BootGeom {
                 }
             },
             b,
-        )
-    }
-
-    /// The part with a conservative interval bound (centre value +- `LIP` x half-diagonal), so
-    /// cf-design's adaptive mesher can prune empty space. Used for the light display meshes
-    /// (`mesh_simplified`); the parts are weighed and saved from the uniform meshes of `solid`.
-    /// The layered offsets are not exact distances, hence the margin over 1.
-    pub fn solid_bounded(self: &Arc<Self>, k: PartKind) -> Solid {
-        const LIP: f64 = 3.0;
-        let g = self.clone();
-        let f = move |q: Point3<f64>| g.sdf(k, q);
-        let f2 = f.clone();
-        Solid::user_fn_with_interval(
-            f,
-            move |bb: &Aabb| {
-                let c = Point3::from((bb.min.coords + bb.max.coords) * 0.5);
-                let h = 0.5 * (bb.max - bb.min).norm();
-                let v = f2(c);
-                (v - LIP * h, v + LIP * h)
-            },
-            self.part_bounds(k),
         )
     }
 
@@ -878,6 +874,108 @@ impl BootGeom {
     }
 }
 
+/// Display-only decimation of a closed mesh by vertex clustering: vertices are grouped by a
+/// `cell` mm grid and by which of six directions their normal faces, so the two faces of a thin
+/// wall never merge; each group becomes its mean, moved onto the surface by up to three Newton
+/// steps on `sdf` if given (a step longer than a cell is refused). Triangles that collapse,
+/// repeat, or turn over are dropped.
+pub fn cluster_decimate(m: &IndexedMesh, cell: f64, sdf: Option<&(dyn Fn(Point3<f64>) -> f64 + Sync)>) -> IndexedMesh {
+    use std::collections::{HashMap, HashSet};
+    // Which way each vertex faces: the field's gradient if there is a field (averaged mesh
+    // normals point the wrong way at a few vertices of a thin wall, ~0.3% on a 2 mm shell, and
+    // those would merge the wall's two faces), else the area-weighted mesh normal.
+    let grad = |f: &(dyn Fn(Point3<f64>) -> f64 + Sync), v: Point3<f64>, h: f64| {
+        Vector3::new(
+            f(v + Vector3::x() * h) - f(v - Vector3::x() * h),
+            f(v + Vector3::y() * h) - f(v - Vector3::y() * h),
+            f(v + Vector3::z() * h) - f(v - Vector3::z() * h),
+        ) / (2.0 * h)
+    };
+    let normals: Vec<Vector3<f64>> = match sdf {
+        Some(f) => m.vertices.iter().map(|v| grad(f, *v, 0.02 * cell)).collect(),
+        None => {
+            let mut n = vec![Vector3::zeros(); m.vertices.len()];
+            for f in &m.faces {
+                let [a, b, c] = f.map(|i| m.vertices[i as usize]);
+                let x = (b - a).cross(&(c - a));
+                for i in f {
+                    n[*i as usize] += x;
+                }
+            }
+            n
+        }
+    };
+    let bucket = |n: &Vector3<f64>| -> u8 {
+        let a = n.abs();
+        let axis = if a.x >= a.y && a.x >= a.z { 0 } else if a.y >= a.z { 1 } else { 2 };
+        axis * 2 + u8::from(n[axis as usize] < 0.0)
+    };
+    let mut ids: HashMap<(i64, i64, i64, u8), u32> = HashMap::new();
+    let mut sums: Vec<(Vector3<f64>, f64)> = Vec::new();
+    let map: Vec<u32> = m
+        .vertices
+        .iter()
+        .zip(&normals)
+        .map(|(v, n)| {
+            let key = ((v.x / cell).floor() as i64, (v.y / cell).floor() as i64, (v.z / cell).floor() as i64, bucket(n));
+            let id = *ids.entry(key).or_insert_with(|| {
+                sums.push((Vector3::zeros(), 0.0));
+                (sums.len() - 1) as u32
+            });
+            sums[id as usize].0 += v.coords;
+            sums[id as usize].1 += 1.0;
+            id
+        })
+        .collect();
+    let mut vertices: Vec<Point3<f64>> = sums.iter().map(|(s, n)| Point3::from(s / *n)).collect();
+    if let Some(f) = sdf {
+        for v in &mut vertices {
+            for _ in 0..3 {
+                let d = f(*v);
+                let g = grad(f, *v, 0.05 * cell);
+                let step = g * (d / g.norm_squared().max(1e-12));
+                if !step.norm().is_finite() || step.norm() > cell {
+                    break;
+                }
+                *v -= step;
+            }
+        }
+    }
+    let mut seen = HashSet::new();
+    let mut faces = Vec::new();
+    for f in &m.faces {
+        let [a, b, c] = f.map(|i| map[i as usize]);
+        if a == b || b == c || a == c {
+            continue;
+        }
+        let [pa, pb, pc] = f.map(|i| m.vertices[i as usize]);
+        let before = (pb - pa).cross(&(pc - pa));
+        let after = (vertices[b as usize] - vertices[a as usize]).cross(&(vertices[c as usize] - vertices[a as usize]));
+        if before.dot(&after) <= 0.0 {
+            continue;
+        }
+        let mut key = [a, b, c];
+        key.sort_unstable();
+        if seen.insert(key) {
+            faces.push([a, b, c]);
+        }
+    }
+    // Keep only the vertices some triangle uses.
+    let mut remap = vec![u32::MAX; vertices.len()];
+    let mut out = IndexedMesh::default();
+    for f in &mut faces {
+        for i in f.iter_mut() {
+            if remap[*i as usize] == u32::MAX {
+                remap[*i as usize] = out.vertices.len() as u32;
+                out.vertices.push(vertices[*i as usize]);
+            }
+            *i = remap[*i as usize];
+        }
+    }
+    out.faces = faces;
+    out
+}
+
 /// Standard base64 (RFC 4648, with padding).
 pub fn base64(data: &[u8]) -> String {
     const T: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -966,6 +1064,26 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
         g.eyelets.len() / 2,
         t.elapsed().as_secs_f64()
     );
+    // Room at the cuff's top, leg to liner, and how far the leg can tip before it meets the liner
+    // (geometric, pivoting at the ankle bones' height; the liner's own give comes on top).
+    let z_ank = 0.5 * (lm.medial.z + lm.lateral.z);
+    let room: Vec<(&str, f64, f64)> = [("sides", 0.0, 1.0), ("front", 1.0, 0.0), ("back", -1.0, 0.0)]
+        .iter()
+        .map(|&(name, c, s)| {
+            let x = lm.leg_c.0 + 35.0 * c;
+            let top = g.z_trim(x);
+            let r = g.liner_in(Point3::new(x, lm.leg_c.1 + 35.0 * s, top));
+            (name, r, (r / (top - z_ank)).atan().to_degrees())
+        })
+        .collect();
+    let room_line = format!(
+        "cuff room at the top, leg to liner: {}",
+        room.iter()
+            .map(|(n, r, a)| if *r >= 0.0 { format!("{n} {r:.1} mm ({a:.1} deg of tip)") } else { format!("{n} {r:.1} mm (presses the calf)") })
+            .collect::<Vec<_>>()
+            .join(", ")
+    );
+    println!("{room_line}");
     if std::env::var_os("BOOT_DEBUG").is_some() {
         for (i, (c, a)) in g.eyelets.iter().enumerate() {
             let near = g.prof.closest(c.x, c.z);
@@ -1022,6 +1140,7 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
         g.z_trim_back + p.guard_above_cuff,
         g.eyelets.len() / 2
     );
+    let _ = writeln!(summary, "{room_line}");
     let _ = writeln!(summary, "parts (mass from each mesh's enclosed volume):");
     let mut total = 0.0;
     let save = |name: &str, mesh: &IndexedMesh| -> Result<(), String> {
@@ -1165,29 +1284,39 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
     }
     println!("drew boot.png, boot_hero.png, boot_parts.png, boot_section_*.png ({:.1} s)", t.elapsed().as_secs_f64());
 
-    // Light meshes for the 3D viewer: opt-in, since cf-design's mesh_simplified (adaptive
-    // re-mesh, then decimation) took ~18 min for the ten parts on 12 threads.
+    // Light meshes for the 3D viewer (viewer/boot.html), opt-in: each part's uniform mesh
+    // decimated by `cluster_decimate`, with its colour, weight and the way it moves when exploded.
+    // (cf-design's mesh_simplified took ~18 min here and threw vertices off the surface: see
+    // docs/CORTENFORGE.md.)
     if std::env::var_os("BOOT_VIEWER").is_none() {
-        println!("viewer meshes skipped (set BOOT_VIEWER=1 to build them, ~18 min)");
+        println!("viewer meshes skipped (set BOOT_VIEWER=1 to build them)");
     } else {
-        // Light meshes for the 3D viewer (viewer/boot.html), decimated by cf-design's
-        // mesh_simplified; each part with its colour, weight and the way it moves when exploded.
         let t = Instant::now();
-        let targets = [140_000usize, 25_000, 25_000, 70_000, 8_000, 15_000, 40_000, 12_000];
+        let cells = [2.0, 1.5, 2.0, 2.0, 1.5, 2.0, 2.0, 1.5];
+        let grommet_union = grommets.iter().cloned().reduce(|a, b| a.union(b));
         let mut display: Vec<IndexedMesh> = std::thread::scope(|sc| {
-            let hs: Vec<_> = specs
+            let mut hs: Vec<_> = specs
                 .iter()
-                .zip(targets)
-                .map(|(sp, n)| {
+                .zip(&meshes)
+                .zip(cells)
+                .map(|((sp, m), cell)| {
                     let g = g.clone();
-                    let (kind, cell) = (sp.kind, sp.cell);
-                    sc.spawn(move || g.solid_bounded(kind).mesh_simplified(cell, n).geometry)
+                    let kind = sp.kind;
+                    sc.spawn(move || cluster_decimate(m, cell, Some(&|q| g.sdf(kind, q))))
                 })
                 .collect();
+            let gu = grommet_union.as_ref();
+            hs.push(sc.spawn(move || match gu {
+                Some(u) => cluster_decimate(&eyelet_mesh, 0.6, Some(&|q| u.evaluate(&q))),
+                None => IndexedMesh::default(),
+            }));
+            let lu = laces.as_ref();
+            hs.push(sc.spawn(move || match lu {
+                Some(l) => cluster_decimate(&lace_mesh, 1.0, Some(&|q| l.evaluate(&q))),
+                None => IndexedMesh::default(),
+            }));
             hs.into_iter().map(|h| h.join().unwrap()).collect()
         });
-        display.push(merge(&grommets.iter().map(|s| s.mesh_simplified(0.3, 700).geometry).collect::<Vec<_>>()));
-        display.push(laces.as_ref().map(|l| l.mesh_simplified(0.5, 30_000).geometry).unwrap_or_default());
         display.push(foot.mesh.clone());
         let lat = -lm.medial_side;
         let explode: [[f64; 3]; 11] = [
