@@ -7,6 +7,16 @@ is the part that rocks. The ice skate takes a dynamic (rocking) blade holder. Mo
 [CortenForge](https://crates.io/crates/cortenforge). The chassis came first, so most of this page
 is about it; the boot plan is in `docs/PLAN.md` (track B).
 
+![The roller skate, round 1: boot, rocker, lower frame and wheels, from the side, above, the front and three-quarters](docs/round1/roller_skate.png)
+
+*Round 1 on a stand-in foot: the boot grown from a 3D foot scan, the rocker under its sole, the
+lower frame and four 72 mm wheels. A first layout, not a design yet (see Round 1 below).*
+
+![The ice skate, round 1: the same boot on a holder placeholder and runner, from the side, above, the front and three-quarters](docs/round1/ice_skate.png)
+
+*The ice skate: the same boot on a 254 mm holder. The holder is a placeholder until the real one
+(a Marsblade i2) is measured.*
+
 A Marsblade-style frame is split in two. A rounded upper chassis carries the boot and rocks
 heel-to-toe on a flat lower chassis that carries the wheels, held together by a sprung coupling.
 The skater's foot can pitch the way it does on an ice blade while all four wheels stay on the
@@ -78,9 +88,8 @@ release build takes about 3 minutes.
 
 Every stage, end to end, on a stand-in foot (a CC0 research scan): the foot, a last with a toe
 box, the boot shell and liner, a fit map, a roller chassis with the rocker under the sole, and an
-ice holder placeholder. Round-1 quality: a first layout, not a design.
-
-![Roller skate, round 1](docs/round1/roller_skate.png)
+ice holder placeholder. Round-1 quality: a first layout, not a design. The picture at the top of
+this page is its roller skate.
 
 - Boot shell 277 g printed in PA 12 (425 g in carbon/epoxy), liner 44 g.
 - Fit: snug (~1 mm) at the heel, midfoot, instep and ball; room only round the toes.
