@@ -94,6 +94,13 @@ type (bug, docs, API, perf, setup, works), date, file:line under
   returned its flat edge value ~30 mm behind the leg, which undercut the foot's own distance
   there: the tendon guard, offset ~30 mm from the leg at its top, grew a flat horizontal tab.
   Fix: outside its box, add the distance to the box (foot.rs `last_base`).
+- **note, perf** (2026-11-12, the leg): on a smooth surface, a `CachedGridSdf` at 1.5 mm, meshed
+  by cf-design at 1.0 mm, leaves visible terraces (contour rings) on the leg: trilinear
+  interpolation of distances to a curved surface. The exact field, `Signed { distance:
+  TriMeshDistance, sign: PseudoNormalSign::from_distance(..) }` (oracle.rs:68, sdf.rs:495), on
+  MakeHuman's closed 12.8k-triangle leg, gives a clean surface, but meshing the joined leg
+  (~0.35 x 0.2 x 0.64 m at 1.0 mm cells) took **306 s against 29 s** with the grid. `leg.rs`
+  builds it once and saves it.
 
 ## mesh (measure, io, repair)
 
@@ -137,6 +144,10 @@ type (bug, docs, API, perf, setup, works), date, file:line under
 - **note** (2026-11-10): `cf_scan_prep_core::clip_mesh_against_plane` (clip.rs:132) leaves the
   new cut vertices unshared between neighbouring triangles: the clipped leg stump had 147 open
   edges until `weld_vertices(1e-5)` merged 1,096 vertices, then 1 (the cut). Weld after clipping.
+- **works** (2026-11-12, the leg): `clip_mesh_against_plane` twice (top and bottom), then
+  `weld_vertices(1e-6)`, then `auto_cap_open_boundaries` (cap.rs:63) turned MakeHuman's
+  subdivided leg (an open tube from a whole body) into a closed mesh: 2 caps, 0 open edges,
+  ready for mesh-sdf.
 
 ## sim-soft
 
@@ -256,6 +267,15 @@ Nice-to-haves for CortenForge, with what this project built instead.
   mask, a trimmed-outlier option for scans whose shapes differ in places (a loaded and an
   unloaded foot), and the residual per point to see where they differ. Instead:
   `hockey_boot::align_to`.
+- **Subdivision surfaces** (2026-11-12, the leg): Catmull-Clark (quads) and Loop (triangles)
+  in the mesh crates, ideally as a linear operator that can also subdivide per-vertex fields
+  (morph targets, displacements), for smoothing coarse art meshes such as MakeHuman's (quads
+  ~10-15 mm on the shin). Instead: `leg::Subdivision`, checked in `check` (a cube's first step
+  against the hand values, a flat grid).
+- **A tape girth on sections** (2026-11-12, the leg): `CrossSection::convex_perimeter`, the
+  perimeter of a contour's convex hull, which is how a tape measures a limb (it bridges
+  hollows): every anthropometric girth (ANSUR's calf, ankle, thigh) is one. Instead:
+  `leg::tape_perimeter`.
 - **Section properties and interference** (2026-11-10, round 2): `Solid::section(plane)` (area,
   centroid, second moments) for beam checks, and `Solid::overlap_volume(&other)` that ignores the
   partial-cell band, for clash checks. Instead: `strength::section`, `round2::overlap_mm3`.

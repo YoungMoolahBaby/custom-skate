@@ -49,7 +49,81 @@ pub fn run() -> Tally {
     boot_checks(&mut t);
     println!("scan frame on real stand-in scans (Schuster et al. 2024, pre-aligned: x heel to toe, z up)");
     stand_in_checks(&mut t);
+    println!("stand-in leg tools (track D1): Catmull-Clark, the tape girth");
+    leg_checks(&mut t);
     t
+}
+
+/// The leg's own tools on cases with answers by hand.
+/// - Catmull-Clark, one step on the cube [-1, 1]^3: a corner (valence 3) goes to (F + 2R) / 3 =
+///   (5/9, 5/9, 5/9); an edge's point is (two ends + two face centres) / 4, (3/4, 3/4, 0) for the
+///   edge from (1, 1, -1) to (1, 1, 1). Two steps: 96 quads, still closed (every edge in two).
+/// - On a flat regular grid, Catmull-Clark leaves interior vertices where they are.
+/// - The tape girth (convex hull perimeter) of a meshed cylinder r 50 is 2 pi r; of two
+///   overlapping cylinders r 30 with centres 40 apart (a peanut) it is 2 pi r + 2 x 40 = 268.50,
+///   the tape bridging the waist.
+fn leg_checks(t: &mut Tally) {
+    use crate::leg::{Subdivision, girth_at, open_edges};
+    let p = [
+        [-1.0, -1.0, -1.0], [1.0, -1.0, -1.0], [1.0, 1.0, -1.0], [-1.0, 1.0, -1.0],
+        [-1.0, -1.0, 1.0], [1.0, -1.0, 1.0], [1.0, 1.0, 1.0], [-1.0, 1.0, 1.0],
+    ];
+    let v: Vec<Vector3<f64>> = p.iter().map(|c| Vector3::new(c[0], c[1], c[2])).collect();
+    let quads = vec![[0, 3, 2, 1], [4, 5, 6, 7], [0, 1, 5, 4], [2, 3, 7, 6], [1, 2, 6, 5], [0, 4, 7, 3]];
+    let s1 = Subdivision::new(&quads, 8);
+    let v1 = s1.apply(&v);
+    let corner = v1[6];
+    // The edge 2-6 is (1, 1, -1) to (1, 1, 1): find its edge point (the new vertex at (x, x, 0)).
+    let edge = v1.iter().skip(8 + 6).copied().find(|q| q.z.abs() < 1e-12 && q.x > 0.0 && q.y > 0.0).unwrap_or(Vector3::zeros());
+    let s2 = Subdivision::new(&s1.quads, v1.len());
+    let v2 = s2.apply(&v1);
+    let mut mesh = cortenforge::mesh::types::IndexedMesh::default();
+    mesh.vertices = v2.iter().map(|q| nalgebra::Point3::from(*q)).collect();
+    for q in &s2.quads {
+        mesh.faces.push([q[0], q[1], q[2]]);
+        mesh.faces.push([q[0], q[2], q[3]]);
+    }
+    t.item(
+        "Catmull-Clark on a cube: corner 5/9, edge point 3/4, closed after two steps",
+        (corner - Vector3::repeat(5.0 / 9.0)).norm() < 1e-12 && (edge - Vector3::new(0.75, 0.75, 0.0)).norm() < 1e-12 && s2.quads.len() == 96 && open_edges(&mesh) == 0,
+        format!(
+            "corner ({:.6}, {:.6}, {:.6}), edge point ({:.6}, {:.6}, {:.6}), {} quads, {} open edges",
+            corner.x, corner.y, corner.z, edge.x, edge.y, edge.z, s2.quads.len(), open_edges(&mesh)
+        ),
+    );
+    // A 4 x 4 flat grid of unit quads: interior vertices stay put, everything stays flat.
+    let n = 5;
+    let grid: Vec<Vector3<f64>> = (0..n * n).map(|i| Vector3::new((i % n) as f64, (i / n) as f64, 0.0)).collect();
+    let gq: Vec<[u32; 4]> = (0..(n - 1) * (n - 1))
+        .map(|k| {
+            let (i, j) = ((k % (n - 1)) as u32, (k / (n - 1)) as u32);
+            let id = |a: u32, b: u32| b * n as u32 + a;
+            [id(i, j), id(i + 1, j), id(i + 1, j + 1), id(i, j + 1)]
+        })
+        .collect();
+    let g1 = Subdivision::new(&gq, n * n).apply(&grid);
+    let interior_moved = (0..n * n)
+        .filter(|i| i % n != 0 && i % n != n - 1 && i / n != 0 && i / n != n - 1)
+        .map(|i| (g1[i] - grid[i]).norm())
+        .fold(0.0, f64::max);
+    let off_plane = g1.iter().map(|q| q.z.abs()).fold(0.0, f64::max);
+    t.item(
+        "Catmull-Clark on a flat grid: interior vertices stay, all flat",
+        interior_moved < 1e-12 && off_plane < 1e-12,
+        format!("interior moved {interior_moved:.1e}, off the plane {off_plane:.1e}"),
+    );
+    // The tape: a cylinder, and a peanut whose waist the tape bridges.
+    let cyl = Solid::cylinder(50.0, 60.0).mesh(0.5).geometry;
+    let (g_cyl, _) = girth_at(&cyl, 7.3).unwrap_or((0.0, (0.0, 0.0)));
+    let peanut = Solid::cylinder(30.0, 60.0).translate(Vector3::new(-20.0, 0.0, 0.0)).union(Solid::cylinder(30.0, 60.0).translate(Vector3::new(20.0, 0.0, 0.0)));
+    let pm = peanut.mesh(0.5).geometry;
+    let (g_pea, _) = girth_at(&pm, 7.3).unwrap_or((0.0, (0.0, 0.0)));
+    let (e_cyl, e_pea) = (g_cyl / (2.0 * PI * 50.0) - 1.0, g_pea / (2.0 * PI * 30.0 + 80.0) - 1.0);
+    t.item(
+        "tape girth: cylinder 2 pi r, peanut 2 pi r + 2 d (within 0.2%)",
+        e_cyl.abs() < 0.002 && e_pea.abs() < 0.002,
+        format!("cylinder {g_cyl:.2} mm vs {:.2} ({:+.3}%), peanut {g_pea:.2} vs {:.2} ({:+.3}%)", 2.0 * PI * 50.0, e_cyl * 100.0, 2.0 * PI * 30.0 + 80.0, e_pea * 100.0),
+    );
 }
 
 /// The boot's own tools, on cases with answers by hand: the dorsal line's nearest point (an L of

@@ -3,7 +3,8 @@
 //! Jon (2026-11-11): "more like a traditional hockey skate, with the top cuff around the ankle
 //! flared a bit for ankle mobility", the throat running "from the toes to the heel, direction
 //! wise", a tendon guard, the tongue, eyelets, layers. Built on round 1's last base
-//! (`foot::last_base`), with the leg carried up above the scan as a prism of its top section.
+//! (`foot::last_base`) of the foot scan joined to the stand-in leg above the ankle (`leg.rs`,
+//! track D1; 2026-11-12: before that, the leg above the scan was a prism of its top section).
 //! Every line is placed from landmarks found on the scan, so it follows the foot it is built on:
 //! the ankle bones (malleoli), and the dorsal line, the ridge of the foot from the toes up the
 //! instep and the front of the shin.
@@ -245,11 +246,20 @@ pub struct Landmarks {
     pub length: f64,
 }
 
+/// The boot's forward lean as a shear, mm forward at height `z`: zero below the ankle bones'
+/// mean height `zp`, ramped in from 10 mm below to 30 mm above it, then `tan(lean_deg)` per mm.
+/// Everything built upright (boot parts, the foot and leg) is leaned by it.
+pub fn lean_dx_at(zp: f64, lean_deg: f64, z: f64) -> f64 {
+    smoothstep(zp - 10.0, zp + 30.0, z) * (z - zp) * lean_deg.to_radians().tan()
+}
+
 /// The ankle bones are the outermost skin points each side in the ankle region (10-33% of the
-/// length, 50 mm up to just below the scan's top); the medial one sits higher and further
-/// forward than the lateral one (on stand-in 022: 4 mm higher, 18 mm forward).
-pub fn landmarks(foot: &Foot) -> Landmarks {
-    let (l, h) = (foot.length, foot.height);
+/// length, 50 mm up to just below the scan's top, `scan_top`); the medial one sits higher and
+/// further forward than the lateral one (on stand-in 022: 4 mm higher, 18 mm forward). The leg's
+/// centre is taken just below `scan_top` too; `leg_top` is the surface's own top (the leg's,
+/// when the foot is joined to one).
+pub fn landmarks(foot: &Foot, scan_top: f64) -> Landmarks {
+    let (l, h) = (foot.length, scan_top);
     let v = &foot.mesh.vertices;
     let in_ankle = |q: &&Point3<f64>| q.x > 0.10 * l && q.x < 0.33 * l && q.z > 50.0 && q.z < h - 12.0;
     let plus = v.iter().filter(in_ankle).max_by(|a, b| a.y.total_cmp(&b.y)).copied().unwrap_or(Point3::origin());
@@ -265,7 +275,7 @@ pub fn landmarks(foot: &Foot) -> Landmarks {
         y0 = y0.min(q.y);
         y1 = y1.max(q.y);
     }
-    Landmarks { medial, lateral, medial_side, heel_back_x, leg_c: (0.5 * (x0 + x1), 0.5 * (y0 + y1)), leg_top: h, length: l }
+    Landmarks { medial, lateral, medial_side, heel_back_x, leg_c: (0.5 * (x0 + x1), 0.5 * (y0 + y1)), leg_top: foot.height, length: l }
 }
 
 /// The dorsal line: the ridge of the last from the toes, up the instep and the front of the shin,
@@ -804,8 +814,7 @@ impl BootGeom {
     /// The forward lean as a shear: above the ankle bones x moves forward by this much (ramped in
     /// from 10 mm below to 30 mm above their height, so there's no kink).
     pub fn lean_dx(&self, z: f64) -> f64 {
-        let zp = 0.5 * (self.lm.medial.z + self.lm.lateral.z);
-        smoothstep(zp - 10.0, zp + 30.0, z) * (z - zp) * self.p.lean_deg.to_radians().tan()
+        lean_dx_at(0.5 * (self.lm.medial.z + self.lm.lateral.z), self.p.lean_deg, z)
     }
 
     pub fn lean(&self, q: Point3<f64>) -> Point3<f64> {
@@ -2190,17 +2199,27 @@ fn mesh_bounds(m: &IndexedMesh) -> (Vector3<f64>, Vector3<f64>) {
 pub fn run(scan_path: &Path, out: &Path, vented: bool, open_throat: bool) -> Result<(), String> {
     std::fs::create_dir_all(out).map_err(|e| e.to_string())?;
     let t0 = Instant::now();
-    let (raw, _, _) = scan::load(scan_path)?;
-    let m = scan::measure(&raw, 20);
-    let foot = foot::build(&raw, &m, 1.5, 24.0)?;
-    println!("foot: {} ({:.1} x {:.1} mm, scan {:.0} mm tall)", scan_path.display(), foot.length, foot.width, foot.height);
+    // The foot scan joined to the stand-in leg (track D1), up to `LEG_TOP`: the boot's highest
+    // part (the tendon guard) tops out ~216 mm up on 022, and the closing below works ~12 mm in
+    // from the leg's cut.
+    const LEG_TOP: f64 = 280.0;
+    let leg = crate::leg::build(scan_path, LEG_TOP)?;
+    let foot = leg.as_foot(1.5, 24.0)?;
+    println!(
+        "foot and leg: {} ({:.1} x {:.1} mm; the scan {:.0} mm tall, MakeHuman's leg above it to {:.0})",
+        scan_path.display(),
+        foot.length,
+        foot.width,
+        leg.scan_top(),
+        foot.height
+    );
     // The grid reaches 35 mm past the closed foot: the tendon guard's top stands ~30 mm off it.
     let lb = foot::last_base(&foot, 35.0)?;
-    let lm = landmarks(&foot);
+    let lm = landmarks(&foot, leg.scan_top());
     let side = |s: f64| if s > 0.0 { "+y" } else { "-y" };
     println!(
-        "landmarks: medial ankle bone ({:.0}, {:.0}, {:.0}) on the {} side, lateral ({:.0}, {:.0}, {:.0}); heel back x {:.0}; leg centre ({:.0}, {:.0}) at the scan's top, z {:.0}",
-        lm.medial.x, lm.medial.y, lm.medial.z, side(lm.medial_side), lm.lateral.x, lm.lateral.y, lm.lateral.z, lm.heel_back_x, lm.leg_c.0, lm.leg_c.1, lm.leg_top
+        "landmarks: medial ankle bone ({:.0}, {:.0}, {:.0}) on the {} side, lateral ({:.0}, {:.0}, {:.0}); heel back x {:.0}; leg centre ({:.0}, {:.0}) just below the scan's top, z {:.0}",
+        lm.medial.x, lm.medial.y, lm.medial.z, side(lm.medial_side), lm.lateral.x, lm.lateral.y, lm.lateral.z, lm.heel_back_x, lm.leg_c.0, lm.leg_c.1, leg.scan_top()
     );
     let p = HockeyParams { vented, throat_outline: open_throat, ..HockeyParams::default() };
     let variant = format!(
@@ -2426,7 +2445,14 @@ pub fn run(scan_path: &Path, out: &Path, vented: bool, open_throat: bool) -> Res
     // Weigh (from the meshes' enclosed volumes), save.
     let mut summary = String::new();
     let _ = writeln!(summary, "hockey boot (track B, round 2 of the boot), {variant}, {}", scan_path.display());
-    let _ = writeln!(summary, "foot {:.1} x {:.1} mm; scan {:.0} mm tall, leg carried up as a prism above z {:.0}", foot.length, foot.width, foot.height, g.z_ext);
+    let _ = writeln!(
+        summary,
+        "foot {:.1} x {:.1} mm; the scan {:.0} mm tall, joined to the stand-in leg (MakeHuman, set to ANSUR II; track D1) up to z {:.0}",
+        foot.length,
+        foot.width,
+        leg.scan_top(),
+        foot.height
+    );
     let _ = writeln!(
         summary,
         "landmarks: medial ankle bone ({:.0}, {:.0}, {:.0}), lateral ({:.0}, {:.0}, {:.0}), medial side {}",
@@ -2630,15 +2656,19 @@ pub fn run(scan_path: &Path, out: &Path, vented: bool, open_throat: bool) -> Res
                 .collect();
             let fc = foot_cut.clone();
             hs.push(sc.spawn(move || (mesh_of(&fc, 1.0), skin)));
-            // The leg above the scan's top (the last's prism), lighter: no scan there.
-            let gl = g.clone();
+            // The leg above the surface's top, if the boot reaches past it (the last's prism),
+            // lighter. With the stand-in leg joined on (track D1) the boot stays below it.
             let top = lm.leg_top - 1.0;
-            let mut lb = g.part_bounds(PartKind::Shell);
-            lb.min.z = top - 1.0;
-            lb.max.z = g.z_trim_back + p.guard_above_cuff;
-            let lb = g.leaned_bounds(lb);
-            let leg = Solid::user_fn(move |q: Point3<f64>| gl.d(gl.unlean(q)).max(top - q.z).max(n.dot(&q.coords) - off), lb);
-            hs.push(sc.spawn(move || (mesh_of(&leg, 1.0), [0.93, 0.83, 0.77])));
+            let guard_top = g.z_trim_back + p.guard_above_cuff;
+            if top < guard_top {
+                let gl = g.clone();
+                let mut lb = g.part_bounds(PartKind::Shell);
+                lb.min.z = top - 1.0;
+                lb.max.z = guard_top;
+                let lb = g.leaned_bounds(lb);
+                let leg = Solid::user_fn(move |q: Point3<f64>| gl.d(gl.unlean(q)).max(top - q.z).max(n.dot(&q.coords) - off), lb);
+                hs.push(sc.spawn(move || (mesh_of(&leg, 1.0), [0.93, 0.83, 0.77])));
+            }
             hs.into_iter().map(|h| h.join().unwrap()).collect()
         });
         cut_meshes.push(ms_cut);
@@ -2683,7 +2713,9 @@ pub fn run(scan_path: &Path, out: &Path, vented: bool, open_throat: bool) -> Res
             }));
             hs.into_iter().map(|h| h.join().unwrap()).collect()
         });
-        display.push(g.lean_mesh(&foot.mesh));
+        // The foot and leg, lighter for the viewer (the joined surface is meshed at 1 mm).
+        let fd = foot.clone();
+        display.push(g.lean_mesh(&cluster_decimate(&foot.mesh, 1.5, Some(&move |q| fd.eval(q)))));
         let lat = -lm.medial_side;
         struct Entry {
             mesh: IndexedMesh,
@@ -2721,7 +2753,7 @@ pub fn run(scan_path: &Path, out: &Path, vented: bool, open_throat: bool) -> Res
             } else if i == specs.len() + 1 {
                 ("laces".into(), [0.96, 0.96, 0.94], LACE_LOOK, "fabric", LACE_LOOK, "fabric", rows[10].3, LACE.name.into())
             } else {
-                ("foot (stand-in scan)".into(), skin, skin, "skin", skin, "skin", 0.0, String::new())
+                ("foot and leg (stand-in)".into(), skin, skin, "skin", skin, "skin", 0.0, String::new())
             };
             if i == 0 {
                 // The shell's heel panel: one piece of shell, coloured apart in the alt edition.

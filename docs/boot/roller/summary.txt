@@ -1,23 +1,23 @@
 hockey boot (track B, round 2 of the boot), roller (vented), open throat (stiff boots), scans/stand-in/022_fBW_R.ply
-foot 252.4 x 104.5 mm; scan 125 mm tall, leg carried up as a prism above z 110
+foot 252.4 x 104.5 mm; the scan 125 mm tall, joined to the stand-in leg (MakeHuman, set to ANSUR II; track D1) up to z 280
 landmarks: medial ankle bone (66, 46, 84), lateral (48, -23, 78), medial side +y
 cuff top z 118 (leg centre) to 136 (back); throat from x 197; tongue top z 186; tendon guard top z 206; 9 eyelets a side
-cuff room at the top, leg to liner: sides 13.0 mm (19.4 deg of tip), front 7.0 mm (6.2 deg of tip), back -1.0 mm (presses the calf)
+cuff room at the top, leg to liner: sides 13.0 mm (19.4 deg of tip), front 7.0 mm (6.1 deg of tip), back -1.0 mm (presses the calf)
 roller (vented), open throat (stiff boots); forward lean 6 deg; cuff top line z 146 at the front, 118 at the sides (40 above the outer ankle bone), 136 at the back, padded collar 4 mm; 10 vents; heel-lock eyelets: pair 3 from the top, at the ankle crease (z 94)
-taking it off, with the unloaded scan scans/stand-in\022_mBW_R.ply, aligned to the loaded one (RMS 1.3 mm over 20-70 mm up) (liner squeezed to 1.5 mm, 4912 foot points, in place 0.74 mm): the way out needs heel cup 6.9 mm at (21, -16, 13), quarters 7.0 mm at (102, -26, 42), toe box 7.0 mm at (173, 48, 20) (budgets steering the path 2/8/3 mm, assumed); worst pose: heel lifted 2.5 deg, up 28 mm, back 0 mm (6.4 s)
+taking it off, with the unloaded scan scans/stand-in\022_mBW_R.ply, aligned to the loaded one (RMS 1.3 mm over 20-70 mm up) (liner squeezed to 1.5 mm, 4904 foot points, in place 0.67 mm): the way out needs heel cup 6.9 mm at (22, -14, 8), quarters 7.0 mm at (102, -27, 1), toe box 7.0 mm at (202, 5, 29) (budgets steering the path 2/8/3 mm, assumed); worst pose: heel lifted 7.5 deg, up 24 mm, back 0 mm (7.9 s)
 parts (mass from each mesh's enclosed volume):
-  shell           201.2 cm3   203.2 g  (PA 12 (MJF))
+  shell           200.4 cm3   202.4 g  (PA 12 (MJF))
   toe cap          13.9 cm3    14.0 g  (PA 12 (MJF))
   mount pads       14.4 cm3    14.6 g  (PA 12 (MJF))
-  liner           181.9 cm3    27.3 g  (liner foam (assumed))
-  ankle pads       19.9 cm3     3.0 g  (liner foam (assumed))
-  footbed          54.0 cm3     8.1 g  (liner foam (assumed))
-  tongue plate     43.9 cm3    52.6 g  (TPU (assumed))
-  tendon guard     17.0 cm3    20.4 g  (TPU (assumed))
-  tongue lattice    14.7 cm3    17.6 g  (TPU (assumed))
+  liner           181.8 cm3    27.3 g  (liner foam (assumed))
+  ankle pads       20.0 cm3     3.0 g  (liner foam (assumed))
+  footbed          53.6 cm3     8.0 g  (liner foam (assumed))
+  tongue plate     41.8 cm3    50.2 g  (TPU (assumed))
+  tendon guard     15.6 cm3    18.8 g  (TPU (assumed))
+  tongue lattice    14.2 cm3    17.1 g  (TPU (assumed))
   eyelets           3.2 cm3     8.5 g  (6061-T6)
   laces            13.4 cm3    10.7 g  (lace (assumed))
-  total 380 g (shell in PA 12 (MJF); in carbon/epoxy the shell alone would be 312 g); foam and lace densities assumed
+  total 375 g (shell in PA 12 (MJF); in carbon/epoxy the shell alone would be 311 g); foam and lace densities assumed
 roller chassis (round 2: ribbed upright walls, upper 240 mm, 6 panels, 5 mm ribs; 4 x 72 mm wheels, 7.5 ft rocker); floor 82 mm below the sole; wheels for display, not weighed
   chassis upper      44.7 cm3   125.5 g  (7075-T6)
   chassis lower      27.2 cm3    76.3 g  (7075-T6)
@@ -29,7 +29,7 @@ roller chassis (round 2: ribbed upright walls, upper 240 mm, 6 panels, 5 mm ribs
   bushing             2.2 cm3     2.6 g  (polyurethane (assumed))
   wheels          (display only, not weighed)
   hubs            (display only, not weighed)
-  the roller chassis 241 g; the whole skate 621 g without wheels and bearings
-  check: shell 203.20 g at 0.75 mm cells, 203.37 g at 0.5 mm (+0.1%)
-  check: tendon guard 20.36 g at 0.6 mm cells, 20.40 g at 0.3 mm (+0.2%)
-  check: tendon guard by mass_properties at 0.3 mm: 20.43 g
+  the roller chassis 241 g; the whole skate 616 g without wheels and bearings
+  check: shell 202.44 g at 0.75 mm cells, 202.61 g at 0.5 mm (+0.1%)
+  check: tendon guard 18.78 g at 0.6 mm cells, 18.82 g at 0.3 mm (+0.2%)
+  check: tendon guard by mass_properties at 0.3 mm: 18.84 g

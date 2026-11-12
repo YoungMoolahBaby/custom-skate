@@ -84,6 +84,16 @@ pub fn build(mesh: &IndexedMesh, m: &FootMeasure, cell: f64, margin: f64) -> Res
     Ok(Foot { length: hi.x - lo.x, width: hi.y - lo.y, height: hi.z - lo.z, mesh, sdf, bias: 0.0, bounds })
 }
 
+/// A closed surface already in the standard frame (the foot scan joined to the stand-in leg,
+/// `leg::Leg`) as a `Foot`: its distance grid at `cell` mm over it plus `margin` mm. `length` and
+/// `width` are the foot's own (the leg doesn't change them); `height` is the surface's top.
+pub fn from_standard(mesh: IndexedMesh, length: f64, width: f64, cell: f64, margin: f64) -> Result<Foot, String> {
+    let bounds = bounds_of(&mesh, margin);
+    let sdf = grid(&mesh, bounds, cell, "foot and leg")?;
+    let height = bounds.max.z - margin;
+    Ok(Foot { mesh, length, width, height, sdf, bias: 0.0, bounds })
+}
+
 impl Foot {
     /// Signed distance of the surface this `Foot` stands for (negative inside), mm.
     pub fn eval(&self, p: Point3<f64>) -> f64 {

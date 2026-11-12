@@ -13,6 +13,9 @@ boot, the ice skate on a dynamic (rocking) blade holder. Three tracks that meet 
   rocks), so a whole part, the rivets and the mount plate go away; that is the biggest weight
   lever we have. Ice, a one-piece skate: the boot runs down into our own rocking holder, with
   our own runner and rocker insert (nothing proprietary, Jon 2026-11-11).
+- **Track D, the gear** (Jon, 2026-11-12: "id like to actually do full hockey equipment"):
+  shin pads first, made with the skate as one system; the helmet parked. Below, after Jon's
+  list.
 
 Everything is modelled in CortenForge and checked against known results first (CLAUDE.md).
 
@@ -426,8 +429,9 @@ rocker table above reads somewhat soft.
 
 Jon: "lets not use anything proprietary, so no i2 inserts. can we work on the boot first? it
 would be cool to see the full boot in its glory then go back to the bladeholder".
-`cargo run --release -- boot scans/stand-in/022_fBW_R.ply` (~6 min; `BOOT_VIEWER=1` adds the
-3D viewer's light meshes, seconds more) builds the whole boot on stand-in 022 (`src/hockey_boot.rs`).
+`cargo run --release -- boot scans/stand-in/022_fBW_R.ply` (~15 min with the leg since
+2026-11-12; `BOOT_VIEWER=1` adds the 3D viewer's light meshes, seconds more) builds the whole
+boot on stand-in 022 (`src/hockey_boot.rs`).
 Renders and the summary are in `docs/boot/`; STLs and the viewer's files go to `out/boot/`. The
 viewer page is `viewer/boot.html` (turn, explode, cut through the ankle or lengthwise).
 Its meshes are the uniform ones decimated by our own `cluster_decimate`: cf-design's
@@ -445,8 +449,9 @@ Its meshes are the uniform ones decimated by our own `cluster_decimate`: cf-desi
   between the sides of the foot and leg. The throat, tongue, eyelets and laces follow it.
   Centring matters: the shin's most forward point sits 6-9 mm toward the medial side, and
   following it put the medial eyelets on the side of the ankle.
-- **The leg:** the scan stops 125 mm up, so above 110 mm the leg is carried up as a prism of
-  its own section.
+- **The leg:** the scan stops 125 mm up. At first the leg above 110 mm was carried up as a prism
+  of its own section; since 2026-11-12 the boot is built on the scan joined to the stand-in leg
+  (track D1: MakeHuman set to ANSUR II), up to 280 mm. "Rebuilt on the leg" below.
 
 **The parts** (Jon's list, items 1 and 3-6):
 
@@ -757,6 +762,31 @@ it takes (sim-soft, B5), and the check rerun with them open, pre-game (unloaded)
 (swollen); then the heel cup's hollows tuned to
 the squeeze the heel can take. Jon's own scans: each foot standing (loaded) and sitting
 (unloaded), for the same reason.
+
+**Rebuilt on the leg (2026-11-12).** Jon: "yeah rebuild the boot on the leg first please" (before
+the shin pads, whose bottom edge is shaped to the tongue and cuff). The boot is now built on the
+scan joined to the stand-in leg (track D1) up to 280 mm, in place of the prism above 110 mm; the
+ankle bones and the leg's centre are still found on the scan (`landmarks(foot, scan_top)`).
+`boot` builds the leg itself (~1 min of the ~15). All four builds redone, renders in
+`docs/boot/` and `docs/skate/` (not the two custom-colourway views, which are taken from the
+viewer by hand):
+
+| Boot | before | on the leg | whole skate |
+|---|---|---|---|
+| ice, open throat | 383 g | 377 g | 627 → 621 g |
+| roller, open throat | 380 g | 375 g | 621 → 616 g |
+| ice, V throat | 372 g | 367 g | 616 → 611 g |
+| roller, V throat | 370 g | 364 g | 611 → 605 g |
+
+- Ice, open: shell 205.1 → 204.3 g, tongue plate 52.6 → 50.2, tongue lattice 17.6 → 17.1,
+  tendon guard 20.4 → 18.8. The tongue and guard now follow a shin and calf that taper and
+  curve where the prism stood straight.
+- **Against the leg** (leaned 6° like the boot; `leg` mode): the old boot's liner went up to 4.3
+  mm into the leg at the back of the ankle (4,034 liner vertices more than 1.5 mm in); the new
+  one 1.0 mm at the back of the cuff's top (136 mm up), the snug edge it is designed to have,
+  and none more than 1.5 mm.
+- The cuff's room at the top is unchanged (sides 13.0, front 7.0, back -1.0 mm): it is measured
+  near the ankle, where the scan and the leg agree.
 
 ## Phase 0: the science and the tools (DONE 2026-11-10)
 
@@ -1076,7 +1106,131 @@ own boot waits on his scans (B1).
    (item 7) are one protection system: what overlaps, and what moves when the ankle flexes
    forward. A full set of equipment comes later, as its own track, shin pads first.
 
+## Track D: the gear (2026-11-12)
+
+Jon: "even though this says custom skate, id like to actually do full hockey equipment. i think
+we should do a helmet next. as paying 500 dollars for optimal head protection is.. you know".
+
+**The helmet, parked.** A simulation can't show that a helmet protects: only drop tests on a
+headform can, and sanctioned leagues want a HECC or CSA sticker, which a home-made helmet won't
+have (and changing a certified one voids it). The price isn't the protection either: across the
+75 adult helmets Virginia Tech has rated, price barely predicts the score (RESEARCH.md 17). Jon:
+"ok then maybe we can do shinpads next instead?" If the helmet comes back: a stand-in head, the
+liner's impact checked against the textbook stopping distance and VT's Hockey STAR speeds, then a
+home drop rig that tests his certified helmet and ours the same way.
+
+### Shin pads: Jon's goals (2026-11-12)
+
+In his words, each with a first engineering take. Item 9 above is where this started.
+
+1. **"i think shin pads are too bulky and i wish they just like fit perfectly with the skate. it
+   feels like two different components."** One system with the boot: the pad grown from the same
+   foot and leg, its bottom shaped to the tongue and cuff it sits on. Scored by the gap and the
+   overlap where they meet, from standing through the ankle's forward flex.
+2. **"a lot of players go to undersized shin pads because they feel its more performant, but then
+   it makes them turn into a point merchant type player who doesnt block shots/do gritty stuff
+   because they dont have enough padding. so for it to be ample protection to protect a player,
+   so they can play gritty, but then also still allow them to be as mobile as they we with the
+   undersized gear."** Two sets of numbers held together:
+   - **protection:** the peak force on the leg from a puck at a stated speed, over the places
+     pucks land when blocking (the shin, the knee, and the side of the leg when down on a knee);
+   - **mobility:** weight, bulk (how far the pad stands off the leg), and the knee and ankle
+     range it leaves free.
+
+   A stock pad is bulky partly because it is generic: it has to fit many legs, so foam fills the
+   slack. An undersized pad is light because it covers less, more thinly. A pad fitted to one leg
+   can sit close everywhere and put its thickness where pucks land. The target: a full-size
+   pad's coverage and protection at an undersized pad's bulk and weight.
+
+   **The baseline is modelled, on the same leg** (Jon, 2026-11-12: "may we please not use my
+   current pad as a baseline? since we are measuring a different body anyways?"). Like for like
+   means one body: a stock-style full-size pad (sized by the retail rule, knee centre to boot
+   top) and an undersized one (a size down), drawn on the stand-in leg in the same materials,
+   against the fitted pad. Retail weights (RESEARCH.md 19: 481-792 g a pad at 14") are only a
+   rough reference.
+3. **"i usually go tongue under the pad. some people go tongue over, but its less common. an
+   option for both would be nice."** Two variants, like ice/roller and open/V throat: `under`
+   (the default: the pad's bottom goes over the tongue, so its inside is shaped to the tongue's
+   front) and `over` (the tongue folds down over the pad's bottom, so its outside there is
+   shaped to take the tongue).
+4. **"then we also should consider roller hockey shin pads - lighter puck, way hotter environemtn
+   vs cold hockey rinks."** Two pads, like the two boots: ice (the heavier puck; cold, so foams
+   stiffen) and roller (a lighter puck, so less padding for the same protection; heat, so
+   venting and sweat, and softer foams). The impact checks run at each sport's temperature.
+
+### The phases
+
+- **D1, the leg** (now). The stand-in foot scans stop 125 mm up. Jon: "we could use like a daz
+  model or some other 3d art realistic anatomy model maybe?". MakeHuman, not Daz: MakeHuman's
+  base mesh and targets have been CC0 since 2020, so meshes made from them can go in the public
+  viewer, while Daz's licence lets you publish renders but not meshes. Its leg, made male and
+  set to the median ANSUR II man of stand-in 022's height (US Army, 2012, public data), joined
+  to 022's foot above the ankle (RESEARCH.md 18). Straight-legged first; a skating stance (knee
+  bent) is D4's.
+
+  **D1 done (2026-11-12).** `cargo run --release -- leg scans/stand-in/022_fBW_R.ply` (~1.5
+  min, `src/leg.rs`) builds it; renders and the summary in `docs/leg/`, the STL in `out/leg/`.
+  - MakeHuman's male leg, two Catmull-Clark levels (214k quads for the body). Unfitted, its
+    knee joint sat 507 mm up and its calf measured 363 mm.
+  - **Shin stood upright:** MakeHuman's rest pose has the feet ~44 cm apart, so its shin leaned
+    6.8° inward, and 1.8° forward. Turned about the ankle until the knee joint is straight above
+    it: the boot is built upright and leaned forward by its own 6° (`lean_deg`), which sets the
+    shin's angle in the skate.
+  - **Fitted** (Newton on three of MakeHuman's own measure sliders, 3 steps, always on the leg
+    up to 700 mm): knee joint **466.0 mm** up (ANSUR median tibial height 466), calf **391 mm**
+    at 360 mm up (ANSUR 391), girth at 115 mm **225.8** (the scan's own 225.8). Sliders:
+    lower-leg height -0.71, calf +0.29, ankle +0.14. The smallest girth above the ankle comes
+    out 224 mm at 130 mm up (ANSUR median 228, p5-p95 207-252), which nothing forced.
+  - **The join:** fields blended over 100-120 mm. Girths run 256 → 224 mm from 90 to 125 mm with
+    no step; the section's centre drifts ~1 mm per 5 mm. One closed surface, 744k triangles.
+    MakeHuman's ankle is fuller in front than the scan's (its front 4.8 mm ahead at 85 mm up,
+    1.9 at 100, 0.5 at 120); the joined front follows the scan to 100 mm and is never more than
+    0.8 mm off it, sloping back smoothly (x 114.7 at 85 mm, 105.7 at 100, 99.6 at 120). Jon saw
+    MakeHuman's cut edge at 80 mm standing proud in `leg_join.png` (the two surfaces drawn
+    before blending); that view now starts MakeHuman's leg at 100 mm, where it counts.
+  - **The shin's front line** (the most forward point of each section, where the pad's shell
+    runs) leans forward of the ankle-knee line by ~15 mm over its length: x 91 at 171 mm up, 106
+    at 431.
+  - Fields: MakeHuman's leg exact within 4 mm of its skin, a 2 mm grid further out (a grid alone
+    left terraces; exact everywhere took 306 s to mesh, now 44 s).
+
+  ![The stand-in leg from the front, the inside, the outside and three-quarter](leg/leg.png)
+
+  **Found for the boot:** the boot, built on the scan's top section carried straight up, meets
+  the real leg badly just above the scan. Its liner went into this leg by up to **4.3 mm** at
+  the back of the ankle, 138 mm up, with 4,034 liner vertices more than 1.5 mm in. By design
+  the cuff's top presses 1 mm into the back of the leg (`flare_back` -2 mm against 1 mm of
+  ease). (First reported as 8.3 mm: that check compared the boot, leaned 6° forward, with the
+  leg upright.) So the boot is rebuilt on this leg (Track B round 2, "Rebuilt on the leg").
+
+  **What the numbers say for the pad** (RESEARCH.md 19):
+  - a recreational slap shot is ~23 m/s: 44 J from a 165 g ice puck, 27 J from a 102 g roller
+    puck (60% of it);
+  - no hockey shin-guard standard exists. The marks to hold are football's EN 13061 (≤ 2.0 kN
+    passed on) and the cadaver tibia's ~2.9 kN fracture force; hockey pads passed 0.56-1.85 kN
+    in drop tests at 6.5-19.4 J;
+  - cold matters both ways: a -5 °C ice puck is ~5-7x stiffer than a room-temperature one,
+    and foams can pass on 2-3x the force when cold; the rink's air is +8 to +10 °C;
+  - pads today, one 14" pad: 481 g (CCM Next) to 792 g (Bauer Supreme Ultrasonic);
+  - pucks break bones on the inside of the ankle most (14 of 17 direct blows, one elite
+    study).
+
+- **D2, the pad's geometry**: shin shell, knee cap hinged to it, calf wings, liner, straps, the
+  bottom edge for `under` and `over`. Weighed and measured (bulk, coverage) like for like
+  against a stock-style and an undersized pad modelled on the same leg.
+- **D3, impact**: a puck on the shell over its liner, peak force on the leg. Checked first
+  against a textbook impact. `sim-soft-explicit` (explicit dynamics, hyperelastic and
+  Kelvin-Voigt, contact with a moving rigid body) is the candidate; it has no crushable-foam
+  law. The same model sizes the tongue's shield (item 7).
+- **D4, mobility**: the leg bent into a skating stance and kneeling; the pad's clearance to the
+  knee and the boot through the range.
+- **D5, Jon's leg**: scanned with the Otter, knee bent to his stance.
+
 ## Open questions for Jon
+
+- Answered 2026-11-12: Jon's own shin pads are not the baseline (a different body); the
+  comparison pads are modelled on the stand-in leg. Still open: anything else that bugs him
+  about pads (straps, the calf wrap, the knee).
 
 - Answered 2026-11-10: the name (rocker-chassis, renamed custom-skate for the full skate); size (True 6, Marsblade M a bit big, S too
   small, i2 254).

@@ -191,11 +191,14 @@ flexible boots is in `docs/boot/v/`.
 - **The sole is two flat mount pads**, heel and forefoot, where the holder or chassis attaches;
   between them the shell's own rounded underside. **The tendon guard is a shield**, narrow where
   it rivets on, flaring at the top, ribbed.
-- **383 g (ice), 380 g (roller)** with the open throat (372 / 370 with the V), weighed with the
-  shell, toe cap and mount pads in printed nylon (PA 12): shell 205 g, mount pads 15 g, toe cap
-  14 g, liner, ankle pads and footbed 39 g, printed tongue 70 g (52 with the V's narrower
-  tongue), tendon guard 20 g, eyelets and laces 19 g. The foam, TPU and lace densities are
+- **377 g (ice), 375 g (roller)** with the open throat (367 / 364 with the V), weighed with the
+  shell, toe cap and mount pads in printed nylon (PA 12): shell 204 g, mount pads 15 g, toe cap
+  14 g, liner, ankle pads and footbed 39 g, printed tongue 67 g (49 with the V's narrower
+  tongue), tendon guard 19 g, eyelets and laces 19 g. The foam, TPU and lace densities are
   assumed.
+- **Built on the leg, not just the foot:** the foot scans stop at the ankle, so the boot is built
+  on the scan joined to a stand-in leg (MakeHuman's CC0 body set to US Army ANSUR II
+  measurements), and its tongue, cuff and tendon guard follow a real shin and calf.
 - **Estimates until measured:** the heights of the cuff, tongue and tendon guard, the lean, and
   the eyelet spacing (`docs/MEASURE.md`, B1-B7, on the TF9).
 - **Getting it on and off:** a rigid-foot, rigid-shell check (the unloaded foot, each point
@@ -224,14 +227,14 @@ viewer too, with custom colours for every part.*
   the fatigue allowable when bonded to the sole (upper 240 mm, 6 panels, 5 mm ribs), centred under
   the boot's mount pads; 4 x 72 mm wheels, the upper rocking on a 7.5 ft arc; the floor 82 mm
   below the sole. **Chassis 241 g** (round 2 weighed it at 244 g by a finer method); **the whole
-  skate 621 g without wheels and bearings.**
+  skate 616 g without wheels and bearings.**
 - **Ice: a first look at the holder, not yet designed** (Track C): two windowed towers under the
   mount pads on a beam, our own steel runner rocking against our own insert in the beam's
   channel, on a pivot pin; nothing proprietary. 254 mm long (Jon's i2 size); the rest are
   estimates: an 11 ft runner on a 23 ft insert (the i2's, as a reference), 16 mm of steel
   showing, the ice 62 mm below the sole. **Holder 108 g in printed nylon, runner 131 g of steel,
-  244 g with the insert and pin; the whole skate 627 g.**
-- With the V throat: 616 g (ice), 611 g (roller).
+  244 g with the insert and pin; the whole skate 621 g.**
+- With the V throat: 611 g (ice), 605 g (roller).
 
 ## Status
 

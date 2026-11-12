@@ -1,0 +1,24 @@
+joined leg: knee joint (63, 18, 466), ankle joint (63, 18, 71) mm
+  calf girth 390.9 mm at z 360 (ANSUR median 391); smallest girth above the ankle 223.7 mm at z 130 (ANSUR ankle circumference median 228, p5-p95 207-252)
+  z    90: girth 255.8 mm, centre (62.1, 12.6)
+  z    95: girth 248.2 mm, centre (61.0, 12.4)
+  z   100: girth 241.2 mm, centre (60.0, 12.0)
+  z   105: girth 234.2 mm, centre (59.1, 11.5)
+  z   110: girth 228.0 mm, centre (58.1, 10.9)
+  z   115: girth 225.4 mm, centre (57.0, 10.6)
+  z   120: girth 224.5 mm, centre (56.0, 10.5)
+  z   125: girth 223.9 mm, centre (55.0, 10.4)
+  z   130: girth 223.7 mm, centre (54.2, 10.4)
+  z   135: girth 224.1 mm, centre (53.4, 10.3)
+  z   140: girth 225.0 mm, centre (52.7, 10.3)
+  front of the ankle, z  85: scan x  114.7, MakeHuman  119.5 (+4.8), joined  114.7
+  front of the ankle, z  95: scan x  108.4, MakeHuman  110.7 (+2.3), joined  108.4
+  front of the ankle, z 100: scan x  105.7, MakeHuman  107.6 (+1.9), joined  105.7
+  front of the ankle, z 105: scan x  103.5, MakeHuman  105.1 (+1.7), joined  103.8
+  front of the ankle, z 110: scan x  101.6, MakeHuman  103.0 (+1.4), joined  102.4
+  front of the ankle, z 115: scan x  100.3, MakeHuman  101.2 (+0.9), joined  101.0
+  front of the ankle, z 120: scan x   99.0, MakeHuman   99.6 (+0.5), joined   99.6
+  front of the ankle, z 125: scan x   71.2, MakeHuman   98.1 (+26.9), joined   98.1
+  front of the ankle, z 135: scan x    NaN, MakeHuman   95.7 (NaN), joined   95.7
+  shin's front line (most forward point per section): (102, 15, 111) (97, 14, 131) (93, 11, 151) (91, 8, 171) (91, 7, 191) (91, 4, 211) (92, 2, 231) (92, 3, 251) (94, 2, 271) (95, 3, 291) (96, 2, 311) (98, 3, 331) (99, 4, 351) (100, 3, 371) (102, 3, 391) (104, 4, 411) (106, 5, 431)
+in the boot (out/boot; leg leaned 6 deg like the boot): 2767 liner vertices above z 125 inside the leg, 0 more than 1.5 mm in; closest -1.0 mm (negative: into the leg) at (20, 11, 136)

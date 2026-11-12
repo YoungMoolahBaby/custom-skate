@@ -355,6 +355,172 @@ Mostly retailer copy; no published dimensions or lab data found.
 - **True's custom goalie boots** are a one-piece (monocoque) shell, and more NHL goalies are
   moving to them ([NHL.com](https://nhl.com/news/unmasked-evolving-skates-give-goalies-edge-304203896)).
 
+## 17. Hockey helmets: Virginia Tech's ratings against price (2026-11-12)
+
+Virginia Tech's Helmet Lab rates helmets by **Hockey STAR**, the concussions a player would be
+expected to have in a season of hits wearing that helmet, so lower is better
+([ratings](https://www.helmet.beam.vt.edu/hockey-helmet-ratings.html); test protocol Begonia et
+al. 2020, [Hockey STAR Methodology](https://vtechworks.lib.vt.edu/items/53c334da-710f-4cd7-a163-1b5d884cb9b6/full);
+update Rowson et al. 2022). A pendulum strikes a helmeted headform at the front, side, top and
+back, at 3.1, 4.9 and 6.4 m/s, two helmets twice each (48 tests). Peak linear and rotational
+acceleration go into a concussion risk function. The risks are weighted by how often each hit
+happens to a player (227 head impacts a season on average) and summed. The risk function's
+coefficients are not copied here yet.
+
+The data, read from the ratings page's own data file (`js/hockeyData.js`, 2026-11-12): **75 adult
+helmets** tested 2014-2026, each with the price at the time of its test. **Price against STAR
+score: r = -0.17** (a dearer helmet scores slightly better on average; price explains ~3% of
+the spread). Some tested since 2021:
+
+| Helmet | Tested | Price then | Stars | STAR |
+|---|---|---|---|---|
+| Valor Axiom | 2023 | $299.99 | 5 | 0.43 |
+| Bauer RE-AKT 155 | 2024 | $229.99 | 4 | 0.57 |
+| Bauer Hyperlite 2 | 2023 | $399.99 | 4 | 0.65 |
+| Bauer RE-AKT 85 | 2022 | $139.99 | 4 | 0.66 |
+| Warrior Covert CF 100 | 2022 | $159.99 | 4 | 0.71 |
+| CCM Tacks 920 | 2026 | $399.99 | 4 | 0.72 |
+| Bauer RE-AKT 3D | 2026 | $459.99 | 3 | 0.92 |
+| CCM Super Tacks X | 2021 | $399.99 | 1 | 2.65 |
+
+Youth helmets have their own list (first ratings December 2025:
+[VT News](https://news.vt.edu/articles/2025/12/research-youth-hockey-helmets.html)). Standards
+for the sticker: ASTM F1045 (HECC certifies to it) and CSA Z262.1; CSA's 1990 edition introduced
+a drop test with a 275 g limit; the current limits weren't checked. Printed custom liners exist
+(Bauer with EOS, SLS: [3D Printing Industry](https://3dprintingindustry.com/news/bauer-and-eos-combine-to-produce-personalized-ice-hockey-helmet-inserts-220959/);
+CCM with Carbon for the Super Tacks X: [3DPrint.com](https://3dprint.com/272687/nhl-will-now-use-3d-printed-helmets-thanks-to-carbon-and-ccm)).
+Whether VT tested the Super Tacks X with the printed liner is not stated.
+
+## 18. The stand-in leg: MakeHuman and ANSUR II (2026-11-12)
+
+**MakeHuman** ([makehumancommunity/makehuman](https://github.com/makehumancommunity/makehuman),
+`master`): the base mesh `makehuman/data/3dobjs/base.obj` and the targets (per-vertex offsets,
+`index dx dy dz`) are **CC0** ("explicitly released as CC0 in september 2020", in each target
+file; `LICENSE.ASSETS.md`); the program's code is AGPL and is not used here. Fetched to
+`D:\custom-skate-data\makehuman\` (not in git): the base mesh, the three `*-male-young` macro
+targets, the leg's measure targets (`measure-{ankle,calf,knee,thigh}-circ`,
+`measure-{lowerleg,upperleg}-height`, each `-decr`/`-incr`), the right lower leg's scale and shape
+targets, and, to read, `apps/humanmodifier.py` and the modifier JSON. Seen in `base.obj`: 19,158
+vertices, the skin is group `body`, the rest are helpers (`helper-*`, eyes, teeth, tights) and
+joint markers (`joint-*`, 8 vertices each). Units are decimetres, y up, z forward, +x the model's
+left; the ground marker sits at y = -8.183, the base model is 16.9 dm tall. Right leg (x < 0):
+ankle joint 73.5 mm above the ground, knee joint 449 mm.
+
+Daz was the other option (Jon). Its licence text wasn't read; Daz forum posts say renders can be
+published but the meshes, modified or not, can't be shared, and the viewer publishes meshes
+([Daz forums](https://www.daz3d.com/forums/discussion/comment/489889/)).
+
+**ANSUR II** (US Army anthropometric survey, 2012; public working data,
+[Open Design Lab](https://www.openlab.psu.edu/ansur2/), file `ANSUR_II_MALE_Public.csv`, 4,082
+men, lengths in mm; methods: Gordon et al. 2014, NATICK/TR-15/007). Fetched to
+`D:\custom-skate-data\ansur2\`. The men 1700-1800 mm tall (2,222; mean 1750, stand-in 022 is a
+175 cm man), percentiles 5 / 25 / 50 / 75 / 95, mm:
+
+| Measure | p5 | p25 | median | p75 | p95 |
+|---|---|---|---|---|---|
+| ankle circumference (smallest, above the ankle bones) | 207 | 220 | 228 | 237 | 252 |
+| calf circumference (largest) | 347 | 373 | 391 | 410 | 440 |
+| knee height, mid-patella | 457 | 473 | 486 | 497 | 517 |
+| tibial height (floor to the top of the shin bone) | 440 | 455 | 466 | 478 | 493 |
+| lateral malleolus height (outer ankle bone) | 65 | 69 | 73 | 76 | 82 |
+| lower thigh circumference | 361 | 388 | 408 | 427 | 460 |
+
+Stand-in 022's outer ankle bone is at z = 78 (PLAN.md, the boot), within this range. ANSUR's 3D
+scans are not public. The army is not the hockey population (fitter, younger), but nothing
+better is open.
+
+## 19. Shin pads: pucks, shots, injuries, pads, temperature (2026-11-12)
+
+From a research pass on 2026-11-12. **R** rule or standard, **M** measured, **C** a maker's or
+retailer's claim. Energies (½ m v²) are ours. Not yet checked against the full text: the
+Pearsall 2001 speeds (its abstract gives none; the PDF couldn't be read here).
+
+**Pucks.**
+- Ice (R): vulcanised rubber, 25.4 mm thick, 76.2 mm across, **156-170 g** (IIHF Rule 13.1,
+  2026-27; USA Hockey Rule 306: 5½-6 oz).
+- Ice, cold (M): Bigford & Smith 2009, J ASTM Int 6(7), doi:10.1520/JAI101859 (Anderson/Bigford
+  MS thesis, Washington State 2008). Two brands, 12 each, fired at 24.6 m/s into load cells:
+  restitution 0.383 / 0.349 at 22 °C, 0.267 / 0.256 at -4 °C; dynamic stiffness up 626% / 488%
+  from 22 to -4 °C, contact time halved. Pucks in play at two rinks were -11 to -4 °C. So a
+  room-temperature puck is far softer than the one that hits you.
+- Roller (R): Inline Hockey Australia (on World Skate), Rule 3.2.12: plastic, 77 mm across,
+  22-30 mm thick (without/with pins), **120-130 g**. USARS 2021-22 Rule 13: 1" x 3", no mass; the
+  IDS puck official. Retail (C): Green Biscuit Roller, IDS Pro Shot, Alkali RPD Quantum, Sonic
+  3.6 oz (~102 g); Rocket 102 g; Stilmat 4.3 oz; Bauer Slivvver 4.4 oz. No roller puck
+  stiffness data found.
+
+**Shots** (M, stationary shots).
+- Slap shots, recreational: 23.3 ± 3.8 m/s (10 players), varsity 30.0 ± 2.5 (10) (Pearsall et
+  al. 2001, ISBS, [ojs](https://ojs.ub.uni-konstanz.de/cpa/article/view/3779)); 80.3 ± 11.6 km/h
+  (22.3 m/s; 5 recreational) and 120 ± 18 km/h (4 elite) (Villaseñor et al. 2006, J Appl
+  Biomech 22:202, doi:10.1123/jab.22.3.202).
+- Pro and semi-pro on ice, radar: wrist 105.6 ± 10.0 km/h, slap 125.2 ± 12.6 km/h (20 players;
+  Bežák & Přidal 2017, Acta Gymnica 47(2):78, doi:10.5507/ag.2017.007).
+- NHL: hardest in-game shot of 2025 105.05 mph (NHL EDGE, [nhl.com](https://nhl.com/news/nhl-edge-stats-trends-and-storylines-for-2025)).
+- No roller shot speeds found.
+- **Energy:** a 165 g ice puck carries 44 J at 23 m/s and 74 J at 30 m/s; a 102 g roller puck
+  27 J at 23 m/s and 46 J at 30 m/s, about 60% of the ice puck's at the same speed (125 g:
+  76%).
+
+**Injuries** (M).
+- NCAA men 2014/15-2018/19: blocking a shot caused 11.1% of injuries; lower leg 2.3%, ankle
+  6.8%, knee 9.2% of all (Boltz et al. 2021, J Athl Train 56(7):703, doi:10.4085/1062-6050-611-20).
+- 27 elite players, 31 acute foot and ankle injuries (MRI): 17 direct blows, 15 from a moving
+  puck, 6 fractures and 6 high-grade bone bruises, **14 of 17 on the inner side** (medial
+  malleolus, navicular, first metatarsal); 10.6 games missed against 2.4 (Baker et al. 2016,
+  AJSM 44(5):1317, doi:10.1177/0363546515626181). That is the boot's shield (PLAN item 7) and
+  the pad's bottom edge on the inside.
+- 30 NHL ankle fractures from public data: 36.7% "hit by puck" (Tham et al. 2025, J Orthop
+  68:331, doi:10.1016/j.jor.2025.07.033).
+- Where pucks land on the leg when blocking: not found.
+
+**Impact tests and standards.**
+- **No hockey shin-guard standard exists.** HECC's puck tests are for face and head: ASTM
+  F1587 goalie masks 80 mph; ASTM F513 face protectors 63 / 74 mph; CSA Z262.2 visors
+  ([hecc.org](https://hecc.org)). BNQ 9415-370 (neck guards) is blade cuts only.
+- Football shin guards, EN 13061:2009: 1 kg striker, transmitted force ≤ 2.0 kN (R). Soccer,
+  NOCSAE ND090: 5.0 kg sphere at 1.73 m/s at the centre (~7.5 J), mean ≤ 200 g (R).
+- Hockey shin guards on a leg form (M): Fournier 2002, MHK thesis, Univ. Windsor,
+  [hdl:20.500.14776/1759](https://hdl.handle.net/20.500.14776/1759). A 3.3 kg steel drop mass
+  (contact ~10-15 mm across), 0.2 / 0.4 / 0.6 m (6.5 / 12.9 / 19.4 J), 14 adult guards (brands
+  not named): mean peak force 559-1852 N at the tibia, 545-1342 N at the knee; many guards were
+  damaged. Cadaver tibia fracture force 2927 ± 403 N (Francisco 2000, cited there). A drop, not
+  a puck.
+- Puck on a helmet (M): 160 g at 24.2 m/s (47 J), mean force 3425 N; at 33 m/s (87 J), 6175 N;
+  contact 51-61 cm² (Ouckama & Pearsall 2014, IRCOBI IRC-14-16). The only puck-force data found.
+
+**Pads today** (C, one pad, 14", weighed by Inline/Ice Warehouse, ±5%).
+
+| Pad | g | | Pad | g |
+|---|---|---|---|---|
+| CCM Next | 481 | | Warrior Alpha LT | 605 |
+| Warrior Rise | 492 | | CCM Tacks XR Pro | 675 |
+| CCM JetSpeed FT8 Pro | 637 | | Warrior Alpha Pro | 673 |
+| Sherwood Code Photon Pro | 699 | | CCM Tacks XR | 772 |
+| CCM Tacks XF Pro | 788 | | Bauer Supreme Ultrasonic | 792 |
+
+- Construction (C): a moulded shin cap and a separate knee cap, a foam liner (PE, HD foam;
+  D3O in the calf and knee on some), a foam calf wrap, a knee strap and a calf strap (CCM Next,
+  Tacks XR Pro; Bauer Supreme 1S: Curv composite shin cap).
+- Sizing (C): Bauer and CCM: centre of the knee cap to the top of the boot. Ice Warehouse:
+  seated at 90°, bottom of the knee cap to the top of the foot over the tongue, **1" less if
+  worn under the tongue**; 15" for 5'7"-5'11", 16" for 5'10"-6'2".
+- "Undersized" pads: no study found; retailers say a short pad leaves a gap above the skate and
+  may miss the knee, and slim lower sections "trade some lower-leg coverage for mobility".
+
+**Temperature.**
+- Ice rinks (R): game air +8 to +10 °C at 1 m, ice -4 to -5 °C (IIHF Ice Arena Guide 2024,
+  Table 4.1). NHL 60-64 °F air (secondary reports).
+- Pad materials (M): back protectors, 50 J, 45 mm flat striker, 20 vs -5 °C (Nicotra et al. 2014,
+  Procedia Eng 72:678): three EVA-blend foams 5301 → 6292 N, 5728 → 11196 N, 8644 → 5220 N;
+  a PU foam with PDMS 5549 → 15534 N (time to peak 4.3 → 0.8 ms); a hard PP shell over
+  polyolefin foam 15537 → 7644 N, its shell cracked at -5 °C. Cold can double or treble what a
+  foam passes on, and differs by foam.
+- D3O LP1 (C, data sheet bar chart, EN 1621-1): ~16 kN ambient, ~18 kN at -10 °C, ~23 kN at
+  +40 °C: for that part, heat is worse than cold.
+- Not found: roller playing temperatures; EVA, PE, TPU or Poron XRD impact against
+  temperature from 5 to 35 °C.
+
 ## Still to find
 
 - Frame design loads for hockey: Stidwill's thesis numbers; the EN 13843 test loads (paid).

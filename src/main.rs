@@ -7,6 +7,8 @@
 //! - `chassis [foot length mm] [out]`: the round-2 roller chassis on its own, weighed and checked.
 //! - `boot <scan> [out] [ice|roller]`: the hockey boot on one foot (ice sealed, roller vented),
 //!   every part meshed, weighed and drawn.
+//! - `leg <scan> [out]`: the stand-in leg for the shin pads (track D1): MakeHuman's leg, set to
+//!   ANSUR II, joined to the foot scan.
 
 use custom_skate::check;
 use custom_skate::pitch::{FT, Rocker, fixed_alpha, passive_rocking_stiffness, roller_alpha};
@@ -86,8 +88,19 @@ fn main() {
                 std::process::exit(1);
             }
         }
+        "leg" => {
+            let Some(path) = std::env::args().nth(2) else {
+                eprintln!("usage: leg <scan> [out dir]");
+                std::process::exit(2);
+            };
+            let out = std::env::args().nth(3).unwrap_or_else(|| "out/leg".into());
+            if let Err(e) = custom_skate::leg::run(std::path::Path::new(&path), std::path::Path::new(&out)) {
+                eprintln!("{e}");
+                std::process::exit(1);
+            }
+        }
         other => {
-            eprintln!("unknown mode {other:?}; modes: check, pitch, scan, round1, chassis, boot");
+            eprintln!("unknown mode {other:?}; modes: check, pitch, scan, round1, chassis, boot, leg");
             std::process::exit(2);
         }
     }
