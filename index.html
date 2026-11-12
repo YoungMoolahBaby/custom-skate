@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A custom hockey skate from a foot scan, in 3D: the boot with its ice holder or roller chassis, part by part.">
+<title>Custom Skate Boot</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: one screen. The boot fills a rink-white stage; a spec panel beside it (below it on a phone)
+     lists the parts like a build sheet: swatch, name, grams, material. */
+  :root {
+    --bg: #eef2f5;
+    --stage: #f7f9fb;
+    --panel: #ffffff;
+    --line: #d4dde4;
+    --fg: #13202b;
+    --muted: #5a6b78;
+    --accent: #c8102e;
+    --accent-ink: #ffffff;
+    --font-display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+    --font-text: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+    --font-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d141a; --stage: #111b23; --panel: #142029; --line: #24343f;
+      --fg: #e4ecf1; --muted: #8ea1ae; --accent: #ff5468; --accent-ink: #1a0508;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d141a; --stage: #111b23; --panel: #142029; --line: #24343f;
+    --fg: #e4ecf1; --muted: #8ea1ae; --accent: #ff5468; --accent-ink: #1a0508;
+    color-scheme: dark;
+  }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg); color: var(--fg); font-family: var(--font-text); font-size: 14px; line-height: 1.45;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 12px;
+    box-sizing: border-box;
+  }
+  .app { height: 100%; display: grid; grid-template-columns: minmax(0, 1fr) 320px; grid-template-rows: auto minmax(0, 1fr); gap: 12px; }
+  header { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; }
+  h1 { font-family: var(--font-display); font-weight: 700; font-size: 30px; letter-spacing: 0.01em; margin: 0; text-wrap: balance; }
+  .sub { color: var(--muted); margin: 0; }
+  .stage { position: relative; min-height: 0; background: var(--stage); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+  .status { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font-family: var(--font-data); font-size: 13px; text-align: center; padding: 16px; }
+  .hint { position: absolute; left: 12px; bottom: 10px; color: var(--muted); font-size: 12px; pointer-events: none; }
+  aside { min-height: 0; overflow: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 16px; }
+  .label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+  .total { display: flex; align-items: baseline; gap: 8px; }
+  .total b { font-family: var(--font-display); font-size: 40px; font-weight: 700; line-height: 1; }
+  .total span { color: var(--muted); }
+  ul.parts { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+  ul.parts li { display: grid; grid-template-columns: 18px 18px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 5px 4px; border-radius: 6px; }
+  ul.parts li:hover { background: color-mix(in srgb, var(--fg) 5%, transparent); }
+  ul.parts input { margin: 0; accent-color: var(--accent); width: 15px; height: 15px; }
+  .sw { width: 12px; height: 12px; border-radius: 3px; border: 1px solid color-mix(in srgb, var(--fg) 25%, transparent); justify-self: center; }
+  /* Custom colours: each swatch becomes a colour picker, with a finish under the part's name. */
+  .swc, .fin, .custom-tools { display: none; }
+  aside.custom .sw { display: none; }
+  aside.custom .swc { display: block; width: 18px; height: 18px; padding: 0; border: 1px solid color-mix(in srgb, var(--fg) 30%, transparent); border-radius: 4px; background: none; cursor: pointer; }
+  .swc::-webkit-color-swatch-wrapper { padding: 0; }
+  .swc::-webkit-color-swatch { border: none; border-radius: 3px; }
+  .swc::-moz-color-swatch { border: none; border-radius: 3px; }
+  aside.custom .fin { display: block; margin-top: 4px; font: inherit; font-size: 11.5px; padding: 2px 4px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--fg); }
+  aside.custom .custom-tools { display: grid; gap: 8px; }
+  .custom-tools .row { flex-wrap: wrap; gap: 6px; }
+  .nm { min-width: 0; }
+  .nm label { display: block; cursor: pointer; }
+  .nm small { display: block; color: var(--muted); font-size: 11.5px; }
+  .g { font-family: var(--font-data); font-variant-numeric: tabular-nums; font-size: 12.5px; }
+  .ctl { display: grid; gap: 8px; }
+  .row { display: flex; align-items: center; gap: 10px; }
+  .row label { min-width: 0; flex: 1; }
+  input[type="range"] { width: 100%; accent-color: var(--accent); }
+  .seg { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .seg button { flex: 1; font: inherit; font-size: 12.5px; padding: 6px 4px; background: transparent; color: var(--fg); border: 0; border-right: 1px solid var(--line); cursor: pointer; }
+  .seg button:last-child { border-right: 0; }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn { font: inherit; font-size: 12.5px; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--fg); cursor: pointer; }
+  .notes { color: var(--muted); font-size: 12.5px; display: grid; gap: 6px; margin: 0; padding-left: 16px; }
+  @media (max-width: 760px) {
+    .app { height: auto; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; }
+    .stage { height: 62vh; min-height: 340px; }
+    aside { overflow: visible; }
+    h1 { font-size: 26px; }
+  }
+</style>
+
+<div class="app">
+  <header>
+    <h1>Custom skate boot</h1>
+    <p class="sub">Round 2 of the boot, grown from a foot scan. Drag to turn it, scroll or pinch to zoom.</p>
+  </header>
+  <div class="stage">
+    <canvas id="view" aria-label="3D view of the boot"></canvas>
+    <div class="status" id="status">Loading the boot…</div>
+    <div class="hint" id="hint" hidden>Drag to turn · right-drag to move · scroll to zoom</div>
+  </div>
+  <aside>
+    <div class="ctl">
+      <p class="label">Boot</p>
+      <div class="seg" role="group" aria-label="Boot">
+        <button type="button" id="vIce" aria-pressed="true">Ice, sealed</button>
+        <button type="button" id="vRoller" aria-pressed="false">Roller, vented</button>
+      </div>
+      <div class="seg" role="group" aria-label="Throat">
+        <button type="button" id="tOpen" aria-pressed="true">Open throat</button>
+        <button type="button" id="tV" aria-pressed="false">V throat</button>
+      </div>
+      <div class="seg" role="group" aria-label="Colours">
+        <button type="button" id="cLook" aria-pressed="true">Black</button>
+        <button type="button" id="cAlt" aria-pressed="false">White / blue</button>
+        <button type="button" id="cCustom" aria-pressed="false">Custom</button>
+        <button type="button" id="cLayers" aria-pressed="false">Layers</button>
+      </div>
+      <div class="custom-tools" id="customTools">
+        <p class="sub">Pick each part's colour and finish in the parts list. Your colours stay in this browser.</p>
+        <div class="row">
+          <span class="sub">Start from</span>
+          <button type="button" class="btn" id="fromLook">Black</button>
+          <button type="button" class="btn" id="fromAlt">White / blue</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <p class="label">Whole boot</p>
+      <div class="total"><b id="total">–</b><span>grams, shell in printed PA 12</span></div>
+      <p class="sub" id="carbon"></p>
+      <p class="sub" id="skate"></p>
+    </div>
+    <div>
+      <p class="label">Parts</p>
+      <ul class="parts" id="parts"></ul>
+    </div>
+    <div class="ctl">
+      <p class="label">Take it apart</p>
+      <div class="row"><label for="explode">Explode</label><span class="g" id="explodeVal">0%</span></div>
+      <input type="range" id="explode" min="0" max="100" value="0">
+    </div>
+    <div class="ctl">
+      <p class="label">Cut through</p>
+      <div class="seg" role="group" aria-label="Cut">
+        <button type="button" id="cutNone" aria-pressed="true">None</button>
+        <button type="button" id="cutAnkle" aria-pressed="false">Ankle</button>
+        <button type="button" id="cutLength" aria-pressed="false">Lengthwise</button>
+      </div>
+      <div class="row"><label for="cutPos">Cut position</label><span class="g" id="cutVal">0 mm</span></div>
+      <input type="range" id="cutPos" min="-60" max="60" value="0" disabled>
+    </div>
+    <div class="row"><button type="button" class="btn" id="reset">Reset view</button></div>
+    <div>
+      <p class="label">What this is</p>
+      <ul class="notes">
+        <li>Built on a stand-in foot (a CC0 research scan) until Jon's own scans exist.</li>
+        <li>Lines placed from the scan: the ankle bones set the cuff and the ankle pockets; the ridge from the toes up the shin sets the throat, tongue and eyelets.</li>
+        <li>Tight from heel to toe, open at the top. The cuff stops just above the outer ankle bone at the sides (40 mm), rising up the shin at the front for the lacing and into the tendon guard at the back. Above the ankle bones the liner and shell flare out together: 13 mm of room at the sides (about 19° of ankle tip each way), 7 mm in front, a slight press at the back to pitch the leg forward. Cut through the ankle to see it.</li>
+        <li>Two throats. Open, for stiff boots like this one: over the forefoot and instep the opening is half the way from the top of the foot to its widest line, measured along the surface the same on both sides, so it sits square on the top of the foot; the vamp is short, the opening starting just behind the toe cap. V, for shoes and more flexible boots: a narrow throat from the toe cap widening up the shin. Either way the eyelets run in mirrored pairs, evenly spaced, and splay into a V up the shin for forward flex; the heel-lock pair at the ankle crease is heavy duty.</li>
+        <li>The tongue is 3D-printed TPU, like True's: a solid plate (the outer skin the laces bear on, a rim, an inner skin) round a gyroid lattice core that breathes and squashes. It is thin under the shell's edges and swells between them, its edges rounded, its top flaring forward over the shin. Explode the boot to see the lattice.</li>
+        <li>Two editions on the same boot: all black, and an alt in white fibreglass weave, royal blue, red accents and a speckled cement-grey heel panel, inspired by a sneaker colourway. Or make your own under Custom: every part's colour and finish.</li>
+        <li>The look: black carbon shell against black thermoplastic (toe cap, mount pads, tendon guard), a black printed tongue, white hockey laces. Leaned forward 6°, a padded collar over the shell's edge, a smooth outer shell (its inside still follows the foot).</li>
+        <li>The sole is just two flat mount pads, heel and forefoot, where the holder or roller chassis attaches; between them the shell's own rounded underside.</li>
+        <li>The roller boot is vented (toe cap, lower quarters, liner); the ice boot is sealed, since a cold rink and melting ice make vents a liability.</li>
+        <li>Under the roller boot: the round-2 rocker chassis (ribbed upright walls, 4 x 72 mm wheels, the upper rocking on a 7.5 ft arc). Under the ice boot: a first look at the holder, not yet designed: two windowed towers on a beam, our own steel runner rocking against our own insert in its channel, on a pivot pin. Its sizes are estimates. Explode to drop them away from the boot.</li>
+        <li>Cuff, tongue and tendon guard heights are estimates until measured on the TF9.</li>
+        <li>Weighed with the shell, toe cap and mount pads in 3D-printed nylon (PA 12); a carbon shell would be laid up thinner. Foam, lace and TPU densities are assumed.</li>
+      </ul>
+    </div>
+  </aside>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function () {
+  const status = document.getElementById('status');
+  const fail = (msg) => { status.hidden = false; status.textContent = msg; };
+  if (!window.THREE || !THREE.OrbitControls) { fail('The 3D library did not load. Check the connection and reload the page.'); return; }
+
+  const canvas = document.getElementById('view');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.localClippingEnabled = true;
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(30, 1, 5, 5000);
+  const controls = new THREE.OrbitControls(camera, canvas);
+  controls.enableDamping = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  controls.dampingFactor = 0.12;
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x8a96a3, 0.75));
+  const key = new THREE.DirectionalLight(0xffffff, 0.75); key.position.set(-300, 500, 600); scene.add(key);
+  const fill = new THREE.DirectionalLight(0xffffff, 0.3); fill.position.set(500, 150, -400); scene.add(fill);
+  // A rim light from behind and above, so black-on-black edges catch a highlight.
+  const rim = new THREE.DirectionalLight(0xffffff, 0.5); rim.position.set(-500, 350, -500); scene.add(rim);
+
+  // The boot is modelled z-up (x heel to toe); three.js is y-up.
+  const root = new THREE.Group(); root.rotation.x = -Math.PI / 2; scene.add(root);
+  let parts = [];
+  const hidden = { 'foot (stand-in scan)': true };
+  const clip = new THREE.Plane(new THREE.Vector3(1, 0, 0), 0);
+  let cutMode = 'none', cutPos = 0, explode = 0, manifest = null, colourMode = 'look', variant = '';
+  const center = new THREE.Vector3(); let radius = 200, framed = false;
+
+  // Materials by finish (roughness, metalness). Black parts read apart by their sheen.
+  const FINISH = {
+    carbon: [0.32, 0.0], gloss: [0.3, 0.0], matte: [0.85, 0.0], leather: [0.55, 0.0],
+    fabric: [0.95, 0.0], metal: [0.35, 0.75], skin: [0.7, 0.0], satin: [0.45, 0.0], cement: [0.9, 0.0], fiberglass: [0.36, 0.0],
+  };
+  // A 2x2 twill carbon weave, drawn from the part's own coordinates (mm) on the face's dominant
+  // axis: diagonal tows ~2.2 mm wide, each with a soft sheen across it.
+  function addWeave(m) {
+    m.onBeforeCompile = (sh) => {
+      sh.vertexShader = sh.vertexShader
+        .replace('#include <common>', '#include <common>\nvarying vec3 vPos;\nvarying vec3 vNrm;')
+        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvPos = position;\nvNrm = normal;');
+      sh.fragmentShader = sh.fragmentShader
+        .replace('#include <common>', '#include <common>\nvarying vec3 vPos;\nvarying vec3 vNrm;\n' +
+          'float twill(vec2 p) { vec2 c = floor(p); vec2 f = fract(p); bool w = mod(c.x + c.y, 4.0) < 2.0;' +
+          ' float across = w ? f.y : f.x; return (w ? 1.0 : 0.6) * (0.78 + 0.22 * sin(3.14159 * across)); }')
+        .replace('#include <color_fragment>', '#include <color_fragment>\n{ vec3 an = abs(vNrm);' +
+          ' vec2 uv = (an.x > an.y && an.x > an.z) ? vPos.yz : ((an.y > an.z) ? vPos.xz : vPos.xy);' +
+          ' diffuseColor.rgb *= twill(uv / 2.2); }');
+    };
+  }
+  // A "cement" speckle: about one in six ~1.2 mm cells darkened, a few nearly black.
+  function addSpeckle(m) {
+    m.onBeforeCompile = (sh) => {
+      sh.vertexShader = sh.vertexShader
+        .replace('#include <common>', '#include <common>\nvarying vec3 vPos;')
+        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvPos = position;');
+      sh.fragmentShader = sh.fragmentShader
+        .replace('#include <common>', '#include <common>\nvarying vec3 vPos;\n' +
+          'float hash3(vec3 p) { return fract(sin(dot(p, vec3(12.9898, 78.233, 45.164))) * 43758.5453); }')
+        .replace('#include <color_fragment>', '#include <color_fragment>\n{ float h = hash3(floor(vPos / 1.2));' +
+          ' if (h > 0.93) diffuseColor.rgb *= 0.12; else if (h > 0.84) diffuseColor.rgb *= 0.45; }');
+    };
+  }
+  function rgb(c) { return new THREE.Color(c[0], c[1], c[2]).convertSRGBToLinear(); }
+  // A part's material for a colour (sRGB 0-1) and a finish, with the weave or speckle it needs.
+  function makeMat(raw, finish) {
+    const [rough, metal] = FINISH[finish] || FINISH.matte;
+    const m = new THREE.MeshStandardMaterial({ color: rgb(raw), roughness: rough, metalness: metal });
+    if (finish === 'carbon' || finish === 'fiberglass') addWeave(m);
+    if (finish === 'cement') addSpeckle(m);
+    return m;
+  }
+  function toHex(c) { return '#' + c.map((v) => Math.round(Math.min(1, Math.max(0, v)) * 255).toString(16).padStart(2, '0')).join(''); }
+  function fromHex(h) { return [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255); }
+  // The custom colourway, by part name: { c: '#rrggbb', f: finish }. Kept in this browser only.
+  const CUSTOM_KEY = 'custom-skate-colours-v1';
+  let custom = {};
+  try { custom = JSON.parse(localStorage.getItem(CUSTOM_KEY) || '{}') || {}; } catch (e) { custom = {}; }
+  function saveCustom() { try { localStorage.setItem(CUSTOM_KEY, JSON.stringify(custom)); } catch (e) { /* private window */ } }
+  const FINISH_NAMES = [['gloss', 'Gloss'], ['satin', 'Satin'], ['matte', 'Matte'], ['carbon', 'Carbon weave'], ['fiberglass', 'Fibreglass weave'],
+    ['metal', 'Metal'], ['leather', 'Leather'], ['fabric', 'Fabric'], ['cement', 'Speckled']];
+
+  function stageColor() {
+    const v = getComputedStyle(document.documentElement).getPropertyValue('--stage').trim();
+    return new THREE.Color(v || '#f7f9fb');
+  }
+  function applyTheme() { renderer.setClearColor(stageColor(), 1); render(); }
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
+  new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  function resize() {
+    const r = canvas.parentElement.getBoundingClientRect();
+    renderer.setSize(r.width, r.height, false);
+    camera.aspect = r.width / Math.max(1, r.height);
+    camera.updateProjectionMatrix();
+    render();
+  }
+  new ResizeObserver(resize).observe(canvas.parentElement);
+
+  function frame() {
+    const dir = new THREE.Vector3(0.62, 0.42, manifest ? 0.62 * manifest.medialSide : 0.62).normalize();
+    // Three-quarter view from the front and the outside (lateral) of the foot, a little above.
+    camera.position.copy(center).addScaledVector(dir, radius * 3.3);
+    controls.target.copy(center);
+    camera.near = radius * 0.05; camera.far = radius * 20; camera.updateProjectionMatrix();
+    controls.update();
+    render();
+  }
+
+  function allMats() { const m = []; for (const p of parts) m.push(p.look, p.alt, p.cust, p.diag, p.back); return m; }
+  function updateClip() {
+    const on = cutMode !== 'none';
+    for (const m of allMats()) { m.clippingPlanes = on ? [clip] : []; m.needsUpdate = true; }
+    if (on && manifest) {
+      // A plane in the boot's own frame, moved into the world.
+      const ms = manifest.medialSide;
+      const local = cutMode === 'ankle'
+        ? new THREE.Plane(new THREE.Vector3(-1, 0, 0), manifest.cuts.ankleX + cutPos)
+        : new THREE.Plane(new THREE.Vector3(0, -ms, 0), ms * (manifest.cuts.legY + cutPos));
+      root.updateMatrixWorld(true);
+      clip.copy(local).applyMatrix4(root.matrixWorld);
+    }
+    render();
+  }
+
+  function updateExplode() {
+    for (const p of parts) p.group.position.set(p.explode[0] * explode, p.explode[1] * explode, p.explode[2] * explode);
+    render();
+  }
+
+  function updateColours() {
+    document.querySelector('aside').classList.toggle('custom', colourMode === 'custom');
+    for (const p of parts) {
+      const k = colourMode === 'look' ? 'look' : colourMode === 'alt' ? 'alt' : colourMode === 'custom' ? 'cust' : 'diag';
+      p.front.material = p[k];
+      p.back.color.copy(rgb(p[k + 'Raw']).multiplyScalar(0.8));
+      p.swatch.style.background = swatch(p[k + 'Raw']);
+      if (p.picker) { p.picker.value = toHex(p.custRaw); p.fin.value = p.custFinish; }
+    }
+    render();
+  }
+
+  // One part's custom colour and finish: a new material only when the finish changes (the weave
+  // and the speckle are compiled into it).
+  function setCustom(p, raw, finish, save = true) {
+    if (finish !== p.custFinish) {
+      p.cust.dispose();
+      p.cust = makeMat(raw, finish);
+      if (cutMode !== 'none') p.cust.clippingPlanes = [clip];
+    } else {
+      p.cust.color.copy(rgb(raw));
+    }
+    p.custRaw = raw; p.custFinish = finish;
+    custom[p.name] = { c: toHex(raw), f: finish };
+    if (save) saveCustom();
+    if (colourMode === 'custom') { p.front.material = p.cust; p.back.color.copy(rgb(raw).multiplyScalar(0.8)); render(); }
+  }
+  function customFrom(edition) {
+    for (const p of parts) setCustom(p, edition === 'alt' ? p.altRaw : p.lookRaw, edition === 'alt' ? p.altFinish : p.finish, false);
+    saveCustom();
+    updateColours();
+  }
+
+  let pending = false;
+  function render() {
+    if (pending) return;
+    pending = true;
+    requestAnimationFrame(() => { pending = false; renderer.render(scene, camera); });
+  }
+  controls.addEventListener('change', render);
+  (function tick() { if (controls.enableDamping) controls.update(); requestAnimationFrame(tick); })();
+
+  function swatch(c) { return 'rgb(' + c.map((v) => Math.round(v * 255)).join(',') + ')'; }
+
+  function buildList() {
+    const ul = document.getElementById('parts');
+    ul.textContent = '';
+    parts.forEach((p, i) => {
+      const li = document.createElement('li');
+      const id = 'part-' + i;
+      li.innerHTML = '<input type="checkbox" id="' + id + '"' + (p.group.visible ? ' checked' : '') + '>' +
+        '<span class="sw"></span><input type="color" class="swc">' +
+        '<span class="nm"><label for="' + id + '"></label><small></small><select class="fin"></select></span>' +
+        '<span class="g"></span>';
+      li.querySelector('label').textContent = p.name.charAt(0).toUpperCase() + p.name.slice(1);
+      li.querySelector('small').textContent = p.material;
+      li.querySelector('.g').textContent = p.grams > 0 ? p.grams.toFixed(1) + ' g' : '';
+      p.swatch = li.querySelector('.sw');
+      const nice = p.name.charAt(0).toUpperCase() + p.name.slice(1);
+      p.picker = li.querySelector('.swc');
+      p.picker.setAttribute('aria-label', 'Colour of the ' + p.name);
+      p.picker.value = toHex(p.custRaw);
+      p.picker.addEventListener('input', (e) => setCustom(p, fromHex(e.target.value), p.custFinish));
+      p.fin = li.querySelector('.fin');
+      p.fin.setAttribute('aria-label', 'Finish of the ' + p.name);
+      for (const [v, t] of FINISH_NAMES) { const o = document.createElement('option'); o.value = v; o.textContent = t; p.fin.appendChild(o); }
+      if (!FINISH_NAMES.some(([v]) => v === p.custFinish)) { const o = document.createElement('option'); o.value = p.custFinish; o.textContent = nice; p.fin.appendChild(o); }
+      p.fin.value = p.custFinish;
+      p.fin.addEventListener('change', (e) => setCustom(p, p.custRaw, e.target.value));
+      li.querySelector('input').addEventListener('change', (e) => {
+        p.group.visible = e.target.checked; hidden[p.name] = !e.target.checked; render();
+      });
+      ul.appendChild(li);
+    });
+  }
+
+  async function load(sfx) {
+    status.hidden = false; status.textContent = 'Loading the boot\u2026';
+    // The meshes come as base64 text: int16 positions and uint32 indices per part.
+    // The holder or chassis comes in a file of its own, shared by both throats.
+    const usfx = sfx.startsWith('_roller') ? '_roller' : '';
+    const [mRes, bRes, uRes] = await Promise.all([
+      fetch('manifest' + sfx + '.json'), fetch('boot' + sfx + '.txt'), fetch('under' + usfx + '.txt'),
+    ]);
+    if (!mRes.ok || !bRes.ok) throw new Error('missing data');
+    manifest = await mRes.json();
+    const decode = async (res) => {
+      const raw = atob((await res.text()).replace(/\s+/g, ''));
+      const bytes = new Uint8Array(raw.length);
+      for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+      return bytes.buffer;
+    };
+    // No holder or chassis file (or not mesh data): the boot alone.
+    let under = null;
+    try { under = uRes.ok ? await decode(uRes) : null; } catch (e) { under = null; }
+    const bufs = { boot: await decode(bRes), under };
+    for (const p of parts) { root.remove(p.group); p.front.geometry.dispose(); for (const m of [p.look, p.alt, p.cust, p.diag, p.back]) m.dispose(); }
+    parts = [];
+    const box = new THREE.Box3();
+    for (const d of manifest.parts) {
+      const buf = bufs[d.buf || 'boot'];
+      if (!buf) continue;
+      const q = new Int16Array(buf, d.vertexOffset, d.vertexCount * 3);
+      const pos = new Float32Array(q.length);
+      for (let i = 0; i < q.length; i++) pos[i] = q[i] * manifest.scale;
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      geo.setIndex(new THREE.BufferAttribute(new Uint32Array(buf, d.indexOffset, d.indexCount), 1));
+      geo.computeVertexNormals();
+      const lookRaw = d.look || d.color, diagRaw = d.color, altRaw = d.alt || lookRaw;
+      const look = makeMat(lookRaw, d.finish);
+      const alt = makeMat(altRaw, d.altFinish || d.finish);
+      const cs = custom[d.name];
+      const custRaw = cs ? fromHex(cs.c) : lookRaw, custFinish = cs ? cs.f : (d.finish || 'matte');
+      const cust = makeMat(custRaw, custFinish);
+      const diag = new THREE.MeshStandardMaterial({ color: rgb(diagRaw), roughness: 0.72, metalness: 0.0 });
+      // Inside faces, seen where a cut opens a part: drawn flat (unlit), so a cut reads as solid.
+      // Close to the part's own colour, so the light meshes' few pinholes don't show as specks.
+      const back = new THREE.MeshBasicMaterial({ color: rgb(lookRaw).multiplyScalar(0.8), side: THREE.BackSide });
+      const front = new THREE.Mesh(geo, look);
+      const group = new THREE.Group();
+      group.add(front, new THREE.Mesh(geo, back));
+      group.visible = !hidden[d.name];
+      root.add(group);
+      geo.computeBoundingBox();
+      if (!d.name.startsWith('foot')) box.union(geo.boundingBox);
+      parts.push({ name: d.name, grams: d.grams, material: d.material, explode: d.explode, group, front, look, alt, diag, back,
+        lookRaw, altRaw, diagRaw, cust, custRaw, custFinish, finish: d.finish || 'matte', altFinish: d.altFinish || d.finish || 'matte' });
+    }
+    // Centre of the boot, in world space (the root turns z-up into y-up).
+    const c = box.getCenter(new THREE.Vector3());
+    center.set(c.x, c.z, -c.y);
+    radius = box.getSize(new THREE.Vector3()).length() / 2;
+    document.getElementById('total').textContent = Math.round(manifest.totalGrams);
+    document.getElementById('carbon').textContent = 'In carbon/epoxy at the same 2.5 mm the shell alone would be ' + Math.round(manifest.shellCarbonGrams) + ' g.';
+    document.getElementById('skate').textContent = manifest.skateGrams
+      ? 'With the ' + manifest.under + ', the whole skate is ' + Math.round(manifest.skateGrams) + ' g' + (manifest.under === 'roller chassis' ? ' without wheels and bearings.' : '.')
+      : '';
+    buildList();
+    updateColours(); updateExplode(); updateClip();
+    status.hidden = true;
+    document.getElementById('hint').hidden = false;
+    resize();
+    if (!framed) { frame(); framed = true; }
+  }
+
+  const ex = document.getElementById('explode');
+  ex.addEventListener('input', () => { explode = ex.value / 100; document.getElementById('explodeVal').textContent = ex.value + '%'; updateExplode(); });
+  const cp = document.getElementById('cutPos');
+  cp.addEventListener('input', () => { cutPos = Number(cp.value); document.getElementById('cutVal').textContent = (cutPos > 0 ? '+' : '') + cutPos + ' mm'; updateClip(); });
+  const modes = { cutNone: 'none', cutAnkle: 'ankle', cutLength: 'length' };
+  for (const id of Object.keys(modes)) {
+    document.getElementById(id).addEventListener('click', () => {
+      cutMode = modes[id];
+      for (const k of Object.keys(modes)) document.getElementById(k).setAttribute('aria-pressed', String(k === id));
+      cp.disabled = cutMode === 'none';
+      updateClip();
+    });
+  }
+  document.getElementById('reset').addEventListener('click', frame);
+  function seg(ids, pick) {
+    for (const id of ids) document.getElementById(id).addEventListener('click', () => {
+      for (const k of ids) document.getElementById(k).setAttribute('aria-pressed', String(k === id));
+      pick(id);
+    });
+  }
+  seg(['cLook', 'cAlt', 'cCustom', 'cLayers'], (id) => {
+    colourMode = { cLook: 'look', cAlt: 'alt', cCustom: 'custom', cLayers: 'layers' }[id];
+    updateColours();
+  });
+  document.getElementById('fromLook').addEventListener('click', () => customFrom('look'));
+  document.getElementById('fromAlt').addEventListener('click', () => customFrom('alt'));
+  // Which data: the boot (ice or roller) and the throat (open or V).
+  let bootSfx = '', throatSfx = '';
+  function pickData() {
+    const sfx = bootSfx + throatSfx;
+    if (sfx === variant) return;
+    variant = sfx;
+    load(sfx).catch(() => fail('That boot\u2019s mesh files did not load. Reload the page to try again.'));
+  }
+  seg(['vIce', 'vRoller'], (id) => { bootSfx = id === 'vIce' ? '' : '_roller'; pickData(); });
+  seg(['tOpen', 'tV'], (id) => { throatSfx = id === 'tOpen' ? '' : '_v'; pickData(); });
+
+  applyTheme();
+  load('').catch(() => fail('The boot’s mesh files did not load. Reload the page to try again.'));
+})();
+</script>
