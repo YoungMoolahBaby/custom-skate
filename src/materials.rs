@@ -109,3 +109,10 @@ pub const TI_6AL_4V_STRENGTH: Strength = Strength {
     fatigue_cycles: 1e7,
     source: "ASM Aerospace Specification Metals / MatWeb, Ti-6Al-4V grade 5 annealed: E 113.8 GPa, yield 880 MPa, UTS 950 MPa, fatigue 510 MPa unnotched at 1e7",
 };
+
+/// Stainless steel for an ice runner: an assumption until a grade is chosen.
+pub const STAINLESS: Material = Material {
+    name: "stainless steel (assumed)",
+    density: 7750.0,
+    source: "assumed 7.75 g/cm3, typical of the martensitic stainless steels used for skate runners (7.7-7.8); replace with the chosen grade",
+};

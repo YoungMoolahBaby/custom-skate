@@ -2409,6 +2409,19 @@ pub fn run(scan_path: &Path, out: &Path, vented: bool, open_throat: bool) -> Res
         (hs.into_iter().map(|h| h.join().unwrap()).collect::<Vec<_>>(), eh.join().unwrap(), lh.join().unwrap())
     });
     println!("meshed {} parts + eyelets + laces ({:.1} s)", specs.len(), t.elapsed().as_secs_f64());
+    // What goes under it: the round-2 rocker chassis under the roller boot, a first look at the
+    // holder and runner under the ice boot.
+    let t = Instant::now();
+    let under = if vented {
+        crate::skate::roller(g.sole_bottom, g.mounts, lm.length)
+    } else {
+        crate::skate::ice(g.sole_bottom, g.mounts, crate::skate::HolderParams::default())
+    };
+    let under_meshes: Vec<IndexedMesh> = std::thread::scope(|sc| {
+        let hs: Vec<_> = under.parts.iter().map(|u| sc.spawn(move || mesh_of(&u.solid, u.cell))).collect();
+        hs.into_iter().map(|h| h.join().unwrap()).collect()
+    });
+    println!("meshed the {} ({} parts, {:.1} s); {}", under.name, under.parts.len(), t.elapsed().as_secs_f64(), under.note);
 
     // Weigh (from the meshes' enclosed volumes), save.
     let mut summary = String::new();
@@ -2459,6 +2472,31 @@ pub fn run(scan_path: &Path, out: &Path, vented: bool, open_throat: bool) -> Res
     let line = format!(
         "  total {total:.0} g (shell in {}; in {} the shell alone would be {shell_cf:.0} g); foam and lace densities assumed",
         PA12_MJF.name, CFRP.name
+    );
+    println!("{line}");
+    let _ = writeln!(summary, "{line}");
+    let _ = writeln!(summary, "{}", under.note);
+    let mut under_total = 0.0;
+    let mut under_grams = Vec::new();
+    for (u, mesh) in under.parts.iter().zip(&under_meshes) {
+        save(&format!("{}.stl", u.name.replace(' ', "_")), mesh)?;
+        let vol = mesh_volume(mesh);
+        let grams = if u.weigh { vol * u.material.density * 1e-6 } else { 0.0 };
+        under_grams.push(grams);
+        let line = if u.weigh {
+            under_total += grams;
+            format!("  {:<15} {:7.1} cm3  {grams:6.1} g  ({})", u.name, vol / 1000.0, u.material.name)
+        } else {
+            format!("  {:<15} (display only, not weighed)", u.name)
+        };
+        println!("{line}");
+        let _ = writeln!(summary, "{line}");
+    }
+    let skate_total = total + under_total;
+    let line = format!(
+        "  the {} {under_total:.0} g; the whole skate {skate_total:.0} g{}",
+        under.name,
+        if vented { " without wheels and bearings" } else { "" }
     );
     println!("{line}");
     let _ = writeln!(summary, "{line}");
@@ -2533,6 +2571,17 @@ pub fn run(scan_path: &Path, out: &Path, vented: bool, open_throat: bool) -> Res
     alt_layers.push(Layer::solid(&tag, ALT_RED).with_spec(finish_spec("satin")));
     alt_layers.push(Layer::solid(&lace_mesh, LACE_LOOK).with_spec(finish_spec("fabric")));
     render_styled(&alt_layers, &hero, 3.0, &out.join("boot_hero_alt.png"), pretty).map_err(e)?;
+    // The whole skate: the boot on its holder or chassis.
+    let mut skate_layers = layers.clone();
+    let mut skate_alt = alt_layers.clone();
+    for (u, m) in under.parts.iter().zip(&under_meshes) {
+        skate_layers.push(Layer::solid(m, u.look).with_spec(finish_spec(u.finish)));
+        skate_alt.push(Layer::solid(m, u.alt).with_spec(finish_spec(u.alt_finish)));
+    }
+    render_styled(&skate_layers, &hero, 3.0, &out.join("skate_hero.png"), pretty).map_err(e)?;
+    render_styled(&skate_alt, &hero, 3.0, &out.join("skate_hero_alt.png"), pretty).map_err(e)?;
+    render_styled(&skate_layers, &[View::looking(Vector3::new(0.0, lm.medial_side, 0.0), Vector3::z())], 3.0, &out.join("skate_side.png"), pretty)
+        .map_err(e)?;
 
     // The parts side by side.
     let groups: Vec<(Vec<usize>, &str)> = vec![
@@ -2599,7 +2648,7 @@ pub fn run(scan_path: &Path, out: &Path, vented: bool, open_throat: bool) -> Res
         let view = View::looking(-n, Vector3::z());
         render_styled(&cl, &[view], 3.0, &out.join(format!("boot_section_{name}.png")), pretty).map_err(e)?;
     }
-    println!("drew boot.png, boot_hero.png, boot_parts.png, boot_section_*.png ({:.1} s)", t.elapsed().as_secs_f64());
+    println!("drew boot.png, boot_hero.png, boot_parts.png, boot_section_*.png, skate_*.png ({:.1} s)", t.elapsed().as_secs_f64());
 
     // Light meshes for the 3D viewer (viewer/boot.html), opt-in: each part's uniform mesh
     // decimated by `cluster_decimate`, with its colour, weight and the way it moves when exploded.
@@ -2734,14 +2783,42 @@ pub fn run(scan_path: &Path, out: &Path, vented: bool, open_throat: bool) -> Res
                 split_entries.push(e);
             }
         }
-        let entries = split_entries;
+        let mut entries: Vec<(Entry, bool)> = split_entries.into_iter().map(|e| (e, false)).collect();
+        // What goes under the boot, in a data file of its own (each file stays under 16 MB).
+        let under_display: Vec<IndexedMesh> = std::thread::scope(|sc| {
+            let hs: Vec<_> = under
+                .parts
+                .iter()
+                .zip(&under_meshes)
+                .map(|(u, m)| sc.spawn(move || cluster_decimate(m, u.view_cell, Some(&|q| u.solid.evaluate(&q)))))
+                .collect();
+            hs.into_iter().map(|h| h.join().unwrap()).collect()
+        });
+        for ((u, m), grams) in under.parts.iter().zip(under_display).zip(&under_grams) {
+            entries.push((
+                Entry {
+                    mesh: m,
+                    name: u.name.to_string(),
+                    diag: u.look,
+                    look: u.look,
+                    finish: u.finish,
+                    alt: u.alt,
+                    alt_finish: u.alt_finish,
+                    grams: *grams,
+                    material: if u.weigh { u.material.name.to_string() } else { "display only".into() },
+                    explode: [0.0, 0.0, -90.0],
+                },
+                true,
+            ));
+        }
         let dir = out.join("viewer");
         std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
-        let mut bin: Vec<u8> = Vec::new();
+        let mut bins: [Vec<u8>; 2] = [Vec::new(), Vec::new()];
         let mut parts_json = Vec::new();
         let scale = 0.01; // mm per int16 step: +-327 mm
         let c3 = |c: [f64; 3]| format!("[{:.3},{:.3},{:.3}]", c[0], c[1], c[2]);
-        for e in &entries {
+        for (e, is_under) in &entries {
+            let bin = &mut bins[usize::from(*is_under)];
             let m = &e.mesh;
             let vo = bin.len();
             for v in &m.vertices {
@@ -2759,8 +2836,9 @@ pub fn run(scan_path: &Path, out: &Path, vented: bool, open_throat: bool) -> Res
                 }
             }
             parts_json.push(format!(
-                "{{\"name\":\"{}\",\"color\":{},\"look\":{},\"finish\":\"{}\",\"alt\":{},\"altFinish\":\"{}\",\"grams\":{:.1},\"material\":\"{}\",\"explode\":[{},{},{}],\"vertexOffset\":{vo},\"vertexCount\":{},\"indexOffset\":{io},\"indexCount\":{}}}",
+                "{{\"name\":\"{}\",\"buf\":\"{}\",\"color\":{},\"look\":{},\"finish\":\"{}\",\"alt\":{},\"altFinish\":\"{}\",\"grams\":{:.1},\"material\":\"{}\",\"explode\":[{},{},{}],\"vertexOffset\":{vo},\"vertexCount\":{},\"indexOffset\":{io},\"indexCount\":{}}}",
                 e.name,
+                if *is_under { "under" } else { "boot" },
                 c3(e.diag),
                 c3(e.look),
                 e.finish,
@@ -2776,24 +2854,30 @@ pub fn run(scan_path: &Path, out: &Path, vented: bool, open_throat: bool) -> Res
             ));
         }
         let manifest = format!(
-            "{{\"units\":\"mm\",\"scale\":{scale},\"up\":\"z\",\"variant\":\"{variant}\",\"throat\":\"{}\",\"vents\":{},\"leanDeg\":{},\"shellCarbonGrams\":{shell_cf:.1},\"medialSide\":{},\"cuts\":{{\"ankleX\":{:.1},\"legY\":{:.1}}},\"totalGrams\":{total:.1},\"parts\":[\n{}\n]}}\n",
+            "{{\"units\":\"mm\",\"scale\":{scale},\"up\":\"z\",\"variant\":\"{variant}\",\"throat\":\"{}\",\"vents\":{},\"leanDeg\":{},\"shellCarbonGrams\":{shell_cf:.1},\"medialSide\":{},\"cuts\":{{\"ankleX\":{:.1},\"legY\":{:.1}}},\"totalGrams\":{total:.1},\"under\":\"{}\",\"skateGrams\":{skate_total:.1},\"parts\":[\n{}\n]}}\n",
             if open_throat { "open" } else { "v" },
             g.vents.len(),
             p.lean_deg,
             lm.medial_side,
             0.5 * (lm.medial.x + lm.lateral.x),
             lm.leg_c.1,
+            under.name,
             parts_json.join(",\n")
         );
         // Base64 text: the artifact host serves text and images, not raw binary.
         let sfx = format!("{}{}", if vented { "_roller" } else { "" }, if open_throat { "" } else { "_v" });
-        std::fs::write(dir.join(format!("boot{sfx}.txt")), base64(&bin)).map_err(|e| e.to_string())?;
+        // The undercarriage depends only on ice or roller, not on the throat.
+        let usfx = if vented { "_roller" } else { "" };
+        std::fs::write(dir.join(format!("boot{sfx}.txt")), base64(&bins[0])).map_err(|e| e.to_string())?;
+        std::fs::write(dir.join(format!("under{usfx}.txt")), base64(&bins[1])).map_err(|e| e.to_string())?;
         std::fs::write(dir.join(format!("manifest{sfx}.json")), &manifest).map_err(|e| e.to_string())?;
         std::fs::write(dir.join("index.html"), include_str!("../viewer/boot.html")).map_err(|e| e.to_string())?;
         println!(
-            "viewer: {} triangles in {:.1} MB -> {} ({:.1} s)",
-            entries.iter().map(|e| e.mesh.faces.len()).sum::<usize>(),
-            bin.len() as f64 / 1e6,
+            "viewer: {} triangles in {:.1} + {:.1} MB (boot, {}) -> {} ({:.1} s)",
+            entries.iter().map(|e| e.0.mesh.faces.len()).sum::<usize>(),
+            bins[0].len() as f64 / 1e6,
+            bins[1].len() as f64 / 1e6,
+            under.name,
             dir.display(),
             t.elapsed().as_secs_f64()
         );

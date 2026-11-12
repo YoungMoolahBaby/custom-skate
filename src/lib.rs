@@ -9,6 +9,7 @@ pub mod fem;
 pub mod fit;
 pub mod foot;
 pub mod hockey_boot;
+pub mod skate;
 pub mod materials;
 pub mod pitch;
 pub mod render;

@@ -53,10 +53,20 @@
   .total b { font-family: var(--font-display); font-size: 40px; font-weight: 700; line-height: 1; }
   .total span { color: var(--muted); }
   ul.parts { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
-  ul.parts li { display: grid; grid-template-columns: 18px 12px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 5px 4px; border-radius: 6px; }
+  ul.parts li { display: grid; grid-template-columns: 18px 18px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 5px 4px; border-radius: 6px; }
   ul.parts li:hover { background: color-mix(in srgb, var(--fg) 5%, transparent); }
   ul.parts input { margin: 0; accent-color: var(--accent); width: 15px; height: 15px; }
-  .sw { width: 12px; height: 12px; border-radius: 3px; border: 1px solid color-mix(in srgb, var(--fg) 25%, transparent); }
+  .sw { width: 12px; height: 12px; border-radius: 3px; border: 1px solid color-mix(in srgb, var(--fg) 25%, transparent); justify-self: center; }
+  /* Custom colours: each swatch becomes a colour picker, with a finish under the part's name. */
+  .swc, .fin, .custom-tools { display: none; }
+  aside.custom .sw { display: none; }
+  aside.custom .swc { display: block; width: 18px; height: 18px; padding: 0; border: 1px solid color-mix(in srgb, var(--fg) 30%, transparent); border-radius: 4px; background: none; cursor: pointer; }
+  .swc::-webkit-color-swatch-wrapper { padding: 0; }
+  .swc::-webkit-color-swatch { border: none; border-radius: 3px; }
+  .swc::-moz-color-swatch { border: none; border-radius: 3px; }
+  aside.custom .fin { display: block; margin-top: 4px; font: inherit; font-size: 11.5px; padding: 2px 4px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--fg); }
+  aside.custom .custom-tools { display: grid; gap: 8px; }
+  .custom-tools .row { flex-wrap: wrap; gap: 6px; }
   .nm { min-width: 0; }
   .nm label { display: block; cursor: pointer; }
   .nm small { display: block; color: var(--muted); font-size: 11.5px; }
@@ -104,13 +114,23 @@
       <div class="seg" role="group" aria-label="Colours">
         <button type="button" id="cLook" aria-pressed="true">Black</button>
         <button type="button" id="cAlt" aria-pressed="false">White / blue</button>
+        <button type="button" id="cCustom" aria-pressed="false">Custom</button>
         <button type="button" id="cLayers" aria-pressed="false">Layers</button>
+      </div>
+      <div class="custom-tools" id="customTools">
+        <p class="sub">Pick each part's colour and finish in the parts list. Your colours stay in this browser.</p>
+        <div class="row">
+          <span class="sub">Start from</span>
+          <button type="button" class="btn" id="fromLook">Black</button>
+          <button type="button" class="btn" id="fromAlt">White / blue</button>
+        </div>
       </div>
     </div>
     <div>
       <p class="label">Whole boot</p>
       <div class="total"><b id="total">–</b><span>grams, shell in printed PA 12</span></div>
       <p class="sub" id="carbon"></p>
+      <p class="sub" id="skate"></p>
     </div>
     <div>
       <p class="label">Parts</p>
@@ -140,10 +160,11 @@
         <li>Tight from heel to toe, open at the top. The cuff stops just above the outer ankle bone at the sides (40 mm), rising up the shin at the front for the lacing and into the tendon guard at the back. Above the ankle bones the liner and shell flare out together: 13 mm of room at the sides (about 19° of ankle tip each way), 7 mm in front, a slight press at the back to pitch the leg forward. Cut through the ankle to see it.</li>
         <li>Two throats. Open, for stiff boots like this one: over the forefoot and instep the opening is half the way from the top of the foot to its widest line, measured along the surface the same on both sides, so it sits square on the top of the foot; the vamp is short, the opening starting just behind the toe cap. V, for shoes and more flexible boots: a narrow throat from the toe cap widening up the shin. Either way the eyelets run in mirrored pairs, evenly spaced, and splay into a V up the shin for forward flex; the heel-lock pair at the ankle crease is heavy duty.</li>
         <li>The tongue is 3D-printed TPU, like True's: a solid plate (the outer skin the laces bear on, a rim, an inner skin) round a gyroid lattice core that breathes and squashes. It is thin under the shell's edges and swells between them, its edges rounded, its top flaring forward over the shin. Explode the boot to see the lattice.</li>
-        <li>Two editions on the same boot: all black, and an alt in white fibreglass weave, royal blue, red accents and a speckled cement-grey heel panel, inspired by a sneaker colourway.</li>
+        <li>Two editions on the same boot: all black, and an alt in white fibreglass weave, royal blue, red accents and a speckled cement-grey heel panel, inspired by a sneaker colourway. Or make your own under Custom: every part's colour and finish.</li>
         <li>The look: black carbon shell against black thermoplastic (toe cap, mount pads, tendon guard), a black printed tongue, white hockey laces. Leaned forward 6°, a padded collar over the shell's edge, a smooth outer shell (its inside still follows the foot).</li>
         <li>The sole is just two flat mount pads, heel and forefoot, where the holder or roller chassis attaches; between them the shell's own rounded underside.</li>
         <li>The roller boot is vented (toe cap, lower quarters, liner); the ice boot is sealed, since a cold rink and melting ice make vents a liability.</li>
+        <li>Under the roller boot: the round-2 rocker chassis (ribbed upright walls, 4 x 72 mm wheels, the upper rocking on a 7.5 ft arc). Under the ice boot: a first look at the holder, not yet designed: two windowed towers on a beam, our own steel runner rocking against our own insert in its channel, on a pivot pin. Its sizes are estimates. Explode to drop them away from the boot.</li>
         <li>Cuff, tongue and tendon guard heights are estimates until measured on the TF9.</li>
         <li>Weighed with the shell, toe cap and mount pads in 3D-printed nylon (PA 12); a carbon shell would be laid up thinner. Foam, lace and TPU densities are assumed.</li>
       </ul>
@@ -219,6 +240,23 @@
     };
   }
   function rgb(c) { return new THREE.Color(c[0], c[1], c[2]).convertSRGBToLinear(); }
+  // A part's material for a colour (sRGB 0-1) and a finish, with the weave or speckle it needs.
+  function makeMat(raw, finish) {
+    const [rough, metal] = FINISH[finish] || FINISH.matte;
+    const m = new THREE.MeshStandardMaterial({ color: rgb(raw), roughness: rough, metalness: metal });
+    if (finish === 'carbon' || finish === 'fiberglass') addWeave(m);
+    if (finish === 'cement') addSpeckle(m);
+    return m;
+  }
+  function toHex(c) { return '#' + c.map((v) => Math.round(Math.min(1, Math.max(0, v)) * 255).toString(16).padStart(2, '0')).join(''); }
+  function fromHex(h) { return [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255); }
+  // The custom colourway, by part name: { c: '#rrggbb', f: finish }. Kept in this browser only.
+  const CUSTOM_KEY = 'custom-skate-colours-v1';
+  let custom = {};
+  try { custom = JSON.parse(localStorage.getItem(CUSTOM_KEY) || '{}') || {}; } catch (e) { custom = {}; }
+  function saveCustom() { try { localStorage.setItem(CUSTOM_KEY, JSON.stringify(custom)); } catch (e) { /* private window */ } }
+  const FINISH_NAMES = [['gloss', 'Gloss'], ['satin', 'Satin'], ['matte', 'Matte'], ['carbon', 'Carbon weave'], ['fiberglass', 'Fibreglass weave'],
+    ['metal', 'Metal'], ['leather', 'Leather'], ['fabric', 'Fabric'], ['cement', 'Speckled']];
 
   function stageColor() {
     const v = getComputedStyle(document.documentElement).getPropertyValue('--stage').trim();
@@ -247,7 +285,7 @@
     render();
   }
 
-  function allMats() { const m = []; for (const p of parts) m.push(p.look, p.alt, p.diag, p.back); return m; }
+  function allMats() { const m = []; for (const p of parts) m.push(p.look, p.alt, p.cust, p.diag, p.back); return m; }
   function updateClip() {
     const on = cutMode !== 'none';
     for (const m of allMats()) { m.clippingPlanes = on ? [clip] : []; m.needsUpdate = true; }
@@ -269,13 +307,36 @@
   }
 
   function updateColours() {
+    document.querySelector('aside').classList.toggle('custom', colourMode === 'custom');
     for (const p of parts) {
-      const k = colourMode === 'look' ? 'look' : colourMode === 'alt' ? 'alt' : 'diag';
+      const k = colourMode === 'look' ? 'look' : colourMode === 'alt' ? 'alt' : colourMode === 'custom' ? 'cust' : 'diag';
       p.front.material = p[k];
       p.back.color.copy(rgb(p[k + 'Raw']).multiplyScalar(0.8));
       p.swatch.style.background = swatch(p[k + 'Raw']);
+      if (p.picker) { p.picker.value = toHex(p.custRaw); p.fin.value = p.custFinish; }
     }
     render();
+  }
+
+  // One part's custom colour and finish: a new material only when the finish changes (the weave
+  // and the speckle are compiled into it).
+  function setCustom(p, raw, finish, save = true) {
+    if (finish !== p.custFinish) {
+      p.cust.dispose();
+      p.cust = makeMat(raw, finish);
+      if (cutMode !== 'none') p.cust.clippingPlanes = [clip];
+    } else {
+      p.cust.color.copy(rgb(raw));
+    }
+    p.custRaw = raw; p.custFinish = finish;
+    custom[p.name] = { c: toHex(raw), f: finish };
+    if (save) saveCustom();
+    if (colourMode === 'custom') { p.front.material = p.cust; p.back.color.copy(rgb(raw).multiplyScalar(0.8)); render(); }
+  }
+  function customFrom(edition) {
+    for (const p of parts) setCustom(p, edition === 'alt' ? p.altRaw : p.lookRaw, edition === 'alt' ? p.altFinish : p.finish, false);
+    saveCustom();
+    updateColours();
   }
 
   let pending = false;
@@ -296,13 +357,24 @@
       const li = document.createElement('li');
       const id = 'part-' + i;
       li.innerHTML = '<input type="checkbox" id="' + id + '"' + (p.group.visible ? ' checked' : '') + '>' +
-        '<span class="sw"></span>' +
-        '<span class="nm"><label for="' + id + '"></label><small></small></span>' +
+        '<span class="sw"></span><input type="color" class="swc">' +
+        '<span class="nm"><label for="' + id + '"></label><small></small><select class="fin"></select></span>' +
         '<span class="g"></span>';
       li.querySelector('label').textContent = p.name.charAt(0).toUpperCase() + p.name.slice(1);
       li.querySelector('small').textContent = p.material;
       li.querySelector('.g').textContent = p.grams > 0 ? p.grams.toFixed(1) + ' g' : '';
       p.swatch = li.querySelector('.sw');
+      const nice = p.name.charAt(0).toUpperCase() + p.name.slice(1);
+      p.picker = li.querySelector('.swc');
+      p.picker.setAttribute('aria-label', 'Colour of the ' + p.name);
+      p.picker.value = toHex(p.custRaw);
+      p.picker.addEventListener('input', (e) => setCustom(p, fromHex(e.target.value), p.custFinish));
+      p.fin = li.querySelector('.fin');
+      p.fin.setAttribute('aria-label', 'Finish of the ' + p.name);
+      for (const [v, t] of FINISH_NAMES) { const o = document.createElement('option'); o.value = v; o.textContent = t; p.fin.appendChild(o); }
+      if (!FINISH_NAMES.some(([v]) => v === p.custFinish)) { const o = document.createElement('option'); o.value = p.custFinish; o.textContent = nice; p.fin.appendChild(o); }
+      p.fin.value = p.custFinish;
+      p.fin.addEventListener('change', (e) => setCustom(p, p.custRaw, e.target.value));
       li.querySelector('input').addEventListener('change', (e) => {
         p.group.visible = e.target.checked; hidden[p.name] = !e.target.checked; render();
       });
@@ -313,18 +385,29 @@
   async function load(sfx) {
     status.hidden = false; status.textContent = 'Loading the boot\u2026';
     // The meshes come as base64 text: int16 positions and uint32 indices per part.
-    const [mRes, bRes] = await Promise.all([fetch('manifest' + sfx + '.json'), fetch('boot' + sfx + '.txt')]);
+    // The holder or chassis comes in a file of its own, shared by both throats.
+    const usfx = sfx.startsWith('_roller') ? '_roller' : '';
+    const [mRes, bRes, uRes] = await Promise.all([
+      fetch('manifest' + sfx + '.json'), fetch('boot' + sfx + '.txt'), fetch('under' + usfx + '.txt'),
+    ]);
     if (!mRes.ok || !bRes.ok) throw new Error('missing data');
     manifest = await mRes.json();
-    const b64 = (await bRes.text()).replace(/\s+/g, '');
-    const raw = atob(b64);
-    const bytes = new Uint8Array(raw.length);
-    for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
-    const buf = bytes.buffer;
-    for (const p of parts) { root.remove(p.group); p.front.geometry.dispose(); for (const m of [p.look, p.alt, p.diag, p.back]) m.dispose(); }
+    const decode = async (res) => {
+      const raw = atob((await res.text()).replace(/\s+/g, ''));
+      const bytes = new Uint8Array(raw.length);
+      for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+      return bytes.buffer;
+    };
+    // No holder or chassis file (or not mesh data): the boot alone.
+    let under = null;
+    try { under = uRes.ok ? await decode(uRes) : null; } catch (e) { under = null; }
+    const bufs = { boot: await decode(bRes), under };
+    for (const p of parts) { root.remove(p.group); p.front.geometry.dispose(); for (const m of [p.look, p.alt, p.cust, p.diag, p.back]) m.dispose(); }
     parts = [];
     const box = new THREE.Box3();
     for (const d of manifest.parts) {
+      const buf = bufs[d.buf || 'boot'];
+      if (!buf) continue;
       const q = new Int16Array(buf, d.vertexOffset, d.vertexCount * 3);
       const pos = new Float32Array(q.length);
       for (let i = 0; i < q.length; i++) pos[i] = q[i] * manifest.scale;
@@ -333,13 +416,11 @@
       geo.setIndex(new THREE.BufferAttribute(new Uint32Array(buf, d.indexOffset, d.indexCount), 1));
       geo.computeVertexNormals();
       const lookRaw = d.look || d.color, diagRaw = d.color, altRaw = d.alt || lookRaw;
-      const [rough, metal] = FINISH[d.finish] || FINISH.matte;
-      const look = new THREE.MeshStandardMaterial({ color: rgb(lookRaw), roughness: rough, metalness: metal });
-      if (d.finish === 'carbon') addWeave(look);
-      const [aRough, aMetal] = FINISH[d.altFinish] || FINISH[d.finish] || FINISH.matte;
-      const alt = new THREE.MeshStandardMaterial({ color: rgb(altRaw), roughness: aRough, metalness: aMetal });
-      if (d.altFinish === 'cement') addSpeckle(alt);
-      if (d.altFinish === 'carbon' || d.altFinish === 'fiberglass') addWeave(alt);
+      const look = makeMat(lookRaw, d.finish);
+      const alt = makeMat(altRaw, d.altFinish || d.finish);
+      const cs = custom[d.name];
+      const custRaw = cs ? fromHex(cs.c) : lookRaw, custFinish = cs ? cs.f : (d.finish || 'matte');
+      const cust = makeMat(custRaw, custFinish);
       const diag = new THREE.MeshStandardMaterial({ color: rgb(diagRaw), roughness: 0.72, metalness: 0.0 });
       // Inside faces, seen where a cut opens a part: drawn flat (unlit), so a cut reads as solid.
       // Close to the part's own colour, so the light meshes' few pinholes don't show as specks.
@@ -352,7 +433,7 @@
       geo.computeBoundingBox();
       if (!d.name.startsWith('foot')) box.union(geo.boundingBox);
       parts.push({ name: d.name, grams: d.grams, material: d.material, explode: d.explode, group, front, look, alt, diag, back,
-        lookRaw, altRaw, diagRaw });
+        lookRaw, altRaw, diagRaw, cust, custRaw, custFinish, finish: d.finish || 'matte', altFinish: d.altFinish || d.finish || 'matte' });
     }
     // Centre of the boot, in world space (the root turns z-up into y-up).
     const c = box.getCenter(new THREE.Vector3());
@@ -360,6 +441,9 @@
     radius = box.getSize(new THREE.Vector3()).length() / 2;
     document.getElementById('total').textContent = Math.round(manifest.totalGrams);
     document.getElementById('carbon').textContent = 'In carbon/epoxy at the same 2.5 mm the shell alone would be ' + Math.round(manifest.shellCarbonGrams) + ' g.';
+    document.getElementById('skate').textContent = manifest.skateGrams
+      ? 'With the ' + manifest.under + ', the whole skate is ' + Math.round(manifest.skateGrams) + ' g' + (manifest.under === 'roller chassis' ? ' without wheels and bearings.' : '.')
+      : '';
     buildList();
     updateColours(); updateExplode(); updateClip();
     status.hidden = true;
@@ -388,7 +472,12 @@
       pick(id);
     });
   }
-  seg(['cLook', 'cAlt', 'cLayers'], (id) => { colourMode = id === 'cLook' ? 'look' : id === 'cAlt' ? 'alt' : 'layers'; updateColours(); });
+  seg(['cLook', 'cAlt', 'cCustom', 'cLayers'], (id) => {
+    colourMode = { cLook: 'look', cAlt: 'alt', cCustom: 'custom', cLayers: 'layers' }[id];
+    updateColours();
+  });
+  document.getElementById('fromLook').addEventListener('click', () => customFrom('look'));
+  document.getElementById('fromAlt').addEventListener('click', () => customFrom('alt'));
   // Which data: the boot (ice or roller) and the throat (open or V).
   let bootSfx = '', throatSfx = '';
   function pickData() {
