@@ -11,15 +11,15 @@ is about it; the boot plan is in `docs/PLAN.md` (track B).
 V throat, two colourways or your own, taken apart or cut through. Built on the stand-in foot;
 published with `tools/publish_pages.sh` after a build.
 
-![The roller skate, round 1: boot, rocker, lower frame and wheels, from the side, above, the front and three-quarters](docs/round1/roller_skate.png)
+![The roller skate from the side: a black carbon boot with white laces and green eyelets on a grey truss chassis with four white wheels](docs/skate/custom_roller.png)
 
-*Round 1 on a stand-in foot: the boot grown from a 3D foot scan, the rocker under its sole, the
-lower frame and four 72 mm wheels. A first layout, not a design yet (see Round 1 below).*
+*The roller skate on the rocker chassis, four 72 mm wheels; the boot is grown from a 3D foot
+scan (a stand-in foot for now). Jon's colourway, made in the viewer's Custom mode.*
 
-![The ice skate, round 1: the same boot on a holder placeholder and runner, from the side, above, the front and three-quarters](docs/round1/ice_skate.png)
+![The ice skate from the side: the same black boot on a white holder with a steel runner](docs/skate/custom_ice.png)
 
-*The ice skate: the same boot on a 254 mm holder, a placeholder for our own one-piece rocking
-holder (our own runner and rocker insert; nothing proprietary).*
+*The ice skate: the same boot on a first look at our own rocking holder, the runner rocking
+against an insert inside it (our own runner and insert; nothing proprietary).*
 
 A Marsblade-style frame is split in two. A rounded upper chassis carries the boot and rocks
 heel-to-toe on a flat lower chassis that carries the wheels, held together by a sprung coupling.
