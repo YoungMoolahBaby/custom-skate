@@ -985,6 +985,22 @@ the rocker's upper: one last, two one-piece skates, each with the rocking joint 
   sharpener holds it.
 - **Patents:** check Marsblade's before making one to sell.
 
+**The whole skate, rendered (Jon, 2026-11-11: "can you render the skate with the bladeholder? for
+both ice hockey and the roller skate").** `src/skate.rs`; the boot run draws `skate_hero*.png` and
+`skate_side.png` and puts it in the viewer (its own data file).
+- **Roller:** the round-2 chassis with the ribbed upright walls (upper 240 mm, 6 panels, 5 mm
+  ribs on every member: the stiffest within the fatigue allowable bonded to the sole), centred
+  under the mount pads; display wheels. 241 g by mesh volume (round 2: 243.8 g); the floor 82 mm
+  below the sole; the whole skate 621 g without wheels and bearings (611 with the V throat).
+- **Ice: a first look, not a design.** Two towers under the mount pads, windowed, flaring to a
+  beam that holds the runner in a channel; our own steel runner (2.9 mm, 16 mm showing, 11 ft)
+  rocking on our own insert (23 ft) in the channel's roof, on a titanium pivot pin. 254 mm long
+  (Jon's i2); everything else an estimate. Holder 108 g (PA 12), runner 131 g (stainless,
+  density assumed), insert 2 g, pin 3 g: 244 g; the whole skate 627 g (616 with the V throat).
+  For comparison, a real holder and steel need weighing (MEASURE.md). Next for it: the one-piece
+  holder run down from the boot (Jon's direction above), the runner's profile and the insert
+  radii set from the pitch (GIH eq. 10), and the pivot's give.
+
 ## Jon's list for the boot, the skates and the gear (2026-11-11)
 
 Jon's items, in his words, each with a first engineering take and where it goes. Items 1 and

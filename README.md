@@ -207,6 +207,28 @@ flexible boots is in `docs/boot/v/`.
 
 Pictures, the layer sections and the numbers: `docs/boot/`, and `docs/PLAN.md` (Track B).
 
+## The whole skate
+
+![The ice skate: the black boot on a first-look holder with a steel runner](docs/skate/ice_hero.png)
+
+![The roller skate, alt edition: the boot on the round-2 rocker chassis with 4 x 72 mm wheels](docs/skate/roller_hero_alt.png)
+
+*The boot on what goes under it, both editions and both skates in `docs/skate/`; in the
+viewer too, with custom colours for every part.*
+
+- **Roller: the round-2 rocker chassis**, the ribbed upright walls that came out stiffest within
+  the fatigue allowable when bonded to the sole (upper 240 mm, 6 panels, 5 mm ribs), centred under
+  the boot's mount pads; 4 x 72 mm wheels, the upper rocking on a 7.5 ft arc; the floor 82 mm
+  below the sole. **Chassis 241 g** (round 2 weighed it at 244 g by a finer method); **the whole
+  skate 621 g without wheels and bearings.**
+- **Ice: a first look at the holder, not yet designed** (Track C): two windowed towers under the
+  mount pads on a beam, our own steel runner rocking against our own insert in the beam's
+  channel, on a pivot pin; nothing proprietary. 254 mm long (Jon's i2 size); the rest are
+  estimates: an 11 ft runner on a 23 ft insert (the i2's, as a reference), 16 mm of steel
+  showing, the ice 62 mm below the sole. **Holder 108 g in printed nylon, runner 131 g of steel,
+  244 g with the insert and pin; the whole skate 627 g.**
+- With the V throat: 616 g (ice), 611 g (roller).
+
 ## Status
 
 Phase 0 (the science, the pitch model, the mass tool checked), round 1 (the whole skate on an
