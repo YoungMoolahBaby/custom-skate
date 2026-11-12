@@ -1321,6 +1321,39 @@ In his words, each with a first engineering take. Item 9 above is where this sta
     frees each pad before the next.
   - **To fix in the drawings:** the vents show skin because the foam is hidden; a real pad shows
     its fabric-covered liner there.
+
+  **D2 round 3, the outlines (2026-11-12).** Jon, comparing round 2 with his reference: "lets
+  talk about how we can close the gap between those and these. like looks wise". The gap, in
+  order: rectangular outlines, a short cap with separate knee wings, knife-thin edges, shallow
+  surface detail, hidden liner. This round: the first two and the liner.
+  - **Outlines on the leg laid flat** (`Outlines` in `pad.rs`): each part's outline is a
+    polygon in (round the leg, up) smoothed by Chaikin's corner cutting, its signed distance on
+    a 0.5 mm grid. The front shell is a shield widest below the knee, tapering to the ankle; the
+    side panels follow its edge (the front's inside cut from them, less 6 mm of overlap) and
+    run up under the knee shield's ears; the calf wraps are rounded.
+  - **One knee shield** in place of the cap and wings: ears over the sides of the knee, a V at
+    its bottom lapped over the front shell's top, domed over the kneecap, a 1.8 mm V ridge
+    across it; it lifts over whatever it laps (front shell, side panels, thigh guard).
+  - **The liner shows**: it runs 3 mm past the shells and is drawn as dark fabric, so the vents
+    show liner, not skin.
+  - **Views to mark up** (`docs/pad/pad_views.png`): front, outside, back and inside, with a grid
+    on the leg and the pad every 50 mm up (darker every 100) and every 30° round (the front
+    line red, the sides blue). Jon marks up screenshots of the 3D model (his idea, in place of
+    a flat design sheet); true flat patterns, which keep lengths, come later for cutting fabric
+    and prepreg.
+  - **Quick runs:** `PAD_QUICK=1` builds the fitted pad alone (~11 min on two threads).
+  - Fitted, tongue under: **337 g**; hard coverage 664 cm² (round 2 618); bulk unchanged (13.6
+    mm at the front, 9-10 at the sides).
+  - **The side panels meet the knee shield:** the first two tries left their tops 1-33 mm
+    short of the shield's bottom edge (skin showed between them; seen in the render, then
+    measured with `examples/probe_pad_outlines.rs`). Now every point round the shield's edge has
+    a shell under it: the front shell 15-31 mm at the front, the side panels 9-17 mm from 50 to
+    110 degrees round. +7 g.
+
+  ![Round 3, the fitted pad: front, outside, back, inside, with the markup grid](pad/pad_views.png)
+
+  **Next for the look:** rolled edges (thicker for the last few mm, turned out), overlapping
+  plates down the front with a bolder spine, padded calf wraps; Jon's marks.
 - **D3, impact**: a puck on the shell over its liner, peak force on the leg. Checked first
   against a textbook impact. `sim-soft-explicit` (explicit dynamics, hyperelastic and
   Kelvin-Voigt, contact with a moving rigid body) is the candidate; it has no crushable-foam

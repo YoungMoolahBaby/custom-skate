@@ -1,4 +1,4 @@
-//! Track D2: the shin pad, round 1 (docs/PLAN.md, track D).
+//! Track D2: the shin pad (docs/PLAN.md, track D).
 //!
 //! Built on the stand-in leg (`leg.rs`) as it stands in the skate: leaned forward like the boot
 //! (`hockey_boot::lean_dx_at`), with the boot's own meshes (`out/boot`) for the parts the pad
@@ -61,11 +61,13 @@ pub struct PadParams {
     pub liner_side: f64,
     /// Hard parts' wall, PA 12 (round 1: 2.5 mm, plain).
     pub wall: f64,
-    /// The front shell's reach round each side, and the side panels' (stepped over its edges by
-    /// `side_overlap`), degrees.
-    pub front_half: f64,
+    /// The liner tapers from the front to `side_to` degrees round; the side panels reach
+    /// `side_overlap` mm under the front shell's edge (round 3: the outlines are curves,
+    /// `Outlines`).
     pub side_to: f64,
     pub side_overlap: f64,
+    /// The liner shows this far past the shells' edges, mm.
+    pub liner_border: f64,
     /// The front shell's ridge down the shin: height and width (mm of arc).
     pub crest_h: f64,
     pub crest_w: f64,
@@ -82,25 +84,14 @@ pub struct PadParams {
     pub shell_below_knee: f64,
     /// Clearance between the pad's bottom edge and the boot's top edge, all round.
     pub clear_boot: f64,
-    /// Knee cap: from below to above the knee joint, its reach round, its liner, and its dome
-    /// (extra stand-off over the kneecap, filled with liner).
-    pub knee_below: f64,
+    /// How far above the knee joint the pad reaches (the thigh guard's top), for boxes and
+    /// counts. The knee shield: its liner, its dome (extra stand-off over the kneecap, filled
+    /// with liner), the V ridge across it.
     pub knee_above: f64,
-    pub knee_half: f64,
     pub knee_liner: f64,
     pub dome_h: f64,
-    /// Knee wings over the sides of the knee: to this angle, below and above the knee joint,
-    /// their foam.
-    pub kwing_to: f64,
-    pub kwing_below: f64,
-    pub kwing_above: f64,
-    pub kwing_foam: f64,
-    /// Thigh guard over the knee cap's top: its V bottom edge from this height above the knee
-    /// joint (the V's depth `thigh_v`), its top, its reach round, its foam.
-    pub thigh_from: f64,
-    pub thigh_v: f64,
-    pub thigh_to: f64,
-    pub thigh_half: f64,
+    pub chevron_h: f64,
+    /// The thigh guard's foam.
     pub thigh_foam: f64,
     /// Calf wraps: from the side panels to this angle; foam and a thin skin; their top below the
     /// knee joint.
@@ -125,9 +116,9 @@ impl Default for PadParams {
             liner_front: 8.0,
             liner_side: 5.0,
             wall: 2.0,
-            front_half: 60.0,
             side_to: 105.0,
-            side_overlap: 8.0,
+            side_overlap: 6.0,
+            liner_border: 3.0,
             crest_h: 2.5,
             crest_w: 16.0,
             groove_d: 0.8,
@@ -138,19 +129,10 @@ impl Default for PadParams {
             vent_h: 34.0,
             shell_below_knee: 20.0,
             clear_boot: 10.0,
-            knee_below: 40.0,
-            knee_above: 75.0,
-            knee_half: 65.0,
+            knee_above: 115.0,
             knee_liner: 9.0,
             dome_h: 5.0,
-            kwing_to: 115.0,
-            kwing_below: 25.0,
-            kwing_above: 45.0,
-            kwing_foam: 6.0,
-            thigh_from: 55.0,
-            thigh_v: 18.0,
-            thigh_to: 105.0,
-            thigh_half: 55.0,
+            chevron_h: 1.8,
             thigh_foam: 6.0,
             wing_to: 150.0,
             wing_foam: 6.0,
@@ -377,18 +359,18 @@ pub fn boot_top(shell: &IndexedMesh, f: &Frame) -> Ring {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Part {
-    /// The front shell: a ridge down the shin, moulded segments.
+    /// The front shell: a tapered shield down the shin, a ridge down it, moulded segments.
     ShinShell,
-    /// Side panels stepped over the front shell's edges, vented: inside (true), outside.
+    /// Side panels following the front shell's edge and stepped over it, vented: inside (true),
+    /// outside.
     SidePanel(bool),
+    /// The liner under the front shell and side panels, showing as a border round them.
     ShinLiner,
-    /// The knee cap, domed over the kneecap.
+    /// The knee shield: one piece over the kneecap and the sides of the knee (its ears), domed,
+    /// a V ridge across it, its bottom a V lapped over the front shell's top.
     KneeCap,
     KneeLiner,
-    /// Wings over the sides of the knee, stepped over the cap's edges, and their foam.
-    KneeWing(bool),
-    KneeWingFoam(bool),
-    /// The thigh guard over the knee cap's top, its bottom edge a V, and its foam.
+    /// The thigh guard, tucked under the knee shield's top, and its foam.
     ThighGuard,
     ThighFoam,
     /// Calf wraps: foam under a thin skin.
@@ -401,7 +383,7 @@ impl Part {
     pub fn all() -> Vec<Part> {
         let mut v = vec![Part::ShinShell, Part::ShinLiner, Part::KneeCap, Part::KneeLiner, Part::ThighGuard, Part::ThighFoam];
         for m in [true, false] {
-            v.extend([Part::SidePanel(m), Part::KneeWing(m), Part::KneeWingFoam(m), Part::WingFoam(m), Part::Wing(m)]);
+            v.extend([Part::SidePanel(m), Part::WingFoam(m), Part::Wing(m)]);
         }
         v.extend([Part::Strap(0), Part::Strap(1)]);
         v
@@ -409,11 +391,11 @@ impl Part {
 
     /// The hard parts (the shell pieces), the ones a puck meets.
     pub fn hard(&self) -> bool {
-        matches!(self, Part::ShinShell | Part::SidePanel(_) | Part::KneeCap | Part::KneeWing(_) | Part::ThighGuard)
+        matches!(self, Part::ShinShell | Part::SidePanel(_) | Part::KneeCap | Part::ThighGuard)
     }
 
     pub fn foam(&self) -> bool {
-        matches!(self, Part::ShinLiner | Part::KneeLiner | Part::KneeWingFoam(_) | Part::ThighFoam | Part::WingFoam(_))
+        matches!(self, Part::ShinLiner | Part::KneeLiner | Part::ThighFoam | Part::WingFoam(_))
     }
 
     pub fn name(&self) -> String {
@@ -422,10 +404,8 @@ impl Part {
             Part::ShinShell => "front shell".into(),
             Part::SidePanel(m) => format!("side panel, {}", side(m)),
             Part::ShinLiner => "shin liner".into(),
-            Part::KneeCap => "knee cap".into(),
+            Part::KneeCap => "knee shield".into(),
             Part::KneeLiner => "knee liner".into(),
-            Part::KneeWing(m) => format!("knee wing, {}", side(m)),
-            Part::KneeWingFoam(m) => format!("knee wing foam, {}", side(m)),
             Part::ThighGuard => "thigh guard".into(),
             Part::ThighFoam => "thigh foam".into(),
             Part::WingFoam(m) => format!("calf foam, {}", side(m)),
@@ -452,14 +432,15 @@ impl Part {
         }
     }
 
-    /// Two-tone, like a modern pad: light front pieces, dark side pieces.
+    /// Two-tone hard parts like a modern pad (light front pieces, dark side pieces); the liners
+    /// as dark fabric, since they show round the shells' edges.
     pub fn color(&self) -> [f64; 3] {
         match self {
             Part::ShinShell | Part::KneeCap | Part::ThighGuard => [0.62, 0.72, 0.84],
-            Part::SidePanel(_) | Part::KneeWing(_) => [0.17, 0.18, 0.20],
-            p if p.foam() => [0.20, 0.45, 0.30],
-            Part::Wing(_) => [0.30, 0.31, 0.33],
-            _ => [0.08, 0.08, 0.09],
+            Part::SidePanel(_) => [0.17, 0.18, 0.20],
+            p if p.foam() => [0.11, 0.12, 0.14],
+            Part::Wing(_) => [0.21, 0.22, 0.24],
+            _ => [0.06, 0.06, 0.07],
         }
     }
 }
@@ -475,6 +456,174 @@ fn rounded_rect(x: f64, y: f64, hx: f64, hy: f64, r: f64) -> f64 {
     let qx = x.abs() - (hx - r);
     let qy = y.abs() - (hy - r);
     (qx.max(0.0).powi(2) + qy.max(0.0).powi(2)).sqrt() + qx.max(qy).min(0.0) - r
+}
+
+/// Chaikin's corner cutting on a closed polygon: each round replaces every edge by its points
+/// at 1/4 and 3/4, so the outline converges to a smooth (quadratic B-spline) curve.
+fn chaikin(p: &[(f64, f64)]) -> Vec<(f64, f64)> {
+    let n = p.len();
+    let mut out = Vec::with_capacity(2 * n);
+    for i in 0..n {
+        let (a, b) = (p[i], p[(i + 1) % n]);
+        out.push((0.75 * a.0 + 0.25 * b.0, 0.75 * a.1 + 0.25 * b.1));
+        out.push((0.25 * a.0 + 0.75 * b.0, 0.25 * a.1 + 0.75 * b.1));
+    }
+    out
+}
+
+/// A symmetric outline from its half on the medial side (s >= 0), listed from the top of the
+/// centre line round to the bottom of it.
+fn mirrored(half: &[(f64, f64)]) -> Vec<(f64, f64)> {
+    let mut v = half.to_vec();
+    for i in (1..half.len() - 1).rev() {
+        v.push((-half[i].0, half[i].1));
+    }
+    v
+}
+
+/// A part's outline on the leg laid flat: `s` round the leg (mm of arc at `R_REF` per radian,
+/// 0 at the front, + medial), `z` up. A closed polygon smoothed by Chaikin's corner cutting,
+/// with its signed distance (negative inside) on a 0.5 mm grid, bilinear between nodes.
+#[derive(Clone)]
+pub struct Outline {
+    s0: f64,
+    z0: f64,
+    cell: f64,
+    ns: usize,
+    nz: usize,
+    d: Arc<Vec<f32>>,
+    pub z_min: f64,
+    pub z_max: f64,
+    /// The smoothed outline, for drawing.
+    pub points: Arc<Vec<(f64, f64)>>,
+}
+
+impl Outline {
+    pub fn new(poly: &[(f64, f64)], rounds: usize) -> Self {
+        let mut p = poly.to_vec();
+        for _ in 0..rounds {
+            p = chaikin(&p);
+        }
+        let cell = 0.5;
+        let (mut s_lo, mut s_hi, mut z_lo, mut z_hi) = (f64::MAX, f64::MIN, f64::MAX, f64::MIN);
+        for &(s, z) in &p {
+            s_lo = s_lo.min(s);
+            s_hi = s_hi.max(s);
+            z_lo = z_lo.min(z);
+            z_hi = z_hi.max(z);
+        }
+        let m = 25.0;
+        let (s0, z0) = (s_lo - m, z_lo - m);
+        let ns = ((s_hi - s_lo + 2.0 * m) / cell).ceil() as usize + 1;
+        let nz = ((z_hi - z_lo + 2.0 * m) / cell).ceil() as usize + 1;
+        let segs: Vec<((f64, f64), (f64, f64))> = (0..p.len()).map(|i| (p[i], p[(i + 1) % p.len()])).collect();
+        let d: Vec<f32> = (0..ns * nz)
+            .map(|k| {
+                let (s, z) = (s0 + (k % ns) as f64 * cell, z0 + (k / ns) as f64 * cell);
+                let mut best = f64::MAX;
+                let mut inside = false;
+                for &((ax, ay), (bx, by)) in &segs {
+                    let (ex, ey) = (bx - ax, by - ay);
+                    let t = (((s - ax) * ex + (z - ay) * ey) / (ex * ex + ey * ey).max(1e-12)).clamp(0.0, 1.0);
+                    let (dx, dy) = (s - ax - t * ex, z - ay - t * ey);
+                    best = best.min(dx * dx + dy * dy);
+                    if (ay > z) != (by > z) && s < ax + (z - ay) / (by - ay) * ex {
+                        inside = !inside;
+                    }
+                }
+                (if inside { -best.sqrt() } else { best.sqrt() }) as f32
+            })
+            .collect();
+        Outline { s0, z0, cell, ns, nz, d: Arc::new(d), z_min: z_lo, z_max: z_hi, points: Arc::new(p) }
+    }
+
+    pub fn eval(&self, s: f64, z: f64) -> f64 {
+        let fx = ((s - self.s0) / self.cell).clamp(0.0, (self.ns - 1) as f64);
+        let fz = ((z - self.z0) / self.cell).clamp(0.0, (self.nz - 1) as f64);
+        let (i, j) = ((fx as usize).min(self.ns - 2), (fz as usize).min(self.nz - 2));
+        let (u, v) = (fx - i as f64, fz - j as f64);
+        let at = |a: usize, b: usize| self.d[b * self.ns + a] as f64;
+        let inner = (1.0 - v) * ((1.0 - u) * at(i, j) + u * at(i + 1, j)) + v * ((1.0 - u) * at(i, j + 1) + u * at(i + 1, j + 1));
+        // Outside the grid: add the distance to it (the grid's edge is > 25 mm from the outline).
+        let out_s = (self.s0 - s).max(s - (self.s0 + (self.ns - 1) as f64 * self.cell)).max(0.0);
+        let out_z = (self.z0 - z).max(z - (self.z0 + (self.nz - 1) as f64 * self.cell)).max(0.0);
+        inner + (out_s * out_s + out_z * out_z).sqrt()
+    }
+}
+
+/// The pad's outlines on the leg laid flat (round 3, 2026-11-12: curves after Jon's reference,
+/// in place of round 2's rectangles). Heights from the knee joint `kz`; `s` in mm of arc at
+/// `R_REF` (1 deg = 0.785 mm: 45 deg = 35, 90 deg = 71, 150 deg = 118). The real width is the
+/// angle times the leg's own radius, so a constant `s` narrows toward the ankle by itself. The
+/// pad's bottom edge follows the boot separately (`Pad::z_bot`), so the outlines run past it.
+pub struct Outlines {
+    /// The front shell: a shield, widest below the knee, tapering to the ankle.
+    pub front: Outline,
+    /// The side panels' outline on the medial half (s >= 0, used mirrored); the front shell's
+    /// inside is cut from it, less the overlap.
+    pub side: Outline,
+    /// The knee shield, ears at the sides of the knee, a V at its bottom.
+    pub knee: Outline,
+    /// The thigh guard, under the knee shield's top.
+    pub thigh: Outline,
+    /// The calf wraps' outline on the medial half (s >= 0, used mirrored).
+    pub calf: Outline,
+}
+
+impl Outlines {
+    pub fn new(kz: f64) -> Self {
+        let front = mirrored(&[
+            (0.0, kz - 12.0),
+            (22.0, kz - 14.0),
+            (40.0, kz - 22.0),
+            (50.0, kz - 40.0),
+            (52.0, kz - 90.0),
+            (47.0, 300.0),
+            (40.0, 230.0),
+            (36.0, 170.0),
+            (35.0, 90.0),
+            (0.0, 90.0),
+        ]);
+        // The side panel's top tucks ~10 mm under the knee shield's bottom edge all the way round
+        // (checked with `examples/probe_pad_outlines.rs`; round 3's first two tries stopped 1-33 mm
+        // short of it and left skin showing).
+        let side = [
+            (28.0, kz - 12.0),
+            (50.0, kz - 16.0),
+            (66.0, kz - 12.0),
+            (80.0, kz - 4.0),
+            (90.0, kz + 8.0),
+            (93.0, kz - 40.0),
+            (86.0, kz - 100.0),
+            (84.0, 300.0),
+            (78.0, 220.0),
+            (72.0, 150.0),
+            (70.0, 90.0),
+            (28.0, 90.0),
+        ];
+        let knee = mirrored(&[
+            (0.0, kz + 92.0),
+            (28.0, kz + 88.0),
+            (48.0, kz + 72.0),
+            (62.0, kz + 50.0),
+            (80.0, kz + 38.0),
+            (90.0, kz + 15.0),
+            (86.0, kz - 12.0),
+            (66.0, kz - 26.0),
+            (44.0, kz - 30.0),
+            (22.0, kz - 36.0),
+            (0.0, kz - 46.0),
+        ]);
+        let thigh = mirrored(&[(0.0, kz + 115.0), (28.0, kz + 112.0), (44.0, kz + 98.0), (42.0, kz + 80.0), (24.0, kz + 70.0), (0.0, kz + 66.0)]);
+        let calf = [(74.0, kz - 70.0), (108.0, kz - 76.0), (121.0, kz - 110.0), (123.0, 250.0), (114.0, 175.0), (88.0, 150.0), (72.0, 150.0)];
+        Outlines {
+            front: Outline::new(&front, 4),
+            side: Outline::new(&side, 4),
+            knee: Outline::new(&knee, 4),
+            thigh: Outline::new(&thigh, 4),
+            calf: Outline::new(&calf, 4),
+        }
+    }
 }
 
 /// One pad on the leg.
@@ -495,6 +644,7 @@ pub struct Pad {
     /// Tongue under, flush: the shell's offset taken from the leg alone (a lap joint over the
     /// tongue), not from the leg and tongue blended.
     pub flush: bool,
+    pub o: Arc<Outlines>,
 }
 
 impl Pad {
@@ -503,34 +653,7 @@ impl Pad {
         self.p.liner_side + (self.p.liner_front - self.p.liner_side) * (FRAC_PI_2 * s).cos().powi(2)
     }
 
-    /// What the hard shin parts are offset from: the leg alone when flush (a lap joint over the
-    /// tongue), else what the pad wraps.
-    fn shin_d(&self, q: Point3<f64>) -> f64 {
-        if self.flush { self.leg.eval(q) } else { self.body.eval(q) }
-    }
-
-    /// The knee cap's dome: extra stand-off over the kneecap (its centre ~15 mm above the knee
-    /// joint), falling smoothly to 0 ~55 mm away.
-    fn dome(&self, th: f64, z: f64) -> f64 {
-        let dz = (z - (self.knee_z + 15.0)) / 55.0;
-        let s = th.to_radians() * R_REF / 55.0;
-        self.p.dome_h * bump((dz * dz + s * s).sqrt())
-    }
-
-    /// The knee cap's outside at its edges (the dome is ~0 there): what the knee wings and the
-    /// thigh guard step over.
-    fn knee_cap_out(&self) -> f64 {
-        self.p.ease + self.p.knee_liner + self.p.wall
-    }
-
-    /// The vent slots' centres in a side panel: (theta, z), on the inside (+) side.
-    fn vents(&self) -> Vec<(f64, f64)> {
-        let p = &self.p;
-        let th = 0.5 * (p.front_half + p.side_to);
-        let (z0, z1) = (self.z_bot.at(th) + 35.0, self.shell_top() - 55.0);
-        (0..p.vents).map(|i| (th, z0 + (i as f64 + 0.5) * (z1 - z0) / p.vents as f64)).collect()
-    }
-
+    /// A reference height below the knee (bulk is measured below it).
     pub fn shell_top(&self) -> f64 {
         self.knee_z - self.p.shell_below_knee
     }
@@ -543,70 +666,90 @@ impl Pad {
         (a - d).max(d - b)
     }
 
-    /// The part's own region round the leg and up it (a pseudo-distance, negative inside).
-    fn region(&self, part: Part, q: Point3<f64>) -> f64 {
+    /// (theta degrees, s mm of arc, z) at a point.
+    fn tsz(&self, q: Point3<f64>) -> (f64, f64, f64) {
         let th = self.f.theta(q);
-        let z = q.z;
+        (th, th.to_radians() * R_REF, q.z)
+    }
+
+    /// What the hard shin parts are offset from: the leg alone when flush (a lap joint over the
+    /// tongue), else what the pad wraps.
+    fn shin_d(&self, q: Point3<f64>) -> f64 {
+        if self.flush { self.leg.eval(q) } else { self.body.eval(q) }
+    }
+
+    /// The knee shield's dome: extra stand-off over the kneecap (its centre ~15 mm above the
+    /// knee joint), falling smoothly to 0 ~55 mm away.
+    fn dome(&self, s: f64, z: f64) -> f64 {
+        let dz = (z - (self.knee_z + 15.0)) / 55.0;
+        self.p.dome_h * bump((dz * dz + (s / 55.0).powi(2)).sqrt())
+    }
+
+    /// The side panel's outline at (s, z): its own outline (mirrored), less the front shell's
+    /// inside beyond the overlap.
+    fn side_panel(&self, s: f64, z: f64) -> f64 {
+        self.o.side.eval(s.abs(), z).max(-(self.o.front.eval(s, z) + self.p.side_overlap))
+    }
+
+    /// How far the side panel lifts to stand on the front shell's edge (0..1).
+    fn side_step(&self, s: f64, z: f64) -> f64 {
+        1.0 - smoothstep(-1.0, 5.0, self.o.front.eval(s, z))
+    }
+
+    fn front_outer(&self, s: f64, z: f64, lt: f64) -> f64 {
         let p = &self.p;
-        let arc = |deg: f64| deg.to_radians() * R_REF;
-        let on_side = |medial: bool| arc(if medial { -th } else { th });
-        let kz = self.knee_z;
+        let crest = p.crest_h * bump(s / (0.5 * p.crest_w));
+        let (z0, z1) = (self.z_front_bottom(), self.o.front.z_max);
+        let groove: f64 = p.grooves_at.iter().map(|f| p.groove_d * bump((z - (z0 + f * (z1 - z0))) / (0.5 * p.groove_w))).sum();
+        p.ease + lt + p.wall + crest - groove
+    }
+
+    fn side_inner(&self, s: f64, z: f64, lt: f64) -> f64 {
+        self.p.ease + lt + self.side_step(s, z) * (self.p.wall + 0.4)
+    }
+
+    /// The vent slots' centres in the medial side panel (s, z); mirrored for the lateral one.
+    fn vents(&self) -> Vec<(f64, f64)> {
+        let p = &self.p;
+        let s = 0.5 * (52.0 + 84.0);
+        let th = s / R_REF * 180.0 / std::f64::consts::PI;
+        let (z0, z1) = (self.z_bot.at(th) + 35.0, self.knee_z - 95.0);
+        (0..p.vents).map(|i| (s, z0 + (i as f64 + 0.5) * (z1 - z0) / p.vents as f64)).collect()
+    }
+
+    /// The part's own region on the leg laid flat (a pseudo-distance, negative inside).
+    fn region(&self, part: Part, q: Point3<f64>) -> f64 {
+        let (th, s, z) = self.tsz(q);
+        let p = &self.p;
+        let o = &self.o;
+        let bot = self.z_bot.at(th) - z;
+        let on_side = |medial: bool| if medial { -s } else { s };
         match part {
-            Part::ShinShell => {
-                let e_bot = self.z_bot.at(th) - z;
-                let e_top = z - self.shell_top();
-                let e_side = arc(th.abs() - p.front_half);
-                smax(smax(e_bot, e_top, 5.0), e_side, 8.0)
-            }
-            Part::ShinLiner => {
-                let e_bot = self.z_bot.at(th) - z;
-                let e_top = z - self.shell_top();
-                let e_side = arc(th.abs() - p.side_to);
-                smax(smax(e_bot, e_top, 5.0), e_side, 8.0)
-            }
+            Part::ShinShell => smax(o.front.eval(s, z), bot, 3.0),
             Part::SidePanel(medial) => {
-                let e_in = arc(p.front_half - p.side_overlap - th.abs());
-                let e_out = arc(th.abs() - p.side_to);
-                let e_bot = self.z_bot.at(th) - z;
-                let e_top = z - (self.shell_top() - 10.0);
-                let mut e = smax(smax(smax(e_in, e_out, 6.0), smax(e_bot, e_top, 5.0), 8.0), on_side(medial), 1.0);
-                for (tc, zc) in self.vents() {
-                    let slot = rounded_rect(arc(th.abs() - tc), z - zc, 0.5 * p.vent_w, 0.5 * p.vent_h, 0.5 * p.vent_w);
+                let mut e = smax(smax(self.side_panel(s, z), bot, 3.0), on_side(medial), 1.0);
+                for (sc, zc) in self.vents() {
+                    let slot = rounded_rect(s.abs() - sc, z - zc, 0.5 * p.vent_w, 0.5 * p.vent_h, 0.5 * p.vent_w);
                     e = e.max(-slot);
                 }
                 e
             }
-            Part::KneeCap | Part::KneeLiner => {
-                let z0 = if part == Part::KneeLiner { self.shell_top() } else { kz - p.knee_below };
-                let e = smax(z0 - z, z - (kz + p.knee_above), 10.0);
-                smax(e, arc(th.abs() - p.knee_half), 15.0)
+            Part::ShinLiner => smax(o.front.eval(s, z).min(o.side.eval(s.abs(), z)) - p.liner_border, bot, 3.0),
+            Part::KneeCap => o.knee.eval(s, z),
+            Part::KneeLiner => {
+                let shin = o.front.eval(s, z).min(o.side.eval(s.abs(), z)) - p.liner_border;
+                (o.knee.eval(s, z) + 2.0).max(0.5 - shin).max(0.5 - o.thigh.eval(s, z))
             }
-            Part::KneeWing(medial) | Part::KneeWingFoam(medial) => {
-                let from = if part == Part::KneeWing(medial) { p.knee_half - 6.0 } else { p.knee_half };
-                let e_th = smax(arc(from - th.abs()), arc(th.abs() - p.kwing_to), 6.0);
-                let e_z = smax(self.shell_top() - z, z - (kz + p.kwing_above), 8.0);
-                smax(smax(e_th, e_z, 12.0), on_side(medial), 1.0)
-            }
-            Part::ThighGuard => {
-                let e_bot = kz + p.thigh_from + p.thigh_v * (th.abs() / p.thigh_half).min(1.0) - z;
-                let e_top = z - (kz + p.thigh_to);
-                smax(smax(e_bot, e_top, 6.0), arc(th.abs() - p.thigh_half), 12.0)
-            }
-            Part::ThighFoam => {
-                let e = smax(kz + p.knee_above + 3.0 - z, z - (kz + p.thigh_to), 6.0);
-                smax(e, arc(th.abs() - p.thigh_half), 12.0)
-            }
+            Part::ThighGuard => o.thigh.eval(s, z),
+            Part::ThighFoam => o.thigh.eval(s, z) + 2.0,
             Part::WingFoam(medial) | Part::Wing(medial) => {
-                let e_in = arc(p.side_to - th.abs());
-                let e_out = arc(th.abs() - p.wing_to);
-                let e_bot = self.z_bot.at(th) + 15.0 - z;
-                let e_top = z - (kz - p.wing_below_knee);
-                smax(smax(smax(e_in, e_out, 6.0), smax(e_bot, e_top, 6.0), 8.0), on_side(medial), 1.0)
+                let e = smax(o.calf.eval(s.abs(), z), 1.0 - o.side.eval(s.abs(), z), 2.0);
+                smax(smax(e, bot + 15.0, 4.0), on_side(medial), 1.0)
             }
             Part::Strap(i) => {
                 let zf = self.z_front_bottom();
                 let zs = zf + p.strap_at[i] * (self.knee_z - zf);
-                ((z - zs).abs() - 0.5 * p.strap_w).max(arc(p.strap_from - th.abs()))
+                ((z - zs).abs() - 0.5 * p.strap_w).max((p.strap_from - th.abs()).to_radians() * R_REF)
             }
         }
     }
@@ -618,7 +761,7 @@ impl Pad {
             return r;
         }
         let p = &self.p;
-        let th = self.f.theta(q);
+        let (th, s, z) = self.tsz(q);
         let lt = self.liner_at(th);
         let band = match part {
             // Flush: the shell keeps its offset from the leg itself; the liner fills from what
@@ -626,36 +769,26 @@ impl Pad {
             // thinner and the outside stays flush.
             Part::ShinLiner if self.flush => (p.ease - self.body.eval(q)).max(self.leg.eval(q) - (p.ease + lt)),
             Part::ShinLiner => Self::band(self.body.eval(q), p.ease, p.ease + lt),
-            // The front shell's outside: the ridge down the shin, less the grooves across.
-            Part::ShinShell => {
-                let crest = p.crest_h * bump(th.to_radians() * R_REF / (0.5 * p.crest_w));
-                let (z0, z1) = (self.z_front_bottom(), self.shell_top());
-                let groove: f64 = p.grooves_at.iter().map(|f| p.groove_d * bump((q.z - (z0 + f * (z1 - z0))) / (0.5 * p.groove_w))).sum();
-                Self::band(self.shin_d(q), p.ease + lt, p.ease + lt + p.wall + crest - groove)
-            }
-            // Over the front shell's edge the side panel stands on it, then steps down onto the
-            // liner.
+            Part::ShinShell => Self::band(self.shin_d(q), p.ease + lt, self.front_outer(s, z, lt)),
             Part::SidePanel(_) => {
-                let step = 1.0 - smoothstep(p.front_half + 1.0, p.front_half + 7.0, th.abs());
-                let inner = p.ease + lt + step * (p.wall + 0.4);
+                let inner = self.side_inner(s, z, lt);
                 Self::band(self.shin_d(q), inner, inner + p.wall)
             }
-            Part::KneeLiner => Self::band(self.body.eval(q), p.ease, p.ease + p.knee_liner + self.dome(th, q.z)),
+            Part::KneeLiner => Self::band(self.body.eval(q), p.ease, p.ease + p.knee_liner + self.dome(s, z)),
+            // The shield lifts over whatever it laps: the front shell's top, the side panels'
+            // tops, the thigh guard's bottom.
             Part::KneeCap => {
-                let inner = p.ease + p.knee_liner + self.dome(th, q.z);
-                Self::band(self.body.eval(q), inner, inner + p.wall)
+                let base = p.ease + p.knee_liner + self.dome(s, z);
+                let w = |d: f64| 1.0 - smoothstep(-1.0, 5.0, d);
+                let lift_f = w(o_eval(&self.o.front, s, z)) * (self.front_outer(s, z, lt) + 0.4 - base).max(0.0);
+                let lift_s = w(self.side_panel(s, z)) * (self.side_inner(s, z, lt) + p.wall + 0.4 - base).max(0.0);
+                let lift_t = w(o_eval(&self.o.thigh, s, z)) * (p.ease + p.thigh_foam + p.wall + 0.4 - base).max(0.0);
+                let inner = base + lift_f.max(lift_s).max(lift_t);
+                let vz = self.knee_z - 8.0 + 0.55 * s.abs();
+                let chevron = p.chevron_h * bump((z - vz) / 3.5) * (1.0 - smoothstep(40.0, 55.0, s.abs()));
+                Self::band(self.body.eval(q), inner, inner + p.wall + chevron)
             }
-            Part::KneeWing(_) => {
-                let step = 1.0 - smoothstep(p.knee_half + 1.0, p.knee_half + 7.0, th.abs());
-                let inner = p.ease + p.kwing_foam + step * (self.knee_cap_out() + 0.4 - p.ease - p.kwing_foam);
-                Self::band(self.body.eval(q), inner, inner + p.wall)
-            }
-            Part::KneeWingFoam(_) => Self::band(self.body.eval(q), p.ease, p.ease + p.kwing_foam),
-            Part::ThighGuard => {
-                let step = 1.0 - smoothstep(self.knee_z + p.knee_above + 1.0, self.knee_z + p.knee_above + 7.0, q.z);
-                let inner = p.ease + p.thigh_foam + step * (self.knee_cap_out() + 0.4 - p.ease - p.thigh_foam);
-                Self::band(self.body.eval(q), inner, inner + p.wall)
-            }
+            Part::ThighGuard => Self::band(self.body.eval(q), p.ease + p.thigh_foam, p.ease + p.thigh_foam + p.wall),
             Part::ThighFoam => Self::band(self.body.eval(q), p.ease, p.ease + p.thigh_foam),
             Part::WingFoam(_) => Self::band(self.body.eval(q), p.ease, p.ease + p.wing_foam),
             Part::Wing(_) => Self::band(self.body.eval(q), p.ease + p.wing_foam, p.ease + p.wing_foam + p.wing_wall),
@@ -667,15 +800,15 @@ impl Pad {
     pub fn bounds(&self, part: Part) -> Aabb {
         let m = 25.0;
         let p = &self.p;
+        let o = &self.o;
         let zb = self.z_bot.0.iter().cloned().fold(f64::MAX, f64::min);
-        let kz = self.knee_z;
         let (z0, z1) = match part {
-            Part::ShinShell | Part::ShinLiner | Part::SidePanel(_) => (zb - 2.0, self.shell_top() + 2.0),
-            Part::KneeCap | Part::KneeLiner => (kz - p.knee_below - 2.0, kz + p.knee_above + 2.0),
-            Part::KneeWing(_) | Part::KneeWingFoam(_) => (self.shell_top() - 2.0, kz + p.kwing_above + 2.0),
-            Part::ThighGuard => (kz + p.thigh_from - 2.0, kz + p.thigh_to + 2.0),
-            Part::ThighFoam => (kz + p.knee_above, kz + p.thigh_to + 2.0),
-            Part::WingFoam(_) | Part::Wing(_) => (zb + 13.0, kz - p.wing_below_knee + 2.0),
+            Part::ShinShell => (zb - 2.0, o.front.z_max + 2.0),
+            Part::SidePanel(_) => (zb - 2.0, o.side.z_max + 2.0),
+            Part::ShinLiner => (zb - 2.0, o.front.z_max.max(o.side.z_max) + p.liner_border + 2.0),
+            Part::KneeCap | Part::KneeLiner => (o.knee.z_min - 2.0, o.knee.z_max + 2.0),
+            Part::ThighGuard | Part::ThighFoam => (o.thigh.z_min - 2.0, o.thigh.z_max + 2.0),
+            Part::WingFoam(_) | Part::Wing(_) => (zb + 13.0, o.calf.z_max + 2.0),
             Part::Strap(i) => {
                 let zf = self.z_front_bottom();
                 let zs = zf + p.strap_at[i] * (self.knee_z - zf);
@@ -684,17 +817,13 @@ impl Pad {
         };
         let (mut lo, mut hi) = (self.lo - Vector3::repeat(m), self.hi + Vector3::repeat(m));
         match part {
-            Part::WingFoam(true) | Part::Wing(true) | Part::SidePanel(true) | Part::KneeWing(true) | Part::KneeWingFoam(true) => {
-                lo.y = self.f.a.y - 10.0
-            }
-            Part::WingFoam(false) | Part::Wing(false) | Part::SidePanel(false) | Part::KneeWing(false) | Part::KneeWingFoam(false) => {
-                hi.y = self.f.a.y + 10.0
-            }
+            Part::WingFoam(true) | Part::Wing(true) | Part::SidePanel(true) => lo.y = self.f.a.y - 10.0,
+            Part::WingFoam(false) | Part::Wing(false) | Part::SidePanel(false) => hi.y = self.f.a.y + 10.0,
             _ => {}
         }
-        // The calf wraps and straps are behind the side panels (|theta| >= 105): nothing of them
-        // is more than ~20 mm in front of the axis. (Their thin skin at fine cells in the whole
-        // leg's box asked for 8.9 GB on the stock pad, 2026-11-12.)
+        // The calf wraps and straps are behind the side panels: nothing of them is more than
+        // ~25 mm in front of the axis. (A thin skin at fine cells in the whole leg's box asked for
+        // 8.9 GB on the stock pad, 2026-11-12.)
         if matches!(part, Part::WingFoam(_) | Part::Wing(_) | Part::Strap(_)) {
             hi.x = hi.x.min(self.f.axis_at(z1).x.max(self.f.axis_at(z0).x) + 25.0);
         }
@@ -705,6 +834,10 @@ impl Pad {
         let me = self.clone();
         Solid::user_fn(move |q| me.field(part, q), self.bounds(part))
     }
+}
+
+fn o_eval(o: &Outline, s: f64, z: f64) -> f64 {
+    o.eval(s, z)
 }
 
 /// One pad's numbers.
@@ -835,6 +968,20 @@ pub fn build_parts(pad: &Pad) -> Vec<(Part, IndexedMesh, f64)> {
     out
 }
 
+/// Draw to `path`; if that file can't be written (Windows holds a picture open in a viewer:
+/// "a file with a user-mapped section open", 2026-11-12), draw to `<name>-new.png` instead and
+/// say so, rather than stopping the run.
+fn draw(layers: &[Layer], views: &[View], px_per_mm: f64, path: &Path, style: Style) -> Result<(), String> {
+    match render_styled(layers, views, px_per_mm, path, style) {
+        Ok(_) => Ok(()),
+        Err(err) => {
+            let alt = path.with_file_name(format!("{}-new.png", path.file_stem().and_then(|s| s.to_str()).unwrap_or("render")));
+            println!("  {} couldn't be written ({err}; open in a viewer?): drawing {} instead", path.display(), alt.display());
+            render_styled(layers, views, px_per_mm, &alt, style).map(|_| ()).map_err(|e| format!("{}: {e}", alt.display()))
+        }
+    }
+}
+
 fn lean_mesh(m: &IndexedMesh, zp: f64, deg: f64) -> IndexedMesh {
     let mut out = m.clone();
     for v in &mut out.vertices {
@@ -963,6 +1110,7 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
         lo,
         hi,
         flush: false,
+        o: Arc::new(Outlines::new(knee.z)),
     };
     // Tongue under, flush: the same, but the shell's offset from the leg alone, so the outside
     // stays slim over the tongue; where the tongue reaches past the shell's inside, the run
@@ -1007,13 +1155,20 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
             thigh
         }
     };
-    let big = scaled_leg(&leaned, &f, &p95);
-    let stock = stock_pad(&format!("stock {stock_in:.0}\""), &big, &leaned, &under, mid_patella - stock_in * 25.4)?;
-    let small = stock_pad(&format!("undersized {:.0}\"", stock_in - 1.0), &leaned.vertices, &leaned, &under, mid_patella - (stock_in - 1.0) * 25.4)?;
+    // `PAD_QUICK=1`: the fitted pad alone (no comparison pads, cuts or tongue-over), for
+    // iterating on its look (~10 min).
+    let quick = std::env::var_os("PAD_QUICK").is_some();
+    let cmp = if quick {
+        None
+    } else {
+        let big = scaled_leg(&leaned, &f, &p95);
+        let stock = stock_pad(&format!("stock {stock_in:.0}\""), &big, &leaned, &under, mid_patella - stock_in * 25.4)?;
+        let small = stock_pad(&format!("undersized {:.0}\"", stock_in - 1.0), &leaned.vertices, &leaned, &under, mid_patella - (stock_in - 1.0) * 25.4)?;
+        Some((stock, small))
+    };
 
     // Each pad in turn: build, measure, draw, save, then let its meshes go (one pad's parts in
     // memory at a time).
-    let e = |e: std::io::Error| e.to_string();
     let pretty = Style::pretty();
     let skin = [0.85, 0.70, 0.60];
     let leg_up = clip_mesh_against_plane(&leaned, Point3::new(0.0, 0.0, 100.0), Vector3::z());
@@ -1031,19 +1186,66 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
         View::looking(Vector3::new(0.0, -1.0, 0.0), Vector3::z()),
     ];
     let mut reports = Vec::new();
-    for (pad, file) in [&flush, &over, &stock, &small].into_iter().zip(["pad_flush.png", "pad_over.png", "pad_stock.png", "pad_undersized.png"]) {
+    let mut runs: Vec<(&Pad, &str)> = vec![(&flush, "pad_flush.png")];
+    if let Some((stock, small)) = &cmp {
+        runs.extend([(&over, "pad_over.png"), (stock, "pad_stock.png"), (small, "pad_undersized.png")]);
+    }
+    for (pad, file) in runs {
         let t = Instant::now();
         let parts = build_parts(pad);
         let mut r = measure(pad, parts, &leaned, &top, &shell_f, &tongue_f);
         println!("{}: {:.0} g, {:.1} s", r.name, r.grams, t.elapsed().as_secs_f64());
+        if std::ptr::eq(pad, &flush) {
+            // Views to mark up (Jon draws on screenshots): front, outside, back, inside, with a
+            // faint grid on the leg and the pad: lines every 50 mm up (darker every 100) and
+            // every 30 degrees round (the front line red, the sides at +-90 blue).
+            let grid = |m: &IndexedMesh, c: [f64; 3]| -> Vec<[f64; 3]> {
+                m.vertices
+                    .iter()
+                    .map(|v| {
+                        let th = f.theta(*v);
+                        let zr = v.z.rem_euclid(50.0).min(50.0 - v.z.rem_euclid(50.0));
+                        let tr = th.rem_euclid(30.0).min(30.0 - th.rem_euclid(30.0)).to_radians() * R_REF;
+                        let hundred = v.z.rem_euclid(100.0).min(100.0 - v.z.rem_euclid(100.0)) < 0.8;
+                        if tr < 0.7 && th.abs() < 1.0 {
+                            [0.80, 0.15, 0.12]
+                        } else if tr < 0.7 && (th.abs() - 90.0).abs() < 1.0 {
+                            [0.15, 0.30, 0.80]
+                        } else if zr < 0.6 || tr < 0.6 {
+                            let k = if hundred { 0.45 } else { 0.70 };
+                            [c[0] * k, c[1] * k, c[2] * k]
+                        } else {
+                            c
+                        }
+                    })
+                    .collect()
+            };
+            let leg_c = grid(&leg_up, skin);
+            let part_c: Vec<Vec<[f64; 3]>> = r.parts.iter().map(|(pt, m, _)| grid(m, pt.color())).collect();
+            let mut ls = vec![Layer { mesh: &leg_up, color: skin, vertex_colors: Some(&leg_c), spec: 0.0 }];
+            ls.extend(boot_layers.iter().copied());
+            for ((pt, m, _), c) in r.parts.iter().zip(&part_c) {
+                if !matches!(pt, Part::WingFoam(_) | Part::KneeLiner | Part::ThighFoam) {
+                    ls.push(Layer { mesh: m, color: pt.color(), vertex_colors: Some(c), spec: if pt.hard() { 0.25 } else { 0.0 } });
+                }
+            }
+            let mv = [
+                View::looking(-Vector3::x(), Vector3::z()),
+                View::looking(Vector3::y(), Vector3::z()),
+                View::looking(Vector3::x(), Vector3::z()),
+                View::looking(-Vector3::y(), Vector3::z()),
+            ];
+            draw(&ls, &mv, 1.2, &docs.join("pad_views.png"), pretty)?;
+        }
         let mut ls = vec![Layer::solid(&leg_up, skin)];
         ls.extend(boot_layers.iter().copied());
         for (part, m, _) in &r.parts {
-            if !part.foam() {
+            // The shin liner shows as a border round the shells; the other foams stay hidden.
+            if !matches!(part, Part::WingFoam(_) | Part::KneeLiner | Part::ThighFoam) {
                 ls.push(Layer::solid(m, part.color()).with_spec(if part.hard() { 0.3 } else { 0.0 }));
             }
         }
-        render_styled(&ls, &views, 1.2, &docs.join(file), pretty).map_err(e)?;
+        draw(&ls, &views, 1.2, &docs.join(file), pretty)?;
         let tag = r.name.replace([' ', ',', '"'], "_").replace("__", "_");
         for (part, m, _) in &r.parts {
             let n = format!("{tag}-{}.stl", part.name().replace([' ', ','], "_").replace("__", "_"));
@@ -1055,27 +1257,25 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
 
     // The summary.
     let mut lines = vec![
-        format!("shin pads, round 2 (track D2, the modern pad), on {} joined to the stand-in leg, leaned {lean} deg like the boot", scan_path.display()),
+        format!("shin pads, round 3 (track D2: curved outlines, one knee shield), on {} joined to the stand-in leg, leaned {lean} deg like the boot", scan_path.display()),
         format!(
-            "layers (placeholders until D3): sock {} mm; liner {} mm at the front to {} at the side panels' back edges; hard parts {} mm PA 12: front shell to {} deg each side with a {} mm ridge down the shin and {} mm grooves across, side panels to {} deg stepped over it with {} vent slots each; knee cap over {} mm of liner, domed {} mm more over the kneecap; knee wings to {} deg on {} mm foam; thigh guard on {} mm foam, its bottom a {} mm V; calf wraps {} mm foam + {} mm TPU skin to {} deg; straps {} x {} mm",
+            "layers (placeholders until D3): sock {} mm; liner {} mm at the front to {} at {} deg round, showing {} mm past the shells; hard parts {} mm PA 12: a tapered front shell with a {} mm ridge down the shin and {} mm grooves across, side panels following its edge and stepped over it ({} mm under), {} vent slots each; one knee shield (ears over the sides of the knee, a V bottom over the front shell) over {} mm of liner, domed {} mm more over the kneecap, a {} mm V ridge across it; thigh guard under its top on {} mm foam; calf wraps {} mm foam + {} mm TPU skin; straps {} x {} mm",
             p.ease,
             p.liner_front,
             p.liner_side,
+            p.side_to,
+            p.liner_border,
             p.wall,
-            p.front_half,
             p.crest_h,
             p.groove_d,
-            p.side_to,
+            p.side_overlap,
             p.vents,
             p.knee_liner,
             p.dome_h,
-            p.kwing_to,
-            p.kwing_foam,
+            p.chevron_h,
             p.thigh_foam,
-            p.thigh_v,
             p.wing_foam,
             p.wing_wall,
-            p.wing_to,
             p.strap_w,
             p.strap_t
         ),
@@ -1112,13 +1312,17 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
         println!("{l}");
     }
     std::fs::write(docs.join("summary.txt"), lines.join("\n") + "\n").map_err(|e| e.to_string())?;
+    let Some((stock, small)) = &cmp else {
+        println!("quick run (PAD_QUICK): the fitted pad only; drew docs/pad/pad_flush.png and pad_views.png ({:.0} s in all)", t0.elapsed().as_secs_f64());
+        return Ok(());
+    };
 
     // Sections across the shin at mid-height, the three pads side by side (fitted, stock,
     // undersized), looking down: the bulk.
     let z_cut = 0.5 * (flush.z_front_bottom() + flush.knee_z);
     let below = Solid::plane(Vector3::z(), z_cut);
     let mut sec_meshes: Vec<(IndexedMesh, [f64; 3])> = Vec::new();
-    for (k, pad) in [&flush, &stock, &small].iter().enumerate() {
+    for (k, pad) in [&flush, stock, small].iter().enumerate() {
         let dy = -170.0 * k as f64;
         let mut parts: Vec<(Solid, Aabb, [f64; 3])> = Vec::new();
         let lf = pad.leg.clone();
@@ -1148,7 +1352,7 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
         }
     }
     let sl: Vec<Layer> = sec_meshes.iter().filter(|(m, _)| !m.faces.is_empty()).map(|(m, c)| Layer::solid(m, *c)).collect();
-    render_styled(&sl, &[View::looking(-Vector3::z(), Vector3::x())], 3.0, &docs.join("pad_sections.png"), pretty).map_err(e)?;
+    draw(&sl, &[View::looking(-Vector3::z(), Vector3::x())], 3.0, &docs.join("pad_sections.png"), pretty)?;
 
     // Lengthwise, through the shin's front line, seen from the outside: how the pad's bottom
     // meets the tongue: tongue under, under flush, and over, left to right (200 mm apart).
@@ -1187,7 +1391,7 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
         }
     }
     let ll: Vec<Layer> = len_meshes.iter().filter(|(m, _)| !m.faces.is_empty()).map(|(m, c)| Layer::solid(m, *c)).collect();
-    render_styled(&ll, &[View::looking(Vector3::y(), Vector3::z())], 1.6, &docs.join("pad_lengthwise.png"), pretty).map_err(e)?;
+    draw(&ll, &[View::looking(Vector3::y(), Vector3::z())], 1.6, &docs.join("pad_lengthwise.png"), pretty)?;
     println!("drew docs/pad/*.png; wrote STLs to {} ({:.0} s in all)", out.display(), t0.elapsed().as_secs_f64());
     Ok(())
 }
