@@ -1,0 +1,93 @@
+shin pads, round 2 (track D2, the modern pad), on scans/stand-in/022_fBW_R.ply joined to the stand-in leg, leaned 6 deg like the boot
+layers (placeholders until D3): sock 1 mm; liner 8 mm at the front to 5 at the side panels' back edges; hard parts 2 mm PA 12: front shell to 60 deg each side with a 2.5 mm ridge down the shin and 0.8 mm grooves across, side panels to 105 deg stepped over it with 3 vent slots each; knee cap over 9 mm of liner, domed 5 mm more over the kneecap; knee wings to 115 deg on 6 mm foam; thigh guard on 6 mm foam, its bottom a 18 mm V; calf wraps 6 mm foam + 1 mm TPU skin to 150 deg; straps 38 x 2 mm
+boot's top edge: front 139 (throat bridged; the tongue reaches 186), sides 119 / 119, back 135 mm; fitted pad's bottom 10 mm above it all round
+retail sizing: knee centre 486 mm up to the boot's top 139: 13.7", so a 14" pad; undersized one size down
+
+fitted, tongue under, flush: 329 g
+  front shell              62.4 g  (PA 12 (MJF))
+  shin liner               47.5 g  (liner foam (assumed))
+  knee cap                 34.0 g  (PA 12 (MJF))
+  knee liner               20.7 g  (liner foam (assumed))
+  thigh guard              11.4 g  (PA 12 (MJF))
+  thigh foam                3.1 g  (liner foam (assumed))
+  side panel, inside       31.9 g  (PA 12 (MJF))
+  knee wing, inside         9.7 g  (PA 12 (MJF))
+  knee wing foam, inside    3.7 g  (liner foam (assumed))
+  calf foam, inside        13.3 g  (liner foam (assumed))
+  calf skin, inside        18.6 g  (TPU (assumed))
+  side panel, outside      25.7 g  (PA 12 (MJF))
+  knee wing, outside        5.6 g  (PA 12 (MJF))
+  knee wing foam, outside    2.0 g  (liner foam (assumed))
+  calf foam, outside       12.0 g  (liner foam (assumed))
+  calf skin, outside       16.9 g  (TPU (assumed))
+  strap 1                   4.6 g  (elastic strap (assumed))
+  strap 2                   5.9 g  (elastic strap (assumed))
+  bulk at mid-shin (shell's outside to skin): +0 deg 13.6 mm, +45 deg 10.4 mm, -45 deg 10.0 mm, +90 deg 9.4 mm, -90 deg 9.0 mm; most 13.6 mm at +0 deg, z 309
+  skin covered: hard 618 cm2, soft (wings) 267 cm2; bare between the boot and the pad 5 cm2
+  into the boot: shell 0.0 mm, tongue 2.9 mm
+fitted, tongue over: 328 g
+  front shell              61.3 g  (PA 12 (MJF))
+  shin liner               47.2 g  (liner foam (assumed))
+  knee cap                 34.0 g  (PA 12 (MJF))
+  knee liner               20.7 g  (liner foam (assumed))
+  thigh guard              11.4 g  (PA 12 (MJF))
+  thigh foam                3.1 g  (liner foam (assumed))
+  side panel, inside       31.9 g  (PA 12 (MJF))
+  knee wing, inside         9.7 g  (PA 12 (MJF))
+  knee wing foam, inside    3.7 g  (liner foam (assumed))
+  calf foam, inside        13.3 g  (liner foam (assumed))
+  calf skin, inside        18.6 g  (TPU (assumed))
+  side panel, outside      25.7 g  (PA 12 (MJF))
+  knee wing, outside        5.6 g  (PA 12 (MJF))
+  knee wing foam, outside    2.0 g  (liner foam (assumed))
+  calf foam, outside       12.0 g  (liner foam (assumed))
+  calf skin, outside       16.9 g  (TPU (assumed))
+  strap 1                   4.6 g  (elastic strap (assumed))
+  strap 2                   5.9 g  (elastic strap (assumed))
+  bulk at mid-shin (shell's outside to skin): +0 deg 13.4 mm, +45 deg 10.4 mm, -45 deg 10.0 mm, +90 deg 9.4 mm, -90 deg 9.0 mm; most 13.8 mm at +0 deg, z 176
+  skin covered: hard 615 cm2, soft (wings) 267 cm2; bare between the boot and the pad 5 cm2
+  into the boot: shell 0.0 mm, tongue 2.8 mm
+stock 14": 403 g
+  front shell              82.2 g  (PA 12 (MJF))
+  shin liner               59.8 g  (liner foam (assumed))
+  knee cap                 37.7 g  (PA 12 (MJF))
+  knee liner               22.7 g  (liner foam (assumed))
+  thigh guard              19.0 g  (PA 12 (MJF))
+  thigh foam                6.1 g  (liner foam (assumed))
+  side panel, inside       36.9 g  (PA 12 (MJF))
+  knee wing, inside        11.7 g  (PA 12 (MJF))
+  knee wing foam, inside    4.5 g  (liner foam (assumed))
+  calf foam, inside        16.2 g  (liner foam (assumed))
+  calf skin, inside        22.5 g  (TPU (assumed))
+  side panel, outside      28.4 g  (PA 12 (MJF))
+  knee wing, outside        7.8 g  (PA 12 (MJF))
+  knee wing foam, outside    2.9 g  (liner foam (assumed))
+  calf foam, outside       14.6 g  (liner foam (assumed))
+  calf skin, outside       20.2 g  (TPU (assumed))
+  strap 1                   4.4 g  (elastic strap (assumed))
+  strap 2                   5.9 g  (elastic strap (assumed))
+  bulk at mid-shin (shell's outside to skin): +0 deg 27.8 mm, +45 deg 25.4 mm, -45 deg 9.8 mm, +90 deg 12.4 mm, -90 deg 11.4 mm; most 31.8 mm at +60 deg, z 410
+  skin covered: hard 629 cm2, soft (wings) 270 cm2; bare between the boot and the pad 3 cm2
+  into the boot: shell 2.1 mm, tongue 2.9 mm
+undersized 13": 352 g
+  front shell              70.8 g  (PA 12 (MJF))
+  shin liner               51.4 g  (liner foam (assumed))
+  knee cap                 35.8 g  (PA 12 (MJF))
+  knee liner               21.5 g  (liner foam (assumed))
+  thigh guard              17.8 g  (PA 12 (MJF))
+  thigh foam                5.4 g  (liner foam (assumed))
+  side panel, inside       31.4 g  (PA 12 (MJF))
+  knee wing, inside        10.5 g  (PA 12 (MJF))
+  knee wing foam, inside    4.0 g  (liner foam (assumed))
+  calf foam, inside        12.9 g  (liner foam (assumed))
+  calf skin, inside        18.0 g  (TPU (assumed))
+  side panel, outside      24.7 g  (PA 12 (MJF))
+  knee wing, outside        7.1 g  (PA 12 (MJF))
+  knee wing foam, outside    2.6 g  (liner foam (assumed))
+  calf foam, outside       11.6 g  (liner foam (assumed))
+  calf skin, outside       16.2 g  (TPU (assumed))
+  strap 1                   4.6 g  (elastic strap (assumed))
+  strap 2                   5.9 g  (elastic strap (assumed))
+  bulk at mid-shin (shell's outside to skin): +0 deg 23.4 mm, +45 deg 20.2 mm, -45 deg 8.8 mm, +90 deg 8.8 mm, -90 deg 8.4 mm; most 26.4 mm at +60 deg, z 416
+  skin covered: hard 601 cm2, soft (wings) 253 cm2; bare between the boot and the pad 17 cm2
+  into the boot: shell 0.0 mm, tongue 2.9 mm

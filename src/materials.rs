@@ -59,6 +59,12 @@ pub const LACE: Material = Material {
 };
 
 /// Titanium Ti-6Al-4V, for bolts.
+pub const STRAP: Material = Material {
+    name: "elastic strap (assumed)",
+    density: 800.0,
+    source: "assumed 0.8 g/cm3 for elastic webbing with hook-and-loop (like the lace); weigh a real strap",
+};
+
 pub const TI_6AL_4V: Material = Material {
     name: "Ti-6Al-4V",
     density: 4430.0,

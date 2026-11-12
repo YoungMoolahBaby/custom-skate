@@ -709,7 +709,9 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
     if shell_p.exists() {
         let load = |n: &str| load_mesh(boot_dir.join(n)).map_err(|e| format!("{n}: {e}"));
         let shell = load("shell.stl")?;
-        let tongue = load("tongue.stl")?;
+        // The tongue's outside is its plate (`tongue.stl` in out/boot is a stale file from an
+        // older boot that the current code no longer writes).
+        let tongue = load("tongue_plate.stl")?;
         let liner = load("liner.stl")?;
         let lm = crate::hockey_boot::landmarks(&leg.foot, leg.scan_top());
         let zp = 0.5 * (lm.medial.z + lm.lateral.z);

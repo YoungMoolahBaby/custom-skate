@@ -61,6 +61,12 @@ type (bug, docs, API, perf, setup, works), date, file:line under
   clears that easily, so the minimum lands far along the flat direction. And no collapse is
   checked for flipping triangles. Instead: `hockey_boot::cluster_decimate` on the uniform mesh
   (seconds, every vertex snapped back onto the part's field).
+- **perf, memory** (2026-11-12, the shin pad): the uniform mesher (`Solid::mesh`) holds a grid
+  of the whole box while it meshes. Sixteen pad parts meshed at once in threads, one a 1 mm skin
+  at 0.35 mm cells over the leg's whole box, asked for 8.9 GB and failed ("memory allocation of
+  8858370064 bytes failed"). Instead: tight boxes per part, a few parts at a time
+  (`PAD_THREADS`), each pad's meshes freed once drawn and saved. A narrow-band or sparse mesher
+  would let thin parts be meshed finely without the box's whole volume.
 - **works** (2026-11-11, the boot): ten parts of a hockey boot as layered offsets of one scan
   field (`user_fn`s sharing an `Arc`), plus primitives (grommets as cylinders, laces as a
   `pipe`), meshed in parallel threads (the uniform mesher; weights converge, shell +0.0% from
@@ -78,6 +84,8 @@ type (bug, docs, API, perf, setup, works), date, file:line under
 
 ## cf-geometry
 
+- **works** (2026-11-12, the shin pad): `convex_hull` on 90-100k points of a leg (the pad's
+  modelled stock shells) gives clean hulls of 12-15k faces, closed, ready for mesh-sdf.
 - **works** (2026-11-10): `convex_hull` (convex_hull.rs:167, Quickhull) takes 10,074 forefoot
   points to a 1,287-vertex, 2,570-face hull instantly; it makes the toe box of a last.
 
@@ -100,7 +108,21 @@ type (bug, docs, API, perf, setup, works), date, file:line under
   TriMeshDistance, sign: PseudoNormalSign::from_distance(..) }` (oracle.rs:68, sdf.rs:495), on
   MakeHuman's closed 12.8k-triangle leg, gives a clean surface, but meshing the joined leg
   (~0.35 x 0.2 x 0.64 m at 1.0 mm cells) took **306 s against 29 s** with the grid. `leg.rs`
-  builds it once and saves it.
+  now uses the exact field within 4 mm of the skin and a 2 mm grid beyond: 44 s, no terraces.
+- **bug or docs** (2026-11-12, the shin pad): `PseudoNormalSign` (sdf.rs, the `Signed` pair with
+  `TriMeshDistance`) on the boot's shell (a closed 755k-triangle mesh from cf-design's uniform
+  mesher, welded) called points inside it that weren't: a pad part beside the shell's thin edges
+  read as 30.4 mm "into" a 2.5 mm wall. `ParitySign::new` (parity.rs:68) on the same mesh gives
+  0.0 mm, as the geometry says. Cause not found (the crate's docs warn of cap fans and
+  high-valence vertices, neither of which this mesh should have). Inside tests near thin
+  walls: parity.
+- **works** (2026-11-12, the shin pad): the flood-filled sign of `CachedGridSdf::build` counts
+  an enclosed void as inside, which is right for the boot's tongue (a TPU skin round a lattice
+  core): an exact field with the pseudo-normal sign would have put pad material in the
+  tongue's core.
+- **perf** (2026-11-12, the shin pad): grids are most of the pad's ~17 min run: the leaned leg
+  at 2 mm (3.8M nodes, 683k triangles) 103 s, ~27 us a node; the tongue plate at 1.25 mm
+  (2.9M nodes, 641k triangles) 57 s; two convex hulls at 1.5 mm, 71 s and 61 s.
 
 ## mesh (measure, io, repair)
 

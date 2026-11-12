@@ -9,6 +9,8 @@
 //!   every part meshed, weighed and drawn.
 //! - `leg <scan> [out]`: the stand-in leg for the shin pads (track D1): MakeHuman's leg, set to
 //!   ANSUR II, joined to the foot scan.
+//! - `pad <scan> [out]`: the shin pad on the stand-in leg in the boot (track D2), fitted (tongue
+//!   under and over) against modelled stock and undersized pads on the same leg.
 
 use custom_skate::check;
 use custom_skate::pitch::{FT, Rocker, fixed_alpha, passive_rocking_stiffness, roller_alpha};
@@ -99,8 +101,19 @@ fn main() {
                 std::process::exit(1);
             }
         }
+        "pad" => {
+            let Some(path) = std::env::args().nth(2) else {
+                eprintln!("usage: pad <scan> [out dir]");
+                std::process::exit(2);
+            };
+            let out = std::env::args().nth(3).unwrap_or_else(|| "out/pad".into());
+            if let Err(e) = custom_skate::pad::run(std::path::Path::new(&path), std::path::Path::new(&out)) {
+                eprintln!("{e}");
+                std::process::exit(1);
+            }
+        }
         other => {
-            eprintln!("unknown mode {other:?}; modes: check, pitch, scan, round1, chassis, boot, leg");
+            eprintln!("unknown mode {other:?}; modes: check, pitch, scan, round1, chassis, boot, leg, pad");
             std::process::exit(2);
         }
     }

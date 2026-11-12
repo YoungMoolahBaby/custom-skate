@@ -10,6 +10,7 @@ pub mod fit;
 pub mod foot;
 pub mod hockey_boot;
 pub mod leg;
+pub mod pad;
 pub mod skate;
 pub mod materials;
 pub mod pitch;

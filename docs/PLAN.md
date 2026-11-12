@@ -1218,6 +1218,109 @@ In his words, each with a first engineering take. Item 9 above is where this sta
 - **D2, the pad's geometry**: shin shell, knee cap hinged to it, calf wings, liner, straps, the
   bottom edge for `under` and `over`. Weighed and measured (bulk, coverage) like for like
   against a stock-style and an undersized pad modelled on the same leg.
+
+  **D2 round 1 (2026-11-12).** Jon: "yes please start D2". `cargo run --release -- pad
+  scans/stand-in/022_fBW_R.ply` (~17 min, `src/pad.rs`; needs `boot` run first). Renders and
+  the summary in `docs/pad/`, STLs in `out/pad/`.
+  - **Built on** the stand-in leg leaned 6° like the boot, and the boot's own meshes. Every
+    layer is an offset from one body: tongue-under wraps the leg, the tongue and the laces' bow
+    blended; tongue-over wraps the leg alone. Angles round the leg are about an axis through
+    the knee joint and the shin's front line.
+  - **Parts:** shin shell (2.5 mm PA 12, ±95° round the shin), liner (8 mm at the front to 5 at
+    the shell's edges, placeholders until D3), knee cap over an 11 mm liner, overlapping the
+    shell's top by 20 mm; calf wings (5 mm foam + 2 mm TPU, to ±150°); two straps across the
+    back of the calf.
+  - **Bottom edge:** the boot's top edge measured round the leg (119 mm at the sides, 135 at the
+    back, 139 beside the throat), the throat bridged (the tongue fills it), and the pad's bottom
+    10 mm above it all round.
+  - **Comparison pads**, sized by the retail rule: knee centre 486 mm up, boot top 139: 13.7",
+    so a 14" pad and an undersized 13". Stock: the convex hull of the leg at ANSUR's 95th-
+    percentile girths, moved back 6.7 mm onto the shin. Undersized: the convex hull of this
+    (median) leg, 1.3 mm back, an inch shorter. Bottom edges flat, as on a stock pad.
+
+  | Pad | g | bulk at mid-shin, front / +45° / -45° / ±90°, mm | bulkiest, mm | skin covered, hard / wings, cm² | bare above the boot, cm² | into the tongue, mm |
+  |---|---|---|---|---|---|---|
+  | fitted, tongue under | 373 | 11.6 / 10.8 / 10.4 / 9.8, 9.4 | 33.6 (over the tongue's top) | 525 / 318 | 5 | 0 |
+  | fitted, under, flush | 354 | 11.6 / 10.8 / 10.4 / 9.8, 9.4 | 11.6 | 525 / 318 | 5 | 2.9 |
+  | fitted, tongue over | 352 | 11.4 / 10.6 / 10.2 / 9.8, 9.4 | 11.8 | 522 / 318 | 6 | 2.7 |
+  | stock 14" (modelled) | 423 | 25.6 / 25.8 / 10.2 / 13.0, 11.8 | 31.4 | 536 / 321 | 3 | 2.9 (and 2.0 into the shell) |
+  | undersized 13" (modelled) | 366 | 21.4 / 20.4 / 9.2 / 9.2, 8.8 | 26.4 | 511 / 300 | 17 | 2.9 |
+
+  (Round 1's pictures were replaced by round 2's, below.)
+
+  **What it found.**
+  - **Fit takes out the air, not the protection.** With the same layers, the fitted pad stands
+    11.6 mm off the front of the shin at mid-height; the modelled stock 14" 25.6 mm, ~12 mm of it
+    air between the shin and the liner, because a generic shell has to clear the biggest leg
+    its size takes. It is also 50 g heavier (a bigger shell and wings round a bigger shape).
+  - **The undersized pad saves weight, not bulk.** 366 g, lighter than the fitted 373, but still
+    21.4 mm off the shin at the front (it is generic too), and it leaves 17 cm² of skin bare
+    between the boot and the pad, against 5.
+  - **The tongue decides the bottom.** Wrapped over the tongue as it is, the pad hooks over the
+    tongue's top, which curls 8 mm forward: 33.6 mm off the skin there. Keeping the shell's
+    offset from the leg (flush, a lap joint with the liner giving way to the tongue) holds the
+    whole pad at 11.6 mm, but the tongue's top then stands 2.9 mm proud of the shell. For
+    tongue-over, the tongue is 2.7 mm in the way of the pad's bottom. So the skate and the pad
+    want to be designed together at the tongue's top: either the tongue's top ~3 mm flatter
+    (tongue under, flush) or the pad's bottom thinned behind it (tongue over).
+  - **Where the weight is** (fitted, tongue under): shin shell 134 g, knee cap 49, liners 74,
+    calf wings 84 (2 mm TPU is heavy; foam and fabric would be lighter), straps 7.
+  - Like for like only: every pad in printed PA 12, TPU and the same assumed foam; standing, knee
+    straight. The stock and undersized shapes are models (a convex hull, the 95th percentile,
+    "a size down clears the median leg" is assumed), not measured pads.
+  - **Bugs found and fixed in the run:** the pad's check against the boot first said "30 mm
+    into the shell" (the pseudo-normal inside test misread points by the shell's thin edges; ray
+    parity gives 0.0); and the leg-in-boot render drew a stale `tongue.stl` from an older boot.
+
+  **D2 round 2, the modern pad (2026-11-12).** Jon: "its a good start. having them look like
+  modern shinpads, but maybe a bit lighter because of the custom fit instead of fully relying
+  on squish, should be the goal of the next iteration". His reference: a stock pad's 3D model
+  (a domed knee cap with side wings and a thigh piece above it, a segmented front shell, side
+  panels, a calf wrap, two straps). Built that way, with the shape stiffening the hard parts
+  so they can be thinner:
+  - **Shin:** a front shell (±60°) with a 2.5 mm ridge down the shin and two 0.8 mm grooves
+    across it (moulded segments), and side panels (to ±105°) stepped over its edges, three vent
+    slots each.
+  - **Knee:** the cap domed 5 mm more over the kneecap (more foam there), wings over the sides
+    of the knee (to ±115°) stepped over its edges, a thigh guard over its top with a V bottom
+    edge.
+  - **Calf:** 6 mm foam under a 1 mm TPU skin (round 1: 5 mm foam under 2 mm TPU); straps 38 mm
+    wide.
+  - Hard parts 2.0 mm PA 12 (round 1: 2.5 mm, plain); the liner unchanged (8 mm front, 5 at the
+    sides), its thickness D3's to set. Tongue under is now the flush version (the hooked one
+    stays only in the lengthwise cut, for comparison).
+
+  | Pad | g | off the shin, front / ±45° / ±90°, mm | skin covered, hard / calf, cm² | bare above the boot, cm² |
+  |---|---|---|---|---|
+  | **fitted, tongue under (flush)** | **329** | 13.6 / 10.4, 10.0 / 9.4, 9.0 | 618 / 267 | 5 |
+  | fitted, tongue over | 328 | 13.4 / 10.4, 10.0 / 9.4, 9.0 | 615 / 267 | 5 |
+  | stock 14" (modelled) | 403 | 27.8 / 25.4, 9.8 / 12.4, 11.4 | 629 / 270 | 3 |
+  | undersized 13" (modelled) | 352 | 23.4 / 20.2, 8.8 / 8.8, 8.4 | 601 / 253 | 17 |
+
+  ![The round-2 pad on the leg in the boot, tongue under](pad/pad_flush.png)
+
+  ![Lengthwise through the front of the shin: tongue under as round 1 wrapped it, flush, and over](pad/pad_lengthwise.png)
+
+  ![Across mid-shin: fitted, stock 14", undersized 13"](pad/pad_sections.png)
+
+  **What it found.**
+  - **Lighter with more on it:** 329 g against round 1's 354, with knee wings, a thigh guard and
+    side panels to ±105° added: hard coverage 618 cm² against 525.
+  - **Against the modelled pads on the same leg:** 74 g (18%) lighter than the stock 14", and
+    23 g lighter than the undersized 13" while covering more (618 against 601 cm² hard, 5 against
+    17 cm² bare above the boot) and standing about half as far off the front of the shin (13.6
+    against 23.4 mm). That is Jon's goal 2 in numbers: a full pad's coverage at an undersized
+    pad's weight. Protection is D3's to show: the hard parts are thinner than round 1's.
+  - **Where the weight is** (fitted): hard parts 181 g (front shell 62, side panels 58, knee cap
+    34, knee wings 15, thigh guard 11), foam 102 g, calf skins 36 g, straps 10 g.
+  - The ridge down the shin puts the front 2 mm further out (13.6 mm, round 1 11.6); the sides
+    are 0.5 mm slimmer.
+  - **Run:** ~30 min with two meshing threads (`PAD_THREADS=2`; Jon had ML training running).
+    The first try at 16 parts at once asked for 8.9 GB and failed, a second was stopped by
+    Claude Code for low memory; the run now builds a few parts at a time and draws, saves and
+    frees each pad before the next.
+  - **To fix in the drawings:** the vents show skin because the foam is hidden; a real pad shows
+    its fabric-covered liner there.
 - **D3, impact**: a puck on the shell over its liner, peak force on the leg. Checked first
   against a textbook impact. `sim-soft-explicit` (explicit dynamics, hyperelastic and
   Kelvin-Voigt, contact with a moving rigid body) is the candidate; it has no crushable-foam
