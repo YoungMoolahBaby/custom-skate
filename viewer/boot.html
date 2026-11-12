@@ -97,8 +97,13 @@
         <button type="button" id="vIce" aria-pressed="true">Ice, sealed</button>
         <button type="button" id="vRoller" aria-pressed="false">Roller, vented</button>
       </div>
+      <div class="seg" role="group" aria-label="Throat">
+        <button type="button" id="tOpen" aria-pressed="true">Open throat</button>
+        <button type="button" id="tV" aria-pressed="false">V throat</button>
+      </div>
       <div class="seg" role="group" aria-label="Colours">
         <button type="button" id="cLook" aria-pressed="true">Black</button>
+        <button type="button" id="cAlt" aria-pressed="false">White / blue</button>
         <button type="button" id="cLayers" aria-pressed="false">Layers</button>
       </div>
     </div>
@@ -133,8 +138,9 @@
         <li>Built on a stand-in foot (a CC0 research scan) until Jon's own scans exist.</li>
         <li>Lines placed from the scan: the ankle bones set the cuff and the ankle pockets; the ridge from the toes up the shin sets the throat, tongue and eyelets.</li>
         <li>Tight from heel to toe, open at the top. The cuff stops just above the outer ankle bone at the sides (40 mm), rising up the shin at the front for the lacing and into the tendon guard at the back. Above the ankle bones the liner and shell flare out together: 13 mm of room at the sides (about 19° of ankle tip each way), 7 mm in front, a slight press at the back to pitch the leg forward. Cut through the ankle to see it.</li>
-        <li>A wide throat, shaped to the foot: over the forefoot and instep the opening follows the foot's outline seen from above, so the shell doesn't overhang the foot there except a small wrap over its widest line (10 mm at the ball, 18 at the instep). The vamp is short; the opening starts just behind the toe cap. Up the shin the eyelets splay into a V for forward flex. The heel-lock pair at the ankle crease is heavy duty.</li>
-        <li>The tongue is 3D-printed TPU, like True's: a solid plate (the outer skin the laces bear on, a rim, a thin inner skin) round a gyroid lattice core that breathes and squashes. Explode the boot to see the lattice.</li>
+        <li>Two throats. Open, for stiff boots like this one: over the forefoot and instep the opening is half the way from the top of the foot to its widest line, measured along the surface the same on both sides, so it sits square on the top of the foot; the vamp is short, the opening starting just behind the toe cap. V, for shoes and more flexible boots: a narrow throat from the toe cap widening up the shin. Either way the eyelets run in mirrored pairs, evenly spaced, and splay into a V up the shin for forward flex; the heel-lock pair at the ankle crease is heavy duty.</li>
+        <li>The tongue is 3D-printed TPU, like True's: a solid plate (the outer skin the laces bear on, a rim, an inner skin) round a gyroid lattice core that breathes and squashes. It is thin under the shell's edges and swells between them, its edges rounded, its top flaring forward over the shin. Explode the boot to see the lattice.</li>
+        <li>Two editions on the same boot: all black, and an alt in white fibreglass weave, royal blue, red accents and a speckled cement-grey heel panel, inspired by a sneaker colourway.</li>
         <li>The look: black carbon shell against black thermoplastic (toe cap, mount pads, tendon guard), a black printed tongue, white hockey laces. Leaned forward 6°, a padded collar over the shell's edge, a smooth outer shell (its inside still follows the foot).</li>
         <li>The sole is just two flat mount pads, heel and forefoot, where the holder or roller chassis attaches; between them the shell's own rounded underside.</li>
         <li>The roller boot is vented (toe cap, lower quarters, liner); the ice boot is sealed, since a cold rink and melting ice make vents a liability.</li>
@@ -181,7 +187,7 @@
   // Materials by finish (roughness, metalness). Black parts read apart by their sheen.
   const FINISH = {
     carbon: [0.32, 0.0], gloss: [0.3, 0.0], matte: [0.85, 0.0], leather: [0.55, 0.0],
-    fabric: [0.95, 0.0], metal: [0.35, 0.75], skin: [0.7, 0.0],
+    fabric: [0.95, 0.0], metal: [0.35, 0.75], skin: [0.7, 0.0], satin: [0.45, 0.0], cement: [0.9, 0.0], fiberglass: [0.36, 0.0],
   };
   // A 2x2 twill carbon weave, drawn from the part's own coordinates (mm) on the face's dominant
   // axis: diagonal tows ~2.2 mm wide, each with a soft sheen across it.
@@ -197,6 +203,19 @@
         .replace('#include <color_fragment>', '#include <color_fragment>\n{ vec3 an = abs(vNrm);' +
           ' vec2 uv = (an.x > an.y && an.x > an.z) ? vPos.yz : ((an.y > an.z) ? vPos.xz : vPos.xy);' +
           ' diffuseColor.rgb *= twill(uv / 2.2); }');
+    };
+  }
+  // A "cement" speckle: about one in six ~1.2 mm cells darkened, a few nearly black.
+  function addSpeckle(m) {
+    m.onBeforeCompile = (sh) => {
+      sh.vertexShader = sh.vertexShader
+        .replace('#include <common>', '#include <common>\nvarying vec3 vPos;')
+        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvPos = position;');
+      sh.fragmentShader = sh.fragmentShader
+        .replace('#include <common>', '#include <common>\nvarying vec3 vPos;\n' +
+          'float hash3(vec3 p) { return fract(sin(dot(p, vec3(12.9898, 78.233, 45.164))) * 43758.5453); }')
+        .replace('#include <color_fragment>', '#include <color_fragment>\n{ float h = hash3(floor(vPos / 1.2));' +
+          ' if (h > 0.93) diffuseColor.rgb *= 0.12; else if (h > 0.84) diffuseColor.rgb *= 0.45; }');
     };
   }
   function rgb(c) { return new THREE.Color(c[0], c[1], c[2]).convertSRGBToLinear(); }
@@ -228,7 +247,7 @@
     render();
   }
 
-  function allMats() { const m = []; for (const p of parts) m.push(p.look, p.diag, p.back); return m; }
+  function allMats() { const m = []; for (const p of parts) m.push(p.look, p.alt, p.diag, p.back); return m; }
   function updateClip() {
     const on = cutMode !== 'none';
     for (const m of allMats()) { m.clippingPlanes = on ? [clip] : []; m.needsUpdate = true; }
@@ -251,9 +270,10 @@
 
   function updateColours() {
     for (const p of parts) {
-      p.front.material = colourMode === 'look' ? p.look : p.diag;
-      p.back.color.copy((colourMode === 'look' ? p.lookColor : p.diagColor).clone().multiplyScalar(0.8));
-      p.swatch.style.background = swatch(colourMode === 'look' ? p.lookRaw : p.diagRaw);
+      const k = colourMode === 'look' ? 'look' : colourMode === 'alt' ? 'alt' : 'diag';
+      p.front.material = p[k];
+      p.back.color.copy(rgb(p[k + 'Raw']).multiplyScalar(0.8));
+      p.swatch.style.background = swatch(p[k + 'Raw']);
     }
     render();
   }
@@ -301,7 +321,7 @@
     const bytes = new Uint8Array(raw.length);
     for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
     const buf = bytes.buffer;
-    for (const p of parts) { root.remove(p.group); p.front.geometry.dispose(); for (const m of [p.look, p.diag, p.back]) m.dispose(); }
+    for (const p of parts) { root.remove(p.group); p.front.geometry.dispose(); for (const m of [p.look, p.alt, p.diag, p.back]) m.dispose(); }
     parts = [];
     const box = new THREE.Box3();
     for (const d of manifest.parts) {
@@ -312,10 +332,14 @@
       geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
       geo.setIndex(new THREE.BufferAttribute(new Uint32Array(buf, d.indexOffset, d.indexCount), 1));
       geo.computeVertexNormals();
-      const lookRaw = d.look || d.color, diagRaw = d.color;
+      const lookRaw = d.look || d.color, diagRaw = d.color, altRaw = d.alt || lookRaw;
       const [rough, metal] = FINISH[d.finish] || FINISH.matte;
       const look = new THREE.MeshStandardMaterial({ color: rgb(lookRaw), roughness: rough, metalness: metal });
       if (d.finish === 'carbon') addWeave(look);
+      const [aRough, aMetal] = FINISH[d.altFinish] || FINISH[d.finish] || FINISH.matte;
+      const alt = new THREE.MeshStandardMaterial({ color: rgb(altRaw), roughness: aRough, metalness: aMetal });
+      if (d.altFinish === 'cement') addSpeckle(alt);
+      if (d.altFinish === 'carbon' || d.altFinish === 'fiberglass') addWeave(alt);
       const diag = new THREE.MeshStandardMaterial({ color: rgb(diagRaw), roughness: 0.72, metalness: 0.0 });
       // Inside faces, seen where a cut opens a part: drawn flat (unlit), so a cut reads as solid.
       // Close to the part's own colour, so the light meshes' few pinholes don't show as specks.
@@ -327,8 +351,8 @@
       root.add(group);
       geo.computeBoundingBox();
       if (!d.name.startsWith('foot')) box.union(geo.boundingBox);
-      parts.push({ name: d.name, grams: d.grams, material: d.material, explode: d.explode, group, front, look, diag, back,
-        lookRaw, diagRaw, lookColor: rgb(lookRaw), diagColor: rgb(diagRaw) });
+      parts.push({ name: d.name, grams: d.grams, material: d.material, explode: d.explode, group, front, look, alt, diag, back,
+        lookRaw, altRaw, diagRaw });
     }
     // Centre of the boot, in world space (the root turns z-up into y-up).
     const c = box.getCenter(new THREE.Vector3());
@@ -364,13 +388,17 @@
       pick(id);
     });
   }
-  seg(['cLook', 'cLayers'], (id) => { colourMode = id === 'cLook' ? 'look' : 'layers'; updateColours(); });
-  seg(['vIce', 'vRoller'], (id) => {
-    const sfx = id === 'vIce' ? '' : '_roller';
+  seg(['cLook', 'cAlt', 'cLayers'], (id) => { colourMode = id === 'cLook' ? 'look' : id === 'cAlt' ? 'alt' : 'layers'; updateColours(); });
+  // Which data: the boot (ice or roller) and the throat (open or V).
+  let bootSfx = '', throatSfx = '';
+  function pickData() {
+    const sfx = bootSfx + throatSfx;
     if (sfx === variant) return;
     variant = sfx;
     load(sfx).catch(() => fail('That boot\u2019s mesh files did not load. Reload the page to try again.'));
-  });
+  }
+  seg(['vIce', 'vRoller'], (id) => { bootSfx = id === 'vIce' ? '' : '_roller'; pickData(); });
+  seg(['tOpen', 'tV'], (id) => { throatSfx = id === 'tOpen' ? '' : '_v'; pickData(); });
 
   applyTheme();
   load('').catch(() => fail('The boot’s mesh files did not load. Reload the page to try again.'));

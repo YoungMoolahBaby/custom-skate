@@ -60,7 +60,7 @@ fn main() {
         }
         "boot" => {
             let Some(path) = std::env::args().nth(2) else {
-                eprintln!("usage: boot <scan> [out dir] [ice|roller]");
+                eprintln!("usage: boot <scan> [out dir] [ice|roller] [open|v]");
                 std::process::exit(2);
             };
             let out = std::env::args().nth(3).unwrap_or_else(|| "out/boot".into());
@@ -72,7 +72,16 @@ fn main() {
                     std::process::exit(2);
                 }
             };
-            if let Err(e) = custom_skate::hockey_boot::run(std::path::Path::new(&path), std::path::Path::new(&out), vented) {
+            // The throat: open (stiff boots, the default) or v (shoes and more flexible boots).
+            let open_throat = match std::env::args().nth(5).as_deref() {
+                None | Some("open") => true,
+                Some("v") => false,
+                Some(other) => {
+                    eprintln!("boot throat {other:?}: open (stiff boots, the default) or v (flexible boots)");
+                    std::process::exit(2);
+                }
+            };
+            if let Err(e) = custom_skate::hockey_boot::run(std::path::Path::new(&path), std::path::Path::new(&out), vented, open_throat) {
                 eprintln!("{e}");
                 std::process::exit(1);
             }

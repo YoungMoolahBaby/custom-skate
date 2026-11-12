@@ -149,44 +149,61 @@ Pictures and numbers: `docs/round2/`, and `docs/PLAN.md` (Round 2).
 
 ## The boot: a hockey boot from the scan
 
-![The hockey boot: black carbon, three-quarter views from the outside front and the inside back](docs/boot/boot_hero.png)
+![The hockey boot: black carbon, three-quarter views from the outside front and the inside back, and from behind](docs/boot/boot_hero.png)
 
-*The ice boot on the stand-in foot: carbon shell, black thermoplastic toe cap, mount pads and
-tendon guard, black tongue, white laces. The roller boot is the same, vented (`docs/boot/roller/`).
-`cargo run --release -- boot <scan> [out] [ice|roller]`.*
+![The alt edition: white fibreglass weave, royal blue, a cement-grey heel panel, red heel-lock eyelets](docs/boot/boot_hero_alt.png)
+
+*The ice boot on the stand-in foot, in two editions: all black (carbon shell, black thermoplastic
+toe cap, mount pads and tendon guard, black printed tongue, white laces), and an alt in white
+fibreglass weave, royal blue, a cement-grey heel panel and red accents, from a sneaker colourway
+Jon likes. The roller boot is the same, vented (`docs/boot/roller/`); the V-throat version for
+flexible boots is in `docs/boot/v/`.
+`cargo run --release -- boot <scan> [out] [ice|roller] [open|v]`.*
 
 - **Tight from heel to toe, open at the top**, as Jon skates. The cuff stops just above the
   outer ankle bone at the sides (40 mm), rising up the shin at the front for the lacing and into
   a tall tendon guard at the back. Above the ankle bones the liner and shell flare out together:
   13 mm of room at the sides, so **the ankle tips about 19° each way** before the leg meets the
   liner; 7 mm in front; a slight press at the back to pitch the leg forward.
-- **Forward flex:** the upper eyelets splay into a V (26 mm apart at the front, 48 at the top),
-  a 6° forward lean, a tall tongue that curls forward at the top.
+- **Two throats** (Jon: "1 for the former, which would be good for shoes/more flexible boots,
+  and the new opening ... for stiffer boots"). **Open**, for stiff boots like this one (Jon: a wide
+  throat like the CCM Jetspeed FT6 Pro's, the shell still low tolerance round the foot): over
+  the forefoot and instep the opening runs half the way from the top of the foot to its widest
+  line, measured along the surface the same on both sides, so it sits square on the top of the
+  foot; a short vamp. **V**, for shoes and flexible boots: narrow from the toe cap, widening up
+  the shin. Either way the eyelets run in mirrored pairs, evenly spaced (~19 mm), splaying into
+  a V up the shin for forward flex; a 6° forward lean.
+- **A 3D-printed tongue**, as True does: TPU, a solid plate (outer skin, rim, inner skin) round a
+  gyroid lattice core that breathes and squashes; thin under the shell's edges, swelling between
+  them, its edges rounded and its top flaring forward.
 - **The heel lock:** the eyelet pair at the ankle crease, whose lace pulls the heel into its
   pocket, is heavy duty: bigger grommets on a raised boss.
 - **Ice sealed, roller vented:** slots through the roller boot's toe cap, lower quarters and
   liner; the ice boot stays sealed against a cold rink and meltwater.
 - **Placed from the scan.** The ankle bones set the cuff, the ankle pockets and the pads; the
-  line over the top of the foot and up the shin sets the throat, the tongue, the eyelets and the
-  laces. The shell's inside follows the foot; its outside is smoothed over the hollows. So the
+  line over the top of the foot and up the shin, and cross-sections across it, set the throat,
+  the tongue, the eyelets and the laces. The shell's inside follows the foot; its outside is smoothed over the hollows. So the
   same code fits Jon's foot once it's scanned.
 - **The sole is two flat mount pads**, heel and forefoot, where the holder or chassis attaches;
   between them the shell's own rounded underside. **The tendon guard is a shield**, narrow where
   it rivets on, flaring at the top, ribbed.
-- **342 g (ice), 339 g (roller)**, weighed with the shell, toe cap and mount pads in printed nylon
-  (PA 12): shell 215 g, mount pads 15 g, toe cap 21 g, liner, ankle pads and footbed 43 g, tongue
-  15 g, tendon guard 20 g, eyelets and laces 13 g. The foam, TPU and lace densities are assumed.
+- **383 g (ice), 380 g (roller)** with the open throat (372 / 370 with the V), weighed with the
+  shell, toe cap and mount pads in printed nylon (PA 12): shell 205 g, mount pads 15 g, toe cap
+  14 g, liner, ankle pads and footbed 39 g, printed tongue 70 g (52 with the V's narrower
+  tongue), tendon guard 20 g, eyelets and laces 19 g. The foam, TPU and lace densities are
+  assumed.
 - **Estimates until measured:** the heights of the cuff, tongue and tendon guard, the lean, and
   the eyelet spacing (`docs/MEASURE.md`, B1-B7, on the TF9).
-- **Getting it on and off:** checked with the foot unloaded, as it is then. With the whole shell
-  rigid the forefoot can't pass the ankle collar: unlaced, the quarters have to open ~30 mm at
-  the throat, as on any laced boot. The heel cup, tight like True's, costs the heel ~7 mm of
-  squeeze past the hollows beside the Achilles (`docs/PLAN.md`).
-- **Next for the boot:** the quarters opening unlaced, panels and character lines, then the
-  holder under it. Jon's own scans,
-  puck protection (an air-gapped shield) and the fit simulation after. The sole becomes the
-  roller chassis's upper, and the ice skate's one-piece holder takes our own runner and rocker
-  insert; nothing proprietary.
+- **Getting it on and off:** a rigid-foot, rigid-shell check (the unloaded foot, each point
+  tracked inside, outside, in an opening or in the wall) shows a perfectly rigid foot stays
+  trapped in a boot this tight whatever the opening: the toes under the toe cap, the ball
+  against the narrower midfoot, the heel against the hollows beside the Achilles. Real feet
+  get out because toes bend and tissue squashes; sizing the opening and the heel lock needs the
+  fit simulation and printed test shells (`docs/PLAN.md`).
+- **Next for the boot:** the fit simulation, panels and character lines, then the holder under it.
+  Jon's own scans, puck protection (an air-gapped shield) after. The sole becomes the roller
+  chassis's upper, and the ice skate's one-piece holder takes our own runner and rocker insert;
+  nothing proprietary.
 
 Pictures, the layer sections and the numbers: `docs/boot/`, and `docs/PLAN.md` (Track B).
 

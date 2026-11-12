@@ -531,6 +531,15 @@ Our own look, not a copy: a brand's skate shapes are part of its identity.
   offer max mobility."
 - **The heel lock:** "this 4th to the top eyelit ... this should be a heavy duty eyelit as this
   is the most important one, to lock in heel pressure."
+- **An alt edition** (Jon, from a sneaker colourway: "would look good. maybe an alt edition to the
+  all blacks", "they also have red on them", "they can still have the carbon fiber texture. just
+  a white/fiberglass one"): the same boot in a white fibreglass-weave shell, royal blue mount
+  pads, footbed, tendon guard and eyelets, a speckled cement-grey heel panel (the shell's back
+  quarter), red heel-lock eyelets and a red tongue tag, white laces. Colours only, no logos. A
+  real glass-fibre shell would be heavier for the same stiffness (glass fibre ~72 GPa and 2.55
+  g/cm3 against standard carbon ~230 GPa and 1.8, textbook fibre values), so for the same
+  performance: carbon with a white glass outer ply for the look. `boot_hero_alt.png`; the
+  viewer's colour switch: Black | White / blue | Layers.
 
 **Step 1, the shape, done (2026-11-11).** `boot <scan> [out] [ice|roller]`:
 - **The cuff's top line:** at the sides 40 mm above the outer ankle bone (z 118, just above the
@@ -700,6 +709,40 @@ jumps 30-40 mm out at the sides); it's now defined in plan view (`ff_open`), cle
   much less the foot has to squash, needs the fit simulation. (Two earlier versions of the
   check were wrong: their "pushes" of 29 and then 7 mm were the measuring band's edge, points
   outside the boot or through the wall; both fixed.)
+
+**The open throat, revised; two throats (Jon, 2026-11-11):** "the opening itself looks like a
+step in the right direction. maybe looks wise it looks a little less clean but performance wise
+it looks superior", but "the eyelits i dont think are scattered correctly which results in the
+laces looking weird. the tongue also looks weird now", "maybe the opening could be a little more
+towards the inside of the foot, and it looks like maybe ... its biased and taking away more from
+the outer side than the inner side", and "really i think there should be 2 options, 1 for the
+former ... good for shoes/more flexible boots, and the new opening we are making, for stiffer
+boots". He was right about the bias: seen from above, the foot's outline is centred about 13 mm
+toward the outer side of the top of the foot (the dorsal line), and the outer side of the
+forefoot slopes lower, so at the ball the plan-view opening ran 51 mm down the outer side
+against 24 on the inner, and its eyelets sat 30-41 mm up on the outer side against 43-89 on the
+inner. Now:
+- **Measured along the surface from the top of the foot, the same both sides.** Cross-sections
+  across the throat every mm of the dorsal line (the plane through the line spanned by y and
+  the line's normal), the surface traced from the top out each side; the opening's half-width
+  is `open_frac` (0.5) of the arc to the foot's widest line, the two sides' mean. At the ball its
+  edges now sit at the same height both sides (41 / 43 mm), and seen from above it is 59 mm
+  across against 77 before, nearly all of it off the outer side; `open_frac` widens it both
+  sides alike.
+- **Up the shin, the V**, measured straight across on the flared shell as on the V throat: an
+  arc round the shin's narrow front (the shinbone) reaches 25-40 mm back. The two fields blend
+  over the 35 mm before the ankle crease.
+- **The eyelets:** one row a side from 10 mm behind the opening's front to the top, pairs at the
+  same station, evenly spaced along the rows: 9 a side, 18.4-19.6 mm apart; the heel lock
+  still the pair at the crease. The laces are lifted over the tongue mostly along the dorsal
+  line's normal, so seen from above they run straight.
+- **The tongue** had run up the shin to the edge of the meshing box (the plan-view region had no
+  top), stood up as a square block in the middle, and its 0.6 mm inner skin was thinner than the
+  mesh. Now it's thin under the shell's edges, swells over 6 mm inside the opening, is rounded
+  at its edge and flares forward at the top; inner skin 1.0 mm, rim 3.0. 70 g (plate 53,
+  lattice 18) over the open throat, 52 over the V.
+- **Two throats:** `boot <scan> [out] [ice|roller] [open|v]`; the viewer switches between them.
+  Open: 383 g ice, 380 roller; V: 372 / 370.
 
 **The printed tongue (Jon: "the tongue can be 3d printed, like how true does it"):** True sells
 3D-printed lattice tongues (RESEARCH.md 16). Ours: TPU, a solid plate (a 1.0 mm outer skin the

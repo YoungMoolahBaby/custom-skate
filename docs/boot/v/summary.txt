@@ -1,0 +1,23 @@
+hockey boot (track B, round 2 of the boot), ice (sealed), V throat (flexible boots), scans/stand-in/022_fBW_R.ply
+foot 252.4 x 104.5 mm; scan 125 mm tall, leg carried up as a prism above z 110
+landmarks: medial ankle bone (66, 46, 84), lateral (48, -23, 78), medial side +y
+cuff top z 118 (leg centre) to 136 (back); throat from x 197; tongue top z 186; tendon guard top z 206; 8 eyelets a side
+cuff room at the top, leg to liner: sides 13.0 mm (19.4 deg of tip), front 7.0 mm (6.2 deg of tip), back -1.0 mm (presses the calf)
+ice (sealed), V throat (flexible boots); forward lean 6 deg; cuff top line z 146 at the front, 118 at the sides (40 above the outer ankle bone), 136 at the back, padded collar 4 mm; 0 vents; heel-lock eyelets: pair 3 from the top, at the ankle crease (z 94)
+taking it off, with the unloaded scan scans/stand-in\022_mBW_R.ply, aligned to the loaded one (RMS 1.3 mm over 20-70 mm up) (liner squeezed to 1.5 mm, 4912 foot points, in place 0.74 mm): the way out needs heel cup 6.9 mm at (21, -16, 13), quarters 7.0 mm at (102, -26, 42), toe box 7.0 mm at (179, 37, -3) (budgets steering the path 2/8/3 mm, assumed); worst pose: heel lifted 2.5 deg, up 28 mm, back 0 mm (7.3 s)
+parts (mass from each mesh's enclosed volume):
+  shell           212.0 cm3   214.1 g  (PA 12 (MJF))
+  toe cap          14.2 cm3    14.4 g  (PA 12 (MJF))
+  mount pads       14.4 cm3    14.6 g  (PA 12 (MJF))
+  liner           203.6 cm3    30.5 g  (liner foam (assumed))
+  ankle pads       19.9 cm3     3.0 g  (liner foam (assumed))
+  footbed          54.0 cm3     8.1 g  (liner foam (assumed))
+  tongue plate     33.9 cm3    40.7 g  (TPU (assumed))
+  tendon guard     17.0 cm3    20.4 g  (TPU (assumed))
+  tongue lattice     9.6 cm3    11.6 g  (TPU (assumed))
+  eyelets           2.9 cm3     7.7 g  (6061-T6)
+  laces             9.1 cm3     7.3 g  (lace (assumed))
+  total 372 g (shell in PA 12 (MJF); in carbon/epoxy the shell alone would be 329 g); foam and lace densities assumed
+  check: shell 214.11 g at 0.75 mm cells, 214.22 g at 0.5 mm (+0.0%)
+  check: tendon guard 20.36 g at 0.6 mm cells, 20.40 g at 0.3 mm (+0.2%)
+  check: tendon guard by mass_properties at 0.3 mm: 20.43 g
