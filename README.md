@@ -7,6 +7,10 @@ is the part that rocks. The ice skate takes a dynamic (rocking) blade holder. Mo
 [CortenForge](https://crates.io/crates/cortenforge). The chassis came first, so most of this page
 is about it; the boot plan is in `docs/PLAN.md` (track B).
 
+**[Open the skates in 3D](https://youngmoolahbaby.github.io/custom-skate/)**: ice or roller, open or
+V throat, two colourways or your own, taken apart or cut through. Built on the stand-in foot;
+published with `tools/publish_pages.sh` after a build.
+
 ![The roller skate, round 1: boot, rocker, lower frame and wheels, from the side, above, the front and three-quarters](docs/round1/roller_skate.png)
 
 *Round 1 on a stand-in foot: the boot grown from a 3D foot scan, the rocker under its sole, the
