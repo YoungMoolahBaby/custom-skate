@@ -9,6 +9,7 @@ pub mod fem;
 pub mod fit;
 pub mod foot;
 pub mod hockey_boot;
+pub mod impact;
 pub mod leg;
 pub mod pad;
 pub mod skate;

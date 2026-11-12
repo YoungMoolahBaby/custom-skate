@@ -232,6 +232,28 @@ type (bug, docs, API, perf, setup, works), date, file:line under
   of its volume (upright 2 mm walls at 2 mm cells lose 11%). At 1.5 mm cells: -5.3% (upright
   -4.0%). Nothing warns; we check the meshed volume against `mass_properties` on every run.
 
+## sim-soft-explicit
+
+- **API / setup** (2026-11-12, D3): not re-exported by the `cortenforge` facade (nor by
+  `sim-soft`, which depends on it), so it is a direct dependency, `cortenforge-sim-soft-explicit
+  = "0.9.0"`, whose library name is `sim_soft_explicit`. The CPU executors are
+  `cpu::f32::CpuExecutor` and `cpu::f64::CpuExecutor`.
+- **works** (2026-11-12, D3): a free rigid impactor on top of a solver that pushes its obstacle
+  along a set path. `Executor::set_poses` (executor.rs:356) replaces the pose track mid-run
+  without losing the body's state, `Stepper::executor_mut` (stepping.rs:269) reaches it between
+  steps, and `Monitors::contact_force` (executor.rs:153) is the resultant averaged since the last
+  read. Reading every 2 steps (`StepperConfig::monitor_every`) and moving the impactor by it: a
+  0.5 kg impactor at 0.2 m/s on a soft block (a spring) gave its deepest compression to 0.0%,
+  its peak force (averaged over the block's wave period) +1.0%, contact time -1.1%, rebound
+  +2.0% of the closed form, in 0.4 s (`impact::spring_mass_check`, in `check`).
+- **note** (2026-11-12, D3): the four-node tetrahedron is stiff in bending, as expected of it. A
+  40 x 8 x 2 mm PA 12 strip, clamped, first frequency against Euler-Bernoulli's 270 Hz: +31% /
+  +16.5% / +10.4% with 2 / 3 / 4 elements through the thickness (stiffness +73 / +36 / +22%),
+  29 / 71 / 158 s (`impact::cantilever_check`). Thin shells need 4+ elements through, and a
+  higher-order element (the implicit solver's Tet10) would help.
+- **works** (2026-11-12, D3): `fixtures::grid::bake` (fixtures/grid.rs:16) bakes an obstacle's
+  distance grid from any distance function; a half-space impactor is three lines.
+
 ## Setup
 
 - **works** (2026-11-10): the facade with default features (sim, mesh, fabrication) builds in
@@ -298,6 +320,12 @@ Nice-to-haves for CortenForge, with what this project built instead.
   perimeter of a contour's convex hull, which is how a tape measures a limb (it bridges
   hollows): every anthropometric girth (ANSUR's calf, ankle, thigh) is one. Instead:
   `leg::tape_perimeter`.
+- **Impacts in sim-soft-explicit** (2026-11-12, D3): a free rigid body as the obstacle (mass,
+  velocity, moved by the contact force each step), so a dropped or thrown impactor needs no
+  host-side loop; contact between two soft bodies (a rubber puck on a pad); a crushable-foam
+  law (plateau and densification, as EVA and PE foams behave) beside the hyperelastic ones;
+  and the reaction on held nodes as a monitor (the force that reaches the leg). Instead: a
+  host-side loop over `set_poses` (`impact::run_free`); the rest still open.
 - **Section properties and interference** (2026-11-10, round 2): `Solid::section(plane)` (area,
   centroid, second moments) for beam checks, and `Solid::overlap_volume(&other)` that ignores the
   partial-cell band, for clash checks. Instead: `strength::section`, `round2::overlap_mm3`.

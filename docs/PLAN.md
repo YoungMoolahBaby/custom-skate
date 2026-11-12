@@ -1358,6 +1358,69 @@ In his words, each with a first engineering take. Item 9 above is where this sta
   against a textbook impact. `sim-soft-explicit` (explicit dynamics, hyperelastic and
   Kelvin-Voigt, contact with a moving rigid body) is the candidate; it has no crushable-foam
   law. The same model sizes the tongue's shield (item 7).
+
+  **D3 started (2026-11-12).** Jon: "let's do D3 first then the girdle". `src/impact.rs`;
+  `cargo run --release -- impact` runs its checks (~4 min), `check` the fast one.
+  - **The puck as a free body.** The solver pushes a rigid obstacle along a set path. A puck
+    flies in and is slowed by what it hits, so every few steps the contact force (the solver's
+    monitor) changes its speed and the next path is set from it (`set_poses` keeps the soft
+    body's state). The coupling lags by one chunk (2 steps), microseconds against milliseconds.
+  - **Check 1, a spring-mass impact** (0.5 kg at 0.2 m/s on a soft 20 mm cube, k = E A / L):
+    deepest compression 1.000 mm (theory 1.000), peak force averaged over the block's own wave
+    period 20.20 N (20.00; raw 22.97, the block's stress waves ringing on it), contact 15.53 ms
+    (15.71), rebound 0.204 m/s (0.200). The dynamics and the coupling are right. In `check`.
+  - **Check 2, a thin PA 12 strip in bending** (40 x 8 x 2 mm, clamped, set moving; first
+    frequency against Euler-Bernoulli's 270 Hz): 354 / 314 / 298 Hz with 2 / 3 / 4 elements
+    through the thickness, so its bending stiffness reads +73 / +36 / +22% (part of the last is
+    the strip acting partly as a plate). The solver's four-node tetrahedra are stiff in bending,
+    as they are known to be, and come right with refinement. So the pad's 2 mm shells need 4
+    elements through (0.5 mm), and still read ~20% stiff: a shell that spreads a puck's load a
+    little too well, the unsafe side, to correct or bracket.
+  - **The puck** (`impact::Puck`): its face (the rubber that meets the pad, 15% of the mass, an
+    assumption) and the rest of it, joined by a Hunt-Crossley spring (k d (1 + alpha d'),
+    linear: a rim impact's contact time doesn't change with speed). Fitted to Anderson 2008's
+    rim impacts on a rigid plate at 24.6 m/s (contact time and restitution: RESEARCH.md 20), it
+    predicts their peak forces, which the fit left out: **15.0 kN against 14.2 measured at 22 °C,
+    35.8 against 37 at -4 °C**. In `check`. A cold puck hits a rigid target 2.4x as hard as a
+    warm one.
+  - **The pad section** (`impact::pad_impact`): the front of the shin as a cylinder (r 45 mm)
+    held rigid, 8 mm of foam and a 2 mm PA 12 shell round it, ±60° and 100 mm tall (552k
+    elements, ~5 min a run); the puck flat, so its rim meets the shin, straight on.
+  - **First result** (cold puck, 23 m/s, foam 10 MPa elastic): **18.5 kN on the leg**, against
+    35.8 kN for the same puck on a bare rigid shin: the pad halves it. The puck sank 6.0 mm in.
+    Two things make the absolute force too high: the shin is rigid (a real tibia bends, has 2-7
+    mm of soft tissue over it, and the leg moves), and the foam is elastic with no loss (the
+    puck came back at 91% of its speed; real foams soak energy up). So for now the numbers
+    compare designs; they don't say what a real shin feels.
+  - **What changes the force** (one change at a time from the base; `examples/probe_pad_impact.rs`,
+    4-7 min each):
+
+    | Case | force on the leg | vs base | puck sank |
+    |---|---|---|---|
+    | base: cold puck, 23 m/s, foam 8 mm at 10 MPa, shell 2 mm | 18.5 kN | | 6.0 mm |
+    | foam 5 MPa | 19.7 kN | +6% | 6.9 mm |
+    | foam 20 MPa | 19.3 kN | +4% | 5.0 mm |
+    | shell 2.5 mm | 17.8 kN | -4% | 5.9 mm |
+    | shell 3.0 mm | 17.1 kN | -8% | 5.8 mm |
+    | **foam 12 mm** | **13.8 kN** | **-26%** | 7.8 mm |
+    | no shell | crushed through: elements inverted at 0.28 ms, the run stopped | | |
+    | warm puck (22 °C) | 12.5 kN | -32% | 5.3 mm |
+    | 30 m/s | 30.3 kN | +64% | 6.8 mm |
+
+    - **Foam thickness is the lever.** 4 mm more foam takes 26% off; 1 mm more shell 8%. And
+      foam is light: 4 mm more over ~150 cm² of the front of the shin is ~9 g of foam at 0.15
+      g/cm³, where 0.5 mm more PA 12 shell over ~300 cm² is ~15 g for 4%. Thick foam where pucks
+      land, a thin shell: more protection per gram.
+    - **The foam's stiffness has a best value** for its thickness: 10 MPa beat 5 (which
+      compresses further and stiffens as it closes up) and 20 (which hardly gives). Which foam
+      at which thickness is a design choice to make with these runs.
+    - **The shell is essential, its thickness isn't**: without it the puck's rim crushes through
+      the foam locally; with it the load spreads. Whether 2 mm of PA 12 survives a cold puck
+      (cracking) isn't checked yet: no stress readout from the solver yet.
+    - **Cold pucks hit 1.5x as hard** through the pad (2.4x on a bare rigid target), and a 30
+      m/s shot 1.6x.
+    - Still rigid shin, elastic foam: absolute forces high (see above).
+
 - **D4, mobility**: the leg bent into a skating stance and kneeling; the pad's clearance to the
   knee and the boot through the range.
 - **D5, Jon's leg**: scanned with the Otter, knee bent to his stance.

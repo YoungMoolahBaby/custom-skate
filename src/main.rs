@@ -112,8 +112,14 @@ fn main() {
                 std::process::exit(1);
             }
         }
+        "impact" => {
+            if let Err(e) = custom_skate::impact::run_checks() {
+                eprintln!("{e}");
+                std::process::exit(1);
+            }
+        }
         other => {
-            eprintln!("unknown mode {other:?}; modes: check, pitch, scan, round1, chassis, boot, leg, pad");
+            eprintln!("unknown mode {other:?}; modes: check, pitch, scan, round1, chassis, boot, leg, pad, impact");
             std::process::exit(2);
         }
     }

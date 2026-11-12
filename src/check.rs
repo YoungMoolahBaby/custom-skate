@@ -51,7 +51,61 @@ pub fn run() -> Tally {
     stand_in_checks(&mut t);
     println!("stand-in leg tools (track D1): Catmull-Clark, the tape girth");
     leg_checks(&mut t);
+    println!("impacts (track D3): sim-soft-explicit with a free impactor, against a spring-mass impact");
+    impact_checks(&mut t);
     t
+}
+
+/// A heavy flat impactor on a soft block (a spring, k = E A / L): deepest compression
+/// v sqrt(m/k), peak force v sqrt(k m) (averaged over the block's own wave period, which rings
+/// on it), contact time pi sqrt(m/k), rebound at the impact speed. The bending study (a thin PA
+/// 12 strip's first frequency with 2-4 elements through it) is `cargo run --release -- impact`:
+/// minutes, not seconds.
+fn impact_checks(t: &mut Tally) {
+    match crate::impact::spring_mass_check() {
+        Ok((got, want)) => {
+            let e = |k: usize| got[k] / want[k] - 1.0;
+            t.item(
+                "spring-mass impact: compression, averaged peak, contact time, rebound, force on the base within 3%",
+                e(2).abs() < 0.03 && e(1).abs() < 0.03 && e(3).abs() < 0.03 && e(4).abs() < 0.03 && e(5).abs() < 0.03,
+                format!(
+                    "deepest {:.3} mm ({:.3}), peak {:.2} N averaged ({:.2}; raw {:.2}), contact {:.2} ms ({:.2}), rebound {:.3} m/s ({:.3}); force on the held base {:.2} N averaged ({:.2})",
+                    got[2] * 1e3,
+                    want[2] * 1e3,
+                    got[1],
+                    want[1],
+                    got[0],
+                    got[3] * 1e3,
+                    want[3] * 1e3,
+                    got[4],
+                    want[4]
+                    , got[5], want[5]
+                ),
+            );
+        }
+        Err(e) => t.item("spring-mass impact", false, e),
+    }
+    // The puck model, fitted to Anderson 2008's contact time and restitution for a rim impact on
+    // a rigid plate at 24.6 m/s, predicts the peak force, which the fit left out: 14.2 kN warm
+    // (22 C), 37 kN cold (-4 C, an average of three pucks).
+    for (cold, measured) in [(false, 14.2e3), (true, 37.0e3)] {
+        let p = crate::impact::ice_puck(cold);
+        let (peak, tc, e) = p.on_wall(24.6);
+        t.item(
+            &format!("puck model, {}: predicted peak force within 20% of Anderson 2008's", if cold { "-4 C" } else { "22 C" }),
+            (peak / measured - 1.0).abs() < 0.20,
+            format!(
+                "peak {:.1} kN (measured {:.1}, {:+.0}%); fitted: contact {:.2} ms, restitution {:.3}; k {:.2} MN/m, alpha {:.4} s/m",
+                peak / 1e3,
+                measured / 1e3,
+                100.0 * (peak / measured - 1.0),
+                tc * 1e3,
+                e,
+                p.k / 1e6,
+                p.alpha
+            ),
+        );
+    }
 }
 
 /// The leg's own tools on cases with answers by hand.

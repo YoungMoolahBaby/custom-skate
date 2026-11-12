@@ -521,6 +521,64 @@ Pearsall 2001 speeds (its abstract gives none; the PDF couldn't be read here).
 - Not found: roller playing temperatures; EVA, PE, TPU or Poron XRD impact against
   temperature from 5 to 35 °C.
 
+## 20. Puck impacts, foams, shells, the shin: numbers for D3 (2026-11-12)
+
+From a research pass on 2026-11-12. **M** measured, **C** a maker's claim, "read" read off a
+graph. Sources' PDFs are kept locally, not in git.
+
+**The puck on a rigid plate** (Anderson (Bigford) 2008, MS thesis, Washington State Univ,
+[hdl:2376/102825](https://hdl.handle.net/2376/102825), full text; journal version Bigford & Smith
+2009, J ASTM Int 6(7), doi:10.1520/JAI101859). Air cannon, the puck flying **rim first** into a
+rigid plate on three load cells (100 kHz); speed by light gates; two unnamed brands, PA and PB,
+12 pucks each; 164 g used. Dynamic stiffness k_d = (1/m)(F_peak/V)^2.
+
+| At 24.6 m/s (55 mph) | restitution | peak force | contact | k_d |
+|---|---|---|---|---|
+| 22 °C, PA (M) | 0.383 | ~14.2 kN (read) | 0.81 ms | ~1.9 MN/m (read) |
+| 22 °C, PB (M) | 0.349 | ~12 kN (read) | | ~1.3 MN/m |
+| -4 °C, PA (M) | 0.267 | ~37 kN, 3 pucks (read) | 0.41 ms | ~13.7 MN/m |
+| -4 °C, PB (M) | 0.256 | | | ~7.5 MN/m |
+
+- Pucks in play at rinks: -11 to -4 °C. Peak force against temperature (PA, read): 14.7 kN at 22
+  °C, 19.3 at 13, 24.7 at 8, 27.8 at 4, 30.2 at 1, ~37 at -4 to -2.
+- Speed (PA, 22 °C, read): 24.6 / 29.1 / 33.5 / 38.0 m/s gave restitution 0.39 / 0.375 / 0.358 /
+  0.34, peaks ~13.6 / 17.8 / 20.2 / 25.4 kN, and the same **contact time (0.84 ms) at every
+  speed**. Caveats: one of the thesis's figures contradicts another on these peaks (the one
+  consistent with its k_d is used); its displacement axes carry an integration offset.
+- Kays 2013 (MS thesis, same lab), 15.6 m/s, 22 °C: restitution 0.427, peak 8.46 kN, contact
+  0.939 ms (M); an LS-DYNA viscoelastic puck tuned to it; no cold set exists.
+- Puck material: Shore A 85-89, density 1.34-1.43 g/cm³, 157-168 g (US 5,330,184, patentee's
+  tests). No roller puck stiffness or restitution found.
+
+**Pucks on protective gear** (M): Ouckama & Pearsall 2014 (IRCOBI IRC-14-16), a 160 g puck at
+room temperature on helmets on a Hybrid III head: 24.2 m/s (47 J) gave a mean net force of
+3425 N, 32.9 m/s (87 J) 6175 N, over 51-61 cm², under 2 ms. Hart 2015 (MSc, U Manitoba): bare
+composite tibias (Sawbones, 4th gen., n = 8) struck by a 165 g puck broke at 30.4 ± 0.8 m/s
+(76 ± 4 J), after 1-4 hits.
+
+**Foams** (room temperature unless stated):
+- Poron XRD (M, Bhagavathula et al. 2022, Exp Mech 62:505, doi:10.1007/s11340-021-00772-z): at
+  195 / 244 / 404 kg/m³, modulus 0.77 / 1.73 / 4.37 MPa at 1 /s, 3.6 / 9.3 / 25 at 175-250 /s,
+  14 / 24 / 92 at 3300-4600 /s. Rate matters by 15-30x.
+- EVA 80-180 kg/m³ (M, Chen 2023, Polymers 16:34): modulus 2.8-7.0 MPa, quasi-static.
+- An EVA/NBR blend pad (M, Nicotra 2014; Signetti 2019, JSAMS 22:S65): 50 Hz modulus 6.4-18 MPa at
+  20 °C, 2-5x stiffer at -5 °C; densification strain 0.61-0.69; a 50 J drop passed 5.7 kN at 20
+  °C and 11.2 kN at -5 °C.
+- No EVA or PE data at impact strain rates were found.
+
+**Shells:** HP PA 12 (MJF), C: modulus 1800 MPa, strength 48 MPa, elongation 20% (XY), notched
+Izod 3.5 kJ/m², 1.01 g/cm³. Sintered PA 12 at 128-456 /s (M, Xu 2023, Mater Des 232:112162):
+strength 54-61 MPa against 45-48 quasi-static, fracture strain down from 22-33% to 3-10%. No
+public low-temperature data for printed PA 12. Shin guard shells in patents: nylon, PC, PE,
+HDPE, PP; Bauer's FlyPro uses Curv self-reinforced PP (C: 4.2 GPa).
+
+**The shin** (M): soft tissue over the mid-tibia 2-7 mm (Pejović-Milić 2002; Zhang 2021, 2022).
+Fracture references: Kress & Porta 2001, 5.9-7.2 kN; an FE human model 1.6-2.6 kN (Shakib et
+al.); the often-quoted "2927 ± 403 N" (Francisco 2000) is a synthetic tibia's end force, its
+context unconfirmed. Thresholds: bruise, 50% risk at 3.2 J (Desmoulin & Anderson 2007,
+abstract); football shin guards (EN 13061) ≤ 2 kN for a ~2 J impact; cricket leg guards (BS
+6183-3) 4-6 kN.
+
 ## Still to find
 
 - Frame design loads for hockey: Stidwill's thesis numbers; the EN 13843 test loads (paid).

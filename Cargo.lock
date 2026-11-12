@@ -894,6 +894,7 @@ name = "custom-skate"
 version = "0.1.0"
 dependencies = [
  "cortenforge",
+ "cortenforge-sim-soft-explicit",
  "nalgebra 0.34.2",
  "png",
 ]
