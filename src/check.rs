@@ -53,7 +53,36 @@ pub fn run() -> Tally {
     leg_checks(&mut t);
     println!("impacts (track D3): sim-soft-explicit with a free impactor, against a spring-mass impact");
     impact_checks(&mut t);
+    println!("posing (track G3): motions, and reading them across to the foot frame");
+    pose_checks(&mut t);
     t
+}
+
+/// Posing's algebra: a turn about a joint keeps the joint put; a motion after its inverse is no
+/// motion; a motion read across from MakeHuman's frame (dm, y up) to the foot frame (mm, z up)
+/// moves points as the original does, read across (what carries the pads with the body).
+fn pose_checks(t: &mut Tally) {
+    use crate::body::{motion_to_mm, to_mm};
+    use crate::pose::Motion;
+    let axis = nalgebra::Unit::new_normalize(Vector3::new(0.3, -0.5, 0.8));
+    let r = nalgebra::Rotation3::from_axis_angle(&axis, 0.7);
+    let h = Vector3::new(0.4, 5.2, -0.3);
+    let m = Motion { r, t: h - r * h };
+    let moved = (m.apply(h) - h).norm();
+    t.item("a turn about a joint keeps the joint put", moved < 1e-12, format!("moved {moved:.1e} dm"));
+    let pts = [Vector3::new(1.0, 2.0, 3.0), h, Vector3::new(-2.0, 0.5, 7.0)];
+    let back = m.after(&m.inverse());
+    let err = pts.iter().map(|&x| (back.apply(x) - x).norm()).fold(0.0, f64::max);
+    t.item("a motion after its inverse is no motion", err < 1e-12, format!("worst {err:.1e} dm"));
+    let (floor, shift) = (-8.3, (12.0, -95.0));
+    let mm = motion_to_mm(&m, floor, shift);
+    let worst = pts.iter().map(|&v| (mm.apply(to_mm(v, floor, shift).coords) - to_mm(m.apply(v), floor, shift).coords).norm()).fold(0.0, f64::max);
+    let det = mm.r.matrix().determinant();
+    t.item(
+        "a motion read across to the foot frame moves points alike, and stays a turn",
+        worst < 1e-9 && (det - 1.0).abs() < 1e-12,
+        format!("worst {worst:.1e} mm, determinant {det:.12}"),
+    );
 }
 
 /// A heavy flat impactor on a soft block (a spring, k = E A / L): deepest compression

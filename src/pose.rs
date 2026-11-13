@@ -51,6 +51,11 @@ impl Motion {
     pub fn after(&self, other: &Motion) -> Motion {
         Motion { r: self.r * other.r, t: self.r * other.t + self.t }
     }
+
+    pub fn inverse(&self) -> Motion {
+        let r = self.r.inverse();
+        Motion { r, t: -(r * self.t) }
+    }
 }
 
 fn read_json(path: &Path) -> Result<Value, String> {

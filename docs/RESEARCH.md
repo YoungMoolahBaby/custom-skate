@@ -602,6 +602,20 @@ MakeHuman (as in 18; CC0): also fetched `measure-hips-circ` and `measure-waist-c
 `-decr`/`-incr`), and the body-weight targets `macrodetails/universal-male-young-averagemuscle-
 {minweight,maxweight}.target`, to `D:\custom-skate-data\makehuman\`.
 
+## 22. Skin sliding on the bone: soft tissue artefact (2026-11-12)
+
+For G3: posing moves skin with the bones under it, and a girdle or pad worn on the skin can move
+further than that.
+- **Peters, Galna, Sangeux, Morris & Baker (2010)**, "Quantification of soft tissue artifact in
+  lower limb human motion analysis: a systematic review", *Gait & Posture* 31(1):1-8
+  ([Salford repository](https://salford-repository.worktribe.com/output/1452613/quantification-of-soft-tissue-artifact-in-lower-limb-human-motion-analysis-a-systematic-review)).
+  Its abstract: skin markers moved relative to the bone by **more than 30 mm on the thigh** and
+  **up to 15 mm on the tibia**. Read from the abstract only; the per-study values and the tasks
+  behind the 30 mm are not checked here.
+- Limits: these are markers stuck to the skin during motion capture, not garments. A girdle's
+  shorts and a strapped pad move with the skin and can also slide on it. These numbers say how
+  far the skin alone goes, not how far gear goes.
+
 ## Still to find
 
 - Frame design loads for hockey: Stidwill's thesis numbers; the EN 13843 test loads (paid).

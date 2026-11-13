@@ -264,6 +264,31 @@ fn part_bounds(g: &Girdle, part: GPart, verts: &[Point3<f64>]) -> Option<Aabb> {
     any.then(|| Aabb::new(Point3::from(lo - Vector3::repeat(m)), Point3::from(hi + Vector3::repeat(m))))
 }
 
+/// The girdle on the standing body: the body's field over the girdle's heights (exact near the
+/// skin, a 3 mm grid beyond), the torso's axis, each thigh's frame.
+pub fn on_body(b: &body::Body, p: GirdleParams) -> Result<Girdle, String> {
+    let closed = close_between(&b.mesh, 500.0, 1180.0);
+    let field = Field::new(&closed, 25.0, 3.0, Some(8.0), "body")?;
+    let (rh, lh, rk, lk) = (b.joints["r hip"], b.joints["l hip"], b.joints["r knee"], b.joints["l knee"]);
+    Ok(Girdle {
+        body: field,
+        p,
+        o: Arc::new(GOutlines::new(&p)),
+        torso: (0.5 * (rh.x + lh.x), 0.5 * (rh.y + lh.y)),
+        thighs: [Frame::new(rk, rh), Frame::new(lk, lh)],
+    })
+}
+
+/// One part meshed, and its weight (g); none if the body has no skin in its region.
+pub fn build_part(g: &Girdle, part: GPart, verts: &[Point3<f64>]) -> Option<(IndexedMesh, f64)> {
+    let bounds = part_bounds(g, part, verts)?;
+    let gg = g.clone();
+    let s = Solid::user_fn(move |q| gg.field(part, q), bounds);
+    let m = mesh_of(&s, part.cell());
+    let grams = mesh_volume(&m).abs() / 1000.0 * part.material().density / 1000.0;
+    Some((m, grams))
+}
+
 pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
     let t0 = Instant::now();
     std::fs::create_dir_all(out).map_err(|e| e.to_string())?;
@@ -271,19 +296,9 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
     std::fs::create_dir_all(docs).map_err(|e| e.to_string())?;
     let b = body::build(scan_path, 1250.0)?;
     let p = GirdleParams::default();
-    // The body's field over the girdle's heights: exact near the skin, a 3 mm grid beyond.
-    let closed = close_between(&b.mesh, 500.0, 1180.0);
-    let field = Field::new(&closed, 25.0, 3.0, Some(8.0), "body")?;
-    let (rh, lh, rk, lk) = (b.joints["r hip"], b.joints["l hip"], b.joints["r knee"], b.joints["l knee"]);
-    let torso = (0.5 * (rh.x + lh.x), 0.5 * (rh.y + lh.y));
-    let g = Girdle {
-        body: field,
-        p,
-        o: Arc::new(GOutlines::new(&p)),
-        torso,
-        thighs: [Frame::new(rk, rh), Frame::new(lk, lh)],
-    };
-    println!("girdle: torso axis ({:.0}, {:.0}); right thigh axis from the knee ({:.0}, {:.0}, {:.0}) to the hip ({:.0}, {:.0}, {:.0}) ({:.0} s)", torso.0, torso.1, rk.x, rk.y, rk.z, rh.x, rh.y, rh.z, t0.elapsed().as_secs_f64());
+    let g = on_body(&b, p)?;
+    let (rh, rk) = (b.joints["r hip"], b.joints["r knee"]);
+    println!("girdle: torso axis ({:.0}, {:.0}); right thigh axis from the knee ({:.0}, {:.0}, {:.0}) to the hip ({:.0}, {:.0}, {:.0}) ({:.0} s)", g.torso.0, g.torso.1, rk.x, rk.y, rk.z, rh.x, rh.y, rh.z, t0.elapsed().as_secs_f64());
     let threads = std::env::var("PAD_THREADS").ok().and_then(|v| v.parse::<usize>().ok()).unwrap_or(4).max(1);
     let verts = b.mesh.vertices.clone();
     let mut parts: Vec<(GPart, IndexedMesh, f64)> = Vec::new();
@@ -291,18 +306,12 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
         let done: Vec<(GPart, IndexedMesh, f64)> = std::thread::scope(|sc| {
             let hs: Vec<_> = chunk
                 .iter()
-                .filter_map(|&part| {
-                    let bounds = part_bounds(&g, part, &verts)?;
-                    let gg = g.clone();
-                    Some(sc.spawn(move || {
-                        let s = Solid::user_fn(move |q| gg.field(part, q), bounds);
-                        let m = mesh_of(&s, part.cell());
-                        let grams = mesh_volume(&m).abs() / 1000.0 * part.material().density / 1000.0;
-                        (part, m, grams)
-                    }))
+                .map(|&part| {
+                    let (g, verts) = (&g, &verts);
+                    sc.spawn(move || build_part(g, part, verts).map(|(m, grams)| (part, m, grams)))
                 })
                 .collect();
-            hs.into_iter().map(|h| h.join().unwrap()).collect()
+            hs.into_iter().filter_map(|h| h.join().unwrap()).collect()
         });
         parts.extend(done);
     }

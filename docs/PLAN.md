@@ -1547,10 +1547,63 @@ land, or PE); a modern girdle's look (as the shin pad's rounds).
 
   ![The body standing, in a skating stance, kneeling, in a deep crouch](body/poses.png)
 
-**G3 next:** the pads posed with the body (each part carried by the skin under it: the girdle's
-thigh pad by the thigh, the shin pad's shell by the shin, its knee shield and thigh guard by
-the skin over the knee), the gap between the girdle's bottom and the shin pad's top found over
-the range of motion, and the two edges set for the smallest gap that never closes.
+**G3, the gap above the knee, round 1 (2026-11-12).** Jon: "commit and start G3". `cargo run
+--release -- gap scans/stand-in/022_fBW_R.ply` (~9 min on two threads, `src/gap.rs`);
+`docs/girdle/gap.txt`, `gap.png`. `GAP_THIGH_BOTTOM=<mm>` moves the thigh pad's bottom.
+- **Both pads on the posed body:** the girdle's right thigh pad (shell and foam, and its hip
+  pad) and the latest shin pad (tongue under, flush, from `out/pad/`). The shin pad was stood
+  up again by taking the boot's 6° lean out. The leg it was built on and the body have the same
+  knee joint, (63, 18, 466). The body's fuller thigh reaches at most 3.8 mm into the knee liner
+  (z 506, 74° round to the outside). That is close enough here; rebuilding the pad on the body
+  stays on the list.
+- **Carried two ways.** By the skin: each point takes the skin weights of the 6 nearest
+  control-mesh vertices, which is how MakeHuman carries clothes. Rigidly with the shin: the pad
+  is strapped to it, and its knee shield rides the kneecap, which the patellar tendon ties to
+  the shin. The real pad lies between the two.
+- **The sweep:** hip flexion −20 to 110°, knee flexion 0 to 135°, 60 poses. Standing, the thigh
+  pad's bottom (600 mm) is **20 mm** above the thigh guard's top (580), 10° round to the outside.
+
+| hip \ knee | 0 | 15 | 30 | 45 | 60 | 90 | 120 | 135 |
+|---|---|---|---|---|---|---|---|---|
+| −20 | 20/20/20 | 20/32/32 | 20/>40/>40 | 20/>40/>40 | 20/>40/>40 | 20/>40/>40 | 20/>40/>40 | 20/39/39 |
+| 0 | 20/20/20 | 20/>40/>40 | 20/>40/>40 | 20/>40/>40 | 20/>40/>40 | 20/>40/>40 | 20/34/34 | 20/20/20 |
+| 60 | 20/20/20 | 20/30/30 | 20/>40/>40 | 20/>40/>40 | 20/>40/>40 | 20/>40/>40 | 20/>40/>40 | 20/>40/>40 |
+| 90 | 20/20/**5** | 20/>40/**−6** | 20/>40/13 | 20/>40/33 | 20/>40/>40 | 20/>40/>40 | 21/34/35 | 20/20/20 |
+| 110 | 20/20/7 | 20/35/**−6** | 20/>40/**−6** | 20/>40/11 | 20/>40/26 | 20/>40/>40 | 20/38/20 | 20/20/20 |
+
+  Closest approach, mm (negative: overlapping). The shin pad is carried by the skin / rigidly
+  with the shin / rigidly, with the thigh pad pushed down by the belly (item 2). Rows 30 and
+  the knee's 75 and 105 are in `gap.txt`.
+
+What it shows:
+1. **Bending the knee never closes the gap.** By the skin, it holds at 20 mm in every pose:
+   both edges sit on the thigh, whose skin weights there are all the thigh bone's. Rigid with
+   the shin, the thigh guard's top swings forward and down with it: 30-33 mm by 15° of bend,
+   more than 40 from 30°. Past 120°, the calf's strap and wrap come round behind to within
+   20-34 mm of the thigh pad's back edge, no closer than standing.
+2. **From 75° of hip flexion (none at 60), the thigh pad's top runs into the belly**, 5-6 mm
+   deep in the model. Here the pelvis is held still and the pad is one hard piece, rigid with
+   the thigh. The deepest point is always the belly, not the hip pad. Pressed face-on, the belly
+   gives (soft tissue, the pad's foam). Suppose instead it didn't, and the pad slid down the thigh to clear it: 13 mm at 75°, 53 at 90°, more
+   than 80 beyond. Even then, the pushed pad reaches the shin pad only with the knee nearly
+   straight: 5 mm away at hip 90 and knee 0, and overlapping by 6 mm at hip 90-110 with the
+   knee at 15-30°. With the knee bent 45° or more, it stays 11 mm or more away. That covers any
+   skating stance, and sitting on the bench.
+3. **So the straight knee sets the gap, and in the model nothing closes it there.** The 20 mm
+   is a margin for what the model can't see:
+   - the shorts and the skin sliding on the thigh (thigh skin moves more than 30 mm on the
+     femur in motion capture, shin skin up to 15: RESEARCH.md 22);
+   - the quadriceps bulging;
+   - the shin pad shifting on its straps.
+
+  ![The gap: standing, skating stance, kneeling, deep crouch; shin pad rigid with the shin,
+  thigh pad pushed down by the belly; red within 40 mm](girdle/gap.png)
+
+**G3 next:**
+- The margin is Jon's call: how far his girdle rides down, and his shin pad's top moves, when he
+  skates. With it, set `thigh_bottom` (600 now, 20 mm above the thigh guard).
+- The thigh pad's top could give rather than push: its shell stops short of the foam's top, so
+  the belly in a deep crouch presses foam, not a hard edge.
 
 ## Open questions for Jon
 

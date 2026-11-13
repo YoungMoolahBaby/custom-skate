@@ -165,8 +165,18 @@ pub fn posed(m: &Model, raw: &[Vector3<f64>], legs: [LegPose; 2]) -> (Vec<Vector
 }
 
 /// MakeHuman (dm) to the foot frame (mm), floor at 0, then `shift` in x and y.
-fn to_mm(v: Vector3<f64>, floor: f64, shift: (f64, f64)) -> Point3<f64> {
+pub fn to_mm(v: Vector3<f64>, floor: f64, shift: (f64, f64)) -> Point3<f64> {
     Point3::new(100.0 * v.z + shift.0, 100.0 * v.x + shift.1, 100.0 * (v.y - floor))
+}
+
+/// A motion in MakeHuman's frame read across to the foot frame. `to_mm` is A(v) = 100 P v + c,
+/// P the axis turn (x, y, z) -> (z, x, y); a motion M there is A M A^-1 here: P R P^T, and
+/// P R P^T (-c) + 100 P t + c.
+pub fn motion_to_mm(m: &Motion, floor: f64, shift: (f64, f64)) -> Motion {
+    let p = nalgebra::Matrix3::new(0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+    let c = Vector3::new(shift.0, shift.1, -100.0 * floor);
+    let r = Rotation3::from_matrix_unchecked(p * m.r.matrix() * p.transpose());
+    Motion { r, t: -(r * c) + 100.0 * (p * m.t) + c }
 }
 
 /// The body below `z_top` mm (its connected piece holding the pelvis: hands hang free of it),
@@ -284,6 +294,122 @@ pub struct Body {
 }
 
 impl Body {
+    /// A bone's index (as `moves`), by MakeHuman's name ("lowerleg01.R").
+    pub fn bone(&self, name: &str) -> Option<usize> {
+        self.model.rig.index.get(name).copied()
+    }
+
+    /// A bone and every bone below it (bones come parents first).
+    pub fn below(&self, name: &str) -> Vec<usize> {
+        let Some(top) = self.bone(name) else { return Vec::new() };
+        let bones = &self.model.rig.bones;
+        let mut inside = vec![false; bones.len()];
+        inside[top] = true;
+        for (i, b) in bones.iter().enumerate() {
+            if b.parent.is_some_and(|p| inside[p]) {
+                inside[i] = true;
+            }
+        }
+        (0..bones.len()).filter(|&i| inside[i]).collect()
+    }
+
+    fn stand(&self) -> [Rotation3<f64>; 2] {
+        let m = &self.model;
+        let mut stand = [Rotation3::identity(); 2];
+        for (k, side) in ["r", "l"].iter().enumerate() {
+            let d = m.joint(&self.raw, &format!("joint-{side}-knee")) - m.joint(&self.raw, &format!("joint-{side}-ankle"));
+            stand[k] = Rotation3::rotation_between(&d, &Vector3::y()).unwrap_or_else(Rotation3::identity);
+        }
+        stand
+    }
+
+    /// Each bone's motion from standing to `legs`, mm in the foot frame (index as `model.rig`;
+    /// one past the last bone is "no bone": the share of a vertex's weight that stays put).
+    pub fn moves(&self, legs: [LegPose; 2]) -> Vec<Motion> {
+        let m = &self.model;
+        let st = self.stand();
+        let rest = m.rig.motions(&self.raw, &leg_rotations(st, [LegPose::default(); 2]));
+        let pose = m.rig.motions(&self.raw, &leg_rotations(st, legs));
+        let mut out: Vec<Motion> = rest.iter().zip(&pose).map(|(r0, q)| motion_to_mm(&q.after(&r0.inverse()), self.floor, self.shift)).collect();
+        out.push(Motion::identity());
+        out
+    }
+
+    /// Skin weights for points near the skin, standing (mm): each point takes a mix of the
+    /// weights of its `k` nearest control-mesh vertices (by 1 / (d^2 + 25 mm^2)), from its own
+    /// side of the body only (so a point on the inside of the right thigh doesn't take the left
+    /// thigh's), as MakeHuman fits clothes to the body. Bone index as `moves`.
+    pub fn weights_near(&self, pts: &[Point3<f64>], k: usize) -> Vec<Vec<(usize, f64)>> {
+        let m = &self.model;
+        let n = m.n_body;
+        let none = m.rig.bones.len();
+        let rest = m.rig.skin(&self.raw, &m.rig.motions(&self.raw, &leg_rotations(self.stand(), [LegPose::default(); 2])));
+        let ctrl: Vec<Point3<f64>> = rest[..n].iter().map(|&v| to_mm(v, self.floor, self.shift)).collect();
+        // Each control vertex's weights, short of 1 made up by "no bone", over 1 normalised.
+        let mut vw: Vec<Vec<(usize, f64)>> = vec![Vec::new(); n];
+        for (b, ws) in m.rig.weights.iter().enumerate() {
+            for &(i, w) in ws {
+                if (i as usize) < n {
+                    vw[i as usize].push((b, w));
+                }
+            }
+        }
+        for l in &mut vw {
+            let s: f64 = l.iter().map(|x| x.1).sum();
+            if s > 1.0 {
+                l.iter_mut().for_each(|x| x.1 /= s);
+            } else if s < 1.0 {
+                l.push((none, 1.0 - s));
+            }
+        }
+        const CELL: f64 = 25.0;
+        let key = |p: &Point3<f64>| ((p.x / CELL).floor() as i32, (p.y / CELL).floor() as i32, (p.z / CELL).floor() as i32);
+        let mut grid: HashMap<(i32, i32, i32), Vec<u32>> = HashMap::new();
+        for (i, p) in ctrl.iter().enumerate() {
+            grid.entry(key(p)).or_default().push(i as u32);
+        }
+        let mid = self.shift.1;
+        pts.iter()
+            .map(|q| {
+                let (cx, cy, cz) = key(q);
+                let mut near: Vec<(f64, u32)> = Vec::new();
+                for reach in [2, 4] {
+                    near.clear();
+                    for dx in -reach..=reach {
+                        for dy in -reach..=reach {
+                            for dz in -reach..=reach {
+                                for &i in grid.get(&(cx + dx, cy + dy, cz + dz)).map(|v| v.as_slice()).unwrap_or(&[]) {
+                                    let c = ctrl[i as usize];
+                                    if (q.y - mid).abs() > 20.0 && (c.y - mid) * (q.y - mid) < 0.0 {
+                                        continue;
+                                    }
+                                    near.push(((c - q).norm_squared(), i));
+                                }
+                            }
+                        }
+                    }
+                    if near.len() >= k {
+                        break;
+                    }
+                }
+                near.sort_by(|a, b| a.0.total_cmp(&b.0));
+                near.truncate(k);
+                let mut w: Vec<(usize, f64)> = Vec::new();
+                let total: f64 = near.iter().map(|(d2, _)| 1.0 / (d2 + 25.0)).sum();
+                for (d2, i) in &near {
+                    let a = 1.0 / (d2 + 25.0) / total;
+                    for &(b, x) in &vw[*i as usize] {
+                        match w.iter_mut().find(|e| e.0 == b) {
+                            Some(e) => e.1 += a * x,
+                            None => w.push((b, a * x)),
+                        }
+                    }
+                }
+                w
+            })
+            .collect()
+    }
+
     /// The body in another pose, in the same frame as standing (the pelvis stays put), up to
     /// `top` mm; and its joints, mm.
     pub fn posed(&self, legs: [LegPose; 2], top: f64) -> (IndexedMesh, HashMap<String, Point3<f64>>) {

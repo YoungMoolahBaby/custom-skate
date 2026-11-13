@@ -120,6 +120,11 @@ type (bug, docs, API, perf, setup, works), date, file:line under
   an enclosed void as inside, which is right for the boot's tongue (a TPU skin round a lattice
   core): an exact field with the pseudo-normal sign would have put pad material in the
   tongue's core.
+- **works** (2026-11-12, G3): `TriMeshDistance` with `ParitySign` (parity.rs:68), rebuilt for
+  every pose on the girdle's thigh pad as skinning bends it (two closed meshes, 287k vertices
+  between them), gives the shin pad's clearance to it for 180 posed cases in ~6 min on two
+  threads, carrying 5M points as well. Its inside test held on meshes that `clip_mesh_against_plane`
+  cut and `auto_cap_open_boundaries` closed (cf-scan-prep-core).
 - **perf** (2026-11-12, the shin pad): grids are most of the pad's ~17 min run: the leaned leg
   at 2 mm (3.8M nodes, 683k triangles) 103 s, ~27 us a node; the tongue plate at 1.25 mm
   (2.9M nodes, 641k triangles) 57 s; two convex hulls at 1.5 mm, 71 s and 61 s.
@@ -323,7 +328,10 @@ Nice-to-haves for CortenForge, with what this project built instead.
 - **Posing a mesh by a skeleton** (2026-11-12, the girdle): linear blend skinning (bones with
   rest joints, per-vertex weights, local rotations composed down a hierarchy) in the mesh crates,
   for posing a scanned or modelled body before fitting gear to it. Instead: `pose::Rig`, on
-  MakeHuman's skeleton and weights.
+  MakeHuman's skeleton and weights. And carrying things worn on it (G3): skin weights passed
+  from the body to a nearby mesh (each point a mix of its nearest skin vertices' weights, as
+  MakeHuman fits clothes), then posed with the body. Instead: `body::Body::weights_near` and
+  `moves`.
 - **Impacts in sim-soft-explicit** (2026-11-12, D3): a free rigid body as the obstacle (mass,
   velocity, moved by the contact force each step), so a dropped or thrown impactor needs no
   host-side loop; contact between two soft bodies (a rubber puck on a pad); a crushable-foam
