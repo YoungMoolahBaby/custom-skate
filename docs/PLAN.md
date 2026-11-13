@@ -1600,8 +1600,20 @@ What it shows:
   thigh pad pushed down by the belly; red within 40 mm](girdle/gap.png)
 
 **G3 next:**
-- The margin is Jon's call: how far his girdle rides down, and his shin pad's top moves, when he
-  skates. With it, set `thigh_bottom` (600 now, 20 mm above the thigh guard).
+- **The knee shield as a cup on the bent knee.** Jon, on `gap.png`: "im noticing the knee cup
+  sticks out instead of stays cupped to the knee. but i supposed thats because theres no sock
+  holding it on. but the knee part is usually more of a cup, as hockey players usually are
+  always skating with a knee bend, and wearing socks, or in roller hockey, pants". So:
+  - carry the knee shield and thigh guard as a rigid cup that follows the skin over the knee
+    (the sock or pants hold it there), the front shell and calf wraps with the shin;
+  - build the knee shield on the body posed at a skating knee angle (from published on-ice
+    kinematics), so it is a cup round the bent knee. This also moves the knee region onto the
+    body (above: its thigh is fuller than the leg's);
+  - then rerun G3.
+- **The margin: research first.** Jon: "this is something we'd likely research too". How far a
+  girdle (or the shorts holding its pads) rides down a thigh in play, and how far a shin pad
+  shifts on its straps under a sock. Then his experience, then set `thigh_bottom` (600 now,
+  20 mm above the thigh guard).
 - The thigh pad's top could give rather than push: its shell stops short of the foam's top, so
   the belly in a deep crouch presses foam, not a hard edge.
 

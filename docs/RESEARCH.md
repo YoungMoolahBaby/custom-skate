@@ -618,6 +618,10 @@ further than that.
 
 ## Still to find
 
+- How far gear shifts on the leg in play (G3's margin): a girdle's shorts riding down the thigh,
+  a shin pad moving on its straps under a sock or pants.
+- The knee angle of the on-ice skating stance, for the knee shield's cup.
+
 - Frame design loads for hockey: Stidwill's thesis numbers; the EN 13843 test loads (paid).
 - How a hockey boot is built and what each part does: shell, toe cap, tendon guard, liner, tongue,
   footbed, eyelets; materials, wall thicknesses, weights; any puck-protection standard. Ice vs

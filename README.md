@@ -5,7 +5,9 @@ skater's feet. The roller skate rides an aluminium chassis that rocks like Marsb
 the same as a premium one-piece chassis; boot and chassis are designed together, so the boot's sole
 is the part that rocks. The ice skate takes a dynamic (rocking) blade holder. Modelled with
 [CortenForge](https://crates.io/crates/cortenforge). The chassis came first, so most of this page
-is about it; the boot plan is in `docs/PLAN.md` (track B).
+is about it; the boot plan is in `docs/PLAN.md` (track B). The project has since grown into the
+rest of the gear: shin pads and a girdle fitted to the same stand-in body ([The gear](#the-gear),
+track D).
 
 **[Open the skates in 3D](https://youngmoolahbaby.github.io/custom-skate/)**: ice or roller, open or
 V throat, two colourways or your own, taken apart or cut through. Built on the stand-in foot;
@@ -79,13 +81,22 @@ found a gain only in backward skating. Details and numbers are in `docs/RESEARCH
 ## Run
 
 ```
-cargo run --release -- check         # every tool used, against known results (32/32)
+cargo run --release -- check         # every tool used, against known results (43/43)
 cargo run --release -- pitch         # the pitch tables above
 cargo run --release -- scan <file>   # measure a foot scan (OBJ, STL, PLY)
 cargo run --release -- round1 <scan> # the whole skate on one foot -> out/round1 (STL, PNG)
 cargo run --release -- chassis       # the round-2 roller chassis alone: weighed, rocked, checked -> out/chassis
-cargo run --release -- boot <scan> [out] [ice|roller]   # the hockey boot, every part weighed and drawn
+cargo run --release -- boot <scan> [out] [ice|roller] [open|v]   # the hockey boot, every part weighed and drawn
+cargo run --release -- leg <scan>    # the stand-in leg: the foot scan joined to MakeHuman's leg
+cargo run --release -- pad <scan>    # the shin pads on the leg in the boot (run `boot` first)
+cargo run --release -- impact        # puck impacts (sim-soft-explicit) against a spring-mass check
+cargo run --release -- body <scan>   # the stand-in body, waist to feet
+cargo run --release -- girdle <scan> # the girdle on the body
+cargo run --release -- poses <scan>  # the body posed: standing, skating stance, kneeling, crouch
+cargo run --release -- gap <scan>    # the girdle-to-shin-pad gap through the knee's and hip's bend (run `pad` first)
 ```
+
+The pad, girdle and gap runs take 8-30 minutes; `PAD_THREADS=2` keeps their memory down.
 
 Builds go to `D:/cargo-target/custom-skate` (`.cargo/config.toml`, local only). The first
 release build takes about 3 minutes.
@@ -236,12 +247,48 @@ viewer too, with custom colours for every part.*
   244 g with the insert and pin; the whole skate 621 g.**
 - With the V throat: 611 g (ice), 605 g (roller).
 
+## The gear
+
+Jon: "even though this says custom skate, id like to actually do full hockey equipment." The
+helmet is parked: a simulation can't certify one, and leagues want a HECC or CSA sticker. Shin
+pads and a girdle came first, fitted to one stand-in body: MakeHuman's CC0 body set to the US
+Army's ANSUR II medians for men 170-180 cm, joined to the stand-in foot scan.
+
+![The fitted shin pad, round 3: front, outside, back and inside, with a grid to mark up](docs/pad/pad_views.png)
+
+- **Shin pads** fitted to the leg and the boot, so pad and skate read as one piece. Tongue
+  under the pad or over it; ice now, roller (a lighter puck, a hotter rink) to follow. A
+  modern pad's parts: a tapered front shell, vented side panels, one knee shield, a thigh
+  guard, calf wraps, straps. A hard PA 12 shell over a foam liner, **372 g**. It stands 19.6 mm
+  off the shin at the front and 9-10 mm at the sides. Stock and undersized pads modelled on the
+  same leg stand 27.8 and 23.4 mm off at the front, but with 8 mm of foam to its 14: a like-for-
+  like rerun is to come.
+- **Puck impacts** (sim-soft-explicit, checked against a spring-mass impact): foam thickness is
+  the lever. 14 mm of foam at the front takes a third off the force that reaches the shin
+  (12.4 kN against 18.5 with 8 mm, on a rigid shin; the absolute forces are high until the
+  shin and the foam's losses are modelled). Through the pad, a cold puck hits 1.5x as hard as a
+  warm one.
+- **A modern girdle**, compression shorts holding thigh, hip, kidney and tailbone pads: 840 g,
+  layers still placeholders.
+- **Posed** with MakeHuman's skeleton and skin weights: standing, skating stance, kneeling, deep
+  crouch. Through that range, the girdle's thigh pad and the shin pad never meet: bending the knee
+  holds the 20 mm gap between them or opens it. Only a hip flexed past 75° with the knee nearly
+  straight could push the thigh pad down onto the shin pad.
+
+![The girdle and the shin pad posed: standing, skating stance, kneeling, deep crouch](docs/girdle/gap.png)
+
+Next: the knee shield shaped as a cup around the bent knee of a skating stance, held on by the
+sock or pants; how far a girdle and a shin pad shift in play, which sets the gap; the roller pad.
+Pictures and numbers: `docs/pad/`, `docs/girdle/`, `docs/body/`, and `docs/PLAN.md` (Track D).
+
 ## Status
 
 Phase 0 (the science, the pitch model, the mass tool checked), round 1 (the whole skate on an
 example foot), round 2's first step (the chassis to weight), the like-for-like FEM sizing of
-step 2 and round 2 of the boot (a hockey boot from the scan) are done. See `docs/PLAN.md` for what comes next and `docs/CORTENFORGE.md` for what
-CortenForge did well and where it fell short.
+step 2 and round 2 of the boot (a hockey boot from the scan) are done. On the gear: the shin
+pad's third round with its impact model, the girdle's first round, and posing the body with
+the girdle-to-shin-pad gap. See `docs/PLAN.md` for what comes next and `docs/CORTENFORGE.md` for
+what CortenForge did well and where it fell short.
 
 ## Patents
 
