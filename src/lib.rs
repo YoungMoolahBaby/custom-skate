@@ -17,6 +17,7 @@ pub mod pad;
 pub mod skate;
 pub mod materials;
 pub mod pitch;
+pub mod pose;
 pub mod render;
 pub mod round1;
 pub mod round2;

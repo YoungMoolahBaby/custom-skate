@@ -897,6 +897,7 @@ dependencies = [
  "cortenforge-sim-soft-explicit",
  "nalgebra 0.34.2",
  "png",
+ "serde_json",
 ]
 
 [[package]]

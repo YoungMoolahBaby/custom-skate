@@ -25,9 +25,10 @@ use std::time::Instant;
 
 use cortenforge::mesh::io::save_mesh;
 use cortenforge::mesh::types::IndexedMesh;
-use nalgebra::{Point3, Rotation3, Unit, Vector3};
+use nalgebra::{Point3, Rotation3, Vector3};
 
 use crate::leg::{Subdivision, load_base, load_target, makehuman_dir, tape_perimeter};
+use crate::pose::{LegPose, Motion, Rig, leg_rotations};
 use crate::render::{Layer, Style, View, render_styled};
 use crate::scan;
 
@@ -72,13 +73,19 @@ fn target_files(name: &str) -> (String, String) {
 }
 
 /// MakeHuman's male body, subdivided, with the sliders ready to add.
-struct Model {
+pub struct Model {
     base: Vec<Vector3<f64>>,
     targets: Vec<(Vec<Vector3<f64>>, Vec<Vector3<f64>>)>,
     raw: Vec<Vector3<f64>>,
     raw_targets: Vec<(Vec<Vector3<f64>>, Vec<Vector3<f64>>)>,
     joints: HashMap<String, Vec<u32>>,
     quads: Vec<[u32; 4]>,
+    /// The skeleton and skin weights, and the two smoothing passes (to smooth a posed control
+    /// mesh).
+    rig: Rig,
+    s1: Subdivision,
+    s2: Subdivision,
+    n_body: usize,
 }
 
 impl Model {
@@ -101,7 +108,9 @@ impl Model {
             raw_targets.push((load_target(&dir.join("targets").join(d), n)?, load_target(&dir.join("targets").join(i), n)?));
         }
         let targets = raw_targets.iter().map(|(d, i)| (sub(d), sub(i))).collect();
-        Ok(Model { base: sub(&raw), targets, raw, raw_targets, joints: base.joints, quads: s2.quads })
+        let rig = Rig::load(dir)?;
+        let quads = s2.quads.clone();
+        Ok(Model { base: sub(&raw), targets, raw, raw_targets, joints: base.joints, quads, rig, s1, s2, n_body: base.n_body })
     }
 
     fn add(x: &mut [Vector3<f64>], t: &(Vec<Vector3<f64>>, Vec<Vector3<f64>>), w: f64) {
@@ -126,40 +135,33 @@ impl Model {
     }
 }
 
-fn smoothstep(e0: f64, e1: f64, x: f64) -> f64 {
-    let t = ((x - e0) / (e1 - e0)).clamp(0.0, 1.0);
-    t * t * (3.0 - 2.0 * t)
-}
-
-/// Stand the legs: each turns about its hip joint until its knee joint is above its ankle
-/// joint, fully below the hip and blended to nothing 30 mm above it and across the midline.
-/// MakeHuman units (dm, y up); applied to skin and joint markers alike.
-fn pose(m: &Model, skin: &mut [Vector3<f64>], raw: &mut [Vector3<f64>]) -> [(f64, f64); 2] {
+/// The body posed: each leg first stood (turned at the hip until its knee joint is over its
+/// ankle joint: MakeHuman stands with its feet ~44 cm apart), then flexed by `legs` (hip, knee,
+/// ankle), by MakeHuman's skeleton and skin weights (`pose.rs`) on the control mesh, then
+/// smoothed. Returns the smoothed skin, the joints (dm, MakeHuman's frame: "r hip", "r knee",
+/// "r ankle", and "l ..."), and each leg's tilt taken out to stand it (degrees in, forward).
+/// (Before 2026-11-12 the legs were turned about the hips by hand, blended over the hip.)
+pub fn posed(m: &Model, raw: &[Vector3<f64>], legs: [LegPose; 2]) -> (Vec<Vector3<f64>>, HashMap<String, Vector3<f64>>, [(f64, f64); 2]) {
+    let mut stand = [Rotation3::identity(); 2];
     let mut tilts = [(0.0, 0.0); 2];
     for (k, side) in ["r", "l"].iter().enumerate() {
-        let sign = if *side == "r" { -1.0 } else { 1.0 };
-        let hip = m.joint(raw, &format!("joint-{side}-upper-leg"));
-        let knee = m.joint(raw, &format!("joint-{side}-knee"));
-        let ankle = m.joint(raw, &format!("joint-{side}-ankle"));
-        let d = knee - ankle;
-        let Some(rot) = Rotation3::rotation_between(&d, &Vector3::y()) else { continue };
+        let d = m.joint(raw, &format!("joint-{side}-knee")) - m.joint(raw, &format!("joint-{side}-ankle"));
+        stand[k] = Rotation3::rotation_between(&d, &Vector3::y()).unwrap_or_else(Rotation3::identity);
         tilts[k] = (d.x.atan2(d.y).to_degrees(), d.z.atan2(d.y).to_degrees());
-        let (axis, angle) = rot.axis_angle().map_or((Vector3::x_axis(), 0.0), |(a, t)| (a, t));
-        let weight = |v: &Vector3<f64>| smoothstep(hip.y + 0.3, hip.y - 0.7, v.y) * smoothstep(-0.15, 0.15, sign * v.x);
-        let turn = |v: &mut Vector3<f64>, axis: &Unit<Vector3<f64>>| {
-            let w = weight(v);
-            if w > 0.0 {
-                *v = hip + Rotation3::from_axis_angle(axis, w * angle) * (*v - hip);
-            }
-        };
-        for v in skin.iter_mut() {
-            turn(v, &axis);
-        }
-        for v in raw.iter_mut() {
-            turn(v, &axis);
-        }
     }
-    tilts
+    let motions = m.rig.motions(raw, &leg_rotations(stand, legs));
+    let praw = m.rig.skin(raw, &motions);
+    let skin = m.s2.apply(&m.s1.apply(&praw[..m.n_body]));
+    // The joints ride on their bones: the hip on the thigh (it turns about it), the knee at the
+    // thigh's end, the ankle at the shin's end.
+    let mut joints = HashMap::new();
+    for (side, s) in [("r", "R"), ("l", "L")] {
+        let mv = |bone: &str| m.rig.index.get(&format!("{bone}.{s}")).map(|&i| motions[i]).unwrap_or_else(Motion::identity);
+        joints.insert(format!("{side} hip"), mv("upperleg01").apply(m.joint(raw, &format!("joint-{side}-upper-leg"))));
+        joints.insert(format!("{side} knee"), mv("upperleg02").apply(m.joint(raw, &format!("joint-{side}-knee"))));
+        joints.insert(format!("{side} ankle"), mv("lowerleg02").apply(m.joint(raw, &format!("joint-{side}-ankle"))));
+    }
+    (skin, joints, tilts)
 }
 
 /// MakeHuman (dm) to the foot frame (mm), floor at 0, then `shift` in x and y.
@@ -238,7 +240,7 @@ fn right_girth(mesh: &IndexedMesh, z: f64) -> Option<(f64, Point3<f64>)> {
 /// single loop between crotch and waist), waist girth at ANSUR's waist height, lower thigh 80
 /// mm above the knee joint].
 fn measures(m: &Model, w: &[f64; N], join_z: f64) -> ([f64; N], IndexedMesh, f64) {
-    let (mut skin, mut raw) = m.at(w);
+    let (skin, raw) = m.at(w);
     let floor_u = skin.iter().map(|v| v.y).fold(f64::MAX, f64::min);
     let as_is = lower_body(m, &skin, floor_u, (0.0, 0.0), 1250.0);
     let knee_u = 100.0 * (m.joint(&raw, "joint-r-knee").y - floor_u);
@@ -254,10 +256,10 @@ fn measures(m: &Model, w: &[f64; N], join_z: f64) -> ([f64; N], IndexedMesh, f64
         .fold(0.0, f64::max);
     let waist = loops_at(&as_is, ansur::WAIST_HEIGHT).into_iter().map(|l| l.0).fold(0.0, f64::max);
     let lower_thigh = right_girth(&as_is, knee_u + 80.0).map_or(f64::NAN, |g| g.0);
-    pose(m, &mut skin, &mut raw);
+    let (skin, joints, _) = posed(m, &raw, [LegPose::default(); 2]);
     let floor = skin.iter().map(|v| v.y).fold(f64::MAX, f64::min);
     let mesh = lower_body(m, &skin, floor, (0.0, 0.0), 1250.0);
-    let knee = 100.0 * (m.joint(&raw, "joint-r-knee").y - floor);
+    let knee = 100.0 * (joints["r knee"].y - floor);
     let calf = (0..).map(|k| 150.0 + 4.0 * k as f64).take_while(|&z| z < knee - 40.0).filter_map(|z| right_girth(&mesh, z).map(|g| g.0)).fold(0.0, f64::max);
     let join = right_girth(&mesh, join_z).map_or(f64::NAN, |g| g.0);
     ([knee, calf, join, crotch, thigh, hips, waist, lower_thigh], mesh, floor)
@@ -273,6 +275,22 @@ pub struct Body {
     pub joints: HashMap<String, Point3<f64>>,
     /// The legs' tilt taken out at the hips, degrees (sideways, forward), right then left.
     pub tilts: [(f64, f64); 2],
+    /// To pose it again: the model, the fitted control mesh, and its floor and shift into the
+    /// foot frame (standing).
+    pub model: std::sync::Arc<Model>,
+    pub raw: Vec<Vector3<f64>>,
+    pub floor: f64,
+    pub shift: (f64, f64),
+}
+
+impl Body {
+    /// The body in another pose, in the same frame as standing (the pelvis stays put), up to
+    /// `top` mm; and its joints, mm.
+    pub fn posed(&self, legs: [LegPose; 2], top: f64) -> (IndexedMesh, HashMap<String, Point3<f64>>) {
+        let (skin, pj, _) = posed(&self.model, &self.raw, legs);
+        let mesh = lower_body(&self.model, &skin, self.floor, self.shift, top);
+        (mesh, pj.into_iter().map(|(k, v)| (k, to_mm(v, self.floor, self.shift))).collect())
+    }
 }
 
 pub fn build(scan_path: &Path, top: f64) -> Result<Body, String> {
@@ -320,22 +338,17 @@ pub fn build(scan_path: &Path, top: f64) -> Result<Body, String> {
     let (f, unshifted, floor) = measures(&m, &w, join_z);
     let (_, c) = right_girth(&unshifted, join_z).ok_or("no right leg at the join")?;
     let shift = (foot_c.0 - c.x, foot_c.1 - c.y);
-    let (mut skin, mut raw) = m.at(&w);
-    let tilts = pose(&m, &mut skin, &mut raw);
+    let (_, raw) = m.at(&w);
+    let (skin, pj, tilts) = posed(&m, &raw, [LegPose::default(); 2]);
     let mesh = lower_body(&m, &skin, floor, shift, top);
-    let mut joints = HashMap::new();
-    for side in ["r", "l"] {
-        for (part, key) in [("upper-leg", "hip"), ("knee", "knee"), ("ankle", "ankle")] {
-            joints.insert(format!("{side} {key}"), to_mm(m.joint(&raw, &format!("joint-{side}-{part}")), floor, shift));
-        }
-    }
+    let joints: HashMap<String, Point3<f64>> = pj.into_iter().map(|(k, v)| (k, to_mm(v, floor, shift))).collect();
     println!(
         "fitted ({:.0} s): {}; sliders {}",
         t0.elapsed().as_secs_f64(),
         (0..N).map(|i| format!("{} {:.1} ({:.0})", names[i], f[i], goal[i])).collect::<Vec<_>>().join(", "),
         TARGETS.iter().zip(w).map(|(n, x)| format!("{} {x:+.2}", n.trim_start_matches("measure-"))).collect::<Vec<_>>().join(", ")
     );
-    Ok(Body { mesh, weights: w, measured: f, joints, tilts })
+    Ok(Body { mesh, weights: w, measured: f, joints, tilts, raw, floor, shift, model: std::sync::Arc::new(m) })
 }
 
 /// `cargo run --release -- body <scan> [out]`: the stand-in body, measured against ANSUR II and
@@ -394,5 +407,50 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
     ];
     render_styled(&[Layer::solid(&b.mesh, skin)], &views, 0.8, &docs.join("body.png"), Style::pretty()).map_err(|e| e.to_string())?;
     std::fs::write(docs.join("summary.txt"), lines.join("\n") + "\n").map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+/// `cargo run --release -- poses <scan>`: the body in a few poses (both legs alike), side by
+/// side, from the right: standing; a skating stance (hip 60 deg, knee 90, ankle 30, so the shin
+/// leans forward over a flat foot); kneeling to block a shot (hip 10, knee 100, toes pointed
+/// back 20); a deep crouch (hip 90, knee 130). To see how MakeHuman's skin weights bend the knee
+/// and the hip.
+pub fn run_poses(scan_path: &Path) -> Result<(), String> {
+    let docs = Path::new("docs/body");
+    std::fs::create_dir_all(docs).map_err(|e| e.to_string())?;
+    let b = build(scan_path, 1250.0)?;
+    let poses = [
+        ("standing", LegPose::default()),
+        ("skating stance", LegPose { hip: 60.0, knee: 90.0, ankle: 30.0 }),
+        ("kneeling", LegPose { hip: 10.0, knee: 100.0, ankle: -20.0 }),
+        ("deep crouch", LegPose { hip: 90.0, knee: 130.0, ankle: 0.0 }),
+    ];
+    let mut meshes = Vec::new();
+    for (k, (name, p)) in poses.iter().enumerate() {
+        let (mut m, j) = b.posed([*p, *p], 1250.0);
+        let (h, kn, a) = (j["r hip"], j["r knee"], j["r ankle"]);
+        let thigh = (kn - h).normalize();
+        let shin = (a - kn).normalize();
+        println!(
+            "{name}: knee joint ({:.0}, {:.0}, {:.0}), ankle ({:.0}, {:.0}, {:.0}); thigh to shin {:.0} deg; {} triangles",
+            kn.x,
+            kn.y,
+            kn.z,
+            a.x,
+            a.y,
+            a.z,
+            thigh.dot(&shin).clamp(-1.0, 1.0).acos().to_degrees(),
+            m.faces.len()
+        );
+        for v in &mut m.vertices {
+            v.x += 900.0 * k as f64;
+        }
+        meshes.push(m);
+    }
+    let skin = [0.85, 0.70, 0.60];
+    let layers: Vec<Layer> = meshes.iter().map(|m| Layer::solid(m, skin)).collect();
+    render_styled(&layers, &[View::looking(Vector3::y(), Vector3::z())], 0.6, &docs.join("poses.png"), Style::pretty()).map_err(|e| e.to_string())?;
+    render_styled(&layers, &[View::looking(Vector3::new(-0.5, 0.8, -0.3), Vector3::z())], 0.6, &docs.join("poses_34.png"), Style::pretty()).map_err(|e| e.to_string())?;
+    println!("drew docs/body/poses.png, poses_34.png");
     Ok(())
 }

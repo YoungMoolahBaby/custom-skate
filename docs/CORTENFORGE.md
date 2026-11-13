@@ -320,6 +320,10 @@ Nice-to-haves for CortenForge, with what this project built instead.
   perimeter of a contour's convex hull, which is how a tape measures a limb (it bridges
   hollows): every anthropometric girth (ANSUR's calf, ankle, thigh) is one. Instead:
   `leg::tape_perimeter`.
+- **Posing a mesh by a skeleton** (2026-11-12, the girdle): linear blend skinning (bones with
+  rest joints, per-vertex weights, local rotations composed down a hierarchy) in the mesh crates,
+  for posing a scanned or modelled body before fitting gear to it. Instead: `pose::Rig`, on
+  MakeHuman's skeleton and weights.
 - **Impacts in sim-soft-explicit** (2026-11-12, D3): a free rigid body as the obstacle (mass,
   velocity, moved by the contact force each step), so a dropped or thrown impactor needs no
   host-side loop; contact between two soft bodies (a rubber puck on a pad); a crushable-foam

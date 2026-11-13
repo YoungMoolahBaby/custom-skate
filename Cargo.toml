@@ -11,6 +11,9 @@ cortenforge = "0.9.0"
 # The explicit (impact) solver, track D3: published with CortenForge 0.9 but not re-exported by
 # the facade (docs/CORTENFORGE.md).
 cortenforge-sim-soft-explicit = "0.9.0"
+# Reading MakeHuman's skeleton and skin weights (JSON) for posing the body; already in the
+# lock file through CortenForge.
+serde_json = "1"
 nalgebra = "0.34"
 # Display only: PNG views of scans and parts (src/render.rs, examples).
 png = "0.18"

@@ -123,6 +123,16 @@ fn main() {
                 std::process::exit(1);
             }
         }
+        "poses" => {
+            let Some(path) = std::env::args().nth(2) else {
+                eprintln!("usage: poses <scan>");
+                std::process::exit(2);
+            };
+            if let Err(e) = custom_skate::body::run_poses(std::path::Path::new(&path)) {
+                eprintln!("{e}");
+                std::process::exit(1);
+            }
+        }
         "girdle" => {
             let Some(path) = std::env::args().nth(2) else {
                 eprintln!("usage: girdle <scan> [out dir]");
@@ -141,7 +151,7 @@ fn main() {
             }
         }
         other => {
-            eprintln!("unknown mode {other:?}; modes: check, pitch, scan, round1, chassis, boot, leg, pad, impact, body, girdle");
+            eprintln!("unknown mode {other:?}; modes: check, pitch, scan, round1, chassis, boot, leg, pad, impact, body, girdle, poses");
             std::process::exit(2);
         }
     }

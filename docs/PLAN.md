@@ -1527,6 +1527,31 @@ girdle scans/stand-in/022_fBW_R.ply` (~8 min on two threads, `src/girdle.rs`); `
 gap above the knee and D4's knee check; the thigh shells lighter (thinner where pucks don't
 land, or PE); a modern girdle's look (as the shin pad's rounds).
 
+**Posing the body (2026-11-12).** Jon: "commit then start on posing". `src/pose.rs`;
+`cargo run --release -- poses scans/stand-in/022_fBW_R.ply` (~2.5 min) draws `docs/body/poses.png`.
+- MakeHuman's default skeleton and skin weights (`rigs/default.mhskel`, `default_weights.mhw`,
+  CC0 in their own headers): each bone's ends are groups of mesh vertices, so the skeleton
+  follows the fitted body. Each skin vertex moves with its bones, weighted (linear blend
+  skinning), on MakeHuman's control mesh, then smoothed by the same two Catmull-Clark levels,
+  as MakeHuman poses and smooths.
+- **Standing** is now the skeleton's: each leg turned at the hip until its knee is over its
+  ankle (it replaces G1's hand-made turn and blend). The fit and the standing body come out the
+  same (knee 466.0 over the ankle; every girth as before).
+- **Poses** (hip, knee, ankle, degrees; the pelvis held still): standing; a skating stance (60,
+  90, 30: the shin leaning forward over a flat foot); kneeling to block a shot (10, 100, toes
+  pointed back 20); a deep crouch (90, 130). The knee bends cleanly, the back of the knee thins a
+  little in the deep crouch as skinning does.
+- The knee and ankle bend about the sideways axis as it is once the leg is stood; about the rest
+  axis (tilted 6.8° by standing) the shin swung out sideways as it bent, the ankle 29-59 mm off
+  line (the first run).
+
+  ![The body standing, in a skating stance, kneeling, in a deep crouch](body/poses.png)
+
+**G3 next:** the pads posed with the body (each part carried by the skin under it: the girdle's
+thigh pad by the thigh, the shin pad's shell by the shin, its knee shield and thigh guard by
+the skin over the knee), the gap between the girdle's bottom and the shin pad's top found over
+the range of motion, and the two edges set for the smallest gap that never closes.
+
 ## Open questions for Jon
 
 - Answered 2026-11-12: the girdle's list (above, the girdle); a modern girdle, not pants.
