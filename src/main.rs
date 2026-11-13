@@ -112,6 +112,17 @@ fn main() {
                 std::process::exit(1);
             }
         }
+        "body" => {
+            let Some(path) = std::env::args().nth(2) else {
+                eprintln!("usage: body <scan> [out dir]");
+                std::process::exit(2);
+            };
+            let out = std::env::args().nth(3).unwrap_or_else(|| "out/body".into());
+            if let Err(e) = custom_skate::body::run(std::path::Path::new(&path), std::path::Path::new(&out)) {
+                eprintln!("{e}");
+                std::process::exit(1);
+            }
+        }
         "impact" => {
             if let Err(e) = custom_skate::impact::run_checks() {
                 eprintln!("{e}");
@@ -119,7 +130,7 @@ fn main() {
             }
         }
         other => {
-            eprintln!("unknown mode {other:?}; modes: check, pitch, scan, round1, chassis, boot, leg, pad, impact");
+            eprintln!("unknown mode {other:?}; modes: check, pitch, scan, round1, chassis, boot, leg, pad, impact, body");
             std::process::exit(2);
         }
     }

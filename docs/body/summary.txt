@@ -1,0 +1,17 @@
+stand-in body, waist to feet (track G1), on scans/stand-in/022_fBW_R.ply
+legs stood at the hips: right 6.8 deg in, 1.7 deg forward; left 6.8, 1.7
+  r hip joint (14, 20, 945) mm
+  l hip joint (14, 237, 945) mm
+  r knee joint (63, 18, 466) mm
+  r ankle joint (63, 18, 71) mm
+  knee joint: 466.0 mm
+  calf: 391.0 mm
+  girth at 115: 225.8 mm
+  crotch height: 842.0 mm
+  thigh girth: 625.0 mm
+  hip girth: 1016.0 mm
+  waist girth: 904.7 mm
+  lower thigh girth: 408.0 mm
+  lower thigh girth 80 mm above the knee joint, legs stood: 403 mm (fitted with legs apart; ANSUR 408)
+  hip breadth at the trochanters' height (896 mm): 362 mm (ANSUR 344)
+  right leg against the stand-in leg (out/leg/leg.stl): z 150: body 228, leg 228; z 250: body 312, leg 313; z 360: body 391, leg 391; z 450: body 356, leg 348; z 550: body 407, leg 385

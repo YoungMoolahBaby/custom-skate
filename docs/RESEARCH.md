@@ -579,6 +579,29 @@ context unconfirmed. Thresholds: bruise, 50% risk at 3.2 J (Desmoulin & Anderson
 abstract); football shin guards (EN 13061) ≤ 2 kN for a ~2 J impact; cricket leg guards (BS
 6183-3) 4-6 kN.
 
+## 21. The body for the girdle: ANSUR II and MakeHuman (2026-11-12)
+
+ANSUR II (as in 18: `ANSUR_II_MALE_Public.csv`, men 1700-1800 mm tall, n = 2,222), mm:
+
+| Measure | p5 | median | p95 |
+|---|---|---|---|
+| waist circumference (at the navel) | 770 | 938 | 1124 |
+| waist height (navel) | 1003 | 1052 | 1099 |
+| buttock circumference | 903 | 1016 | 1140 |
+| buttock height | 833 | 882 | 940 |
+| crotch height | 796 | 842 | 890 |
+| thigh circumference (at the gluteal furrow) | 534 | 625 | 717 |
+| lower thigh circumference | 361 | 408 | 460 |
+| trochanterion height (the bony point of the hip) | 848 | 896 | 951 |
+| iliocristale height (the top of the pelvis) | 1009 | 1058 | 1105 |
+| hip breadth | 310 | 344 | 385 |
+| waist breadth / depth | 272 / 188 | 326 / 234 | 382 / 299 |
+| buttock depth | 205 | 246 | 289 |
+
+MakeHuman (as in 18; CC0): also fetched `measure-hips-circ` and `measure-waist-circ` (each
+`-decr`/`-incr`), and the body-weight targets `macrodetails/universal-male-young-averagemuscle-
+{minweight,maxweight}.target`, to `D:\custom-skate-data\makehuman\`.
+
 ## Still to find
 
 - Frame design loads for hockey: Stidwill's thesis numbers; the EN 13843 test loads (paid).

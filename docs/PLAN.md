@@ -1446,7 +1446,62 @@ In his words, each with a first engineering take. Item 9 above is where this sta
   knee and the boot through the range.
 - **D5, Jon's leg**: scanned with the Otter, knee bent to his stance.
 
+### The girdle (2026-11-12)
+
+Jon: "let's do the girdle" (after D3, as he set: "let's do D3 first then the girdle"). His
+list (2026-11-12):
+1. **"i like girdles, and i like them to no overlap with the shin pads when moving, and be
+   tight to my thihgs. but also yet the gap between the bottom of the girdle and top of the
+   knee pad should be as small is it can be without them interfering with eachother"**
+2. **"a modern girdle. pants are too baggy/get in the way"**
+
+The plan:
+- **G1, the body** from the waist down (below).
+- **G2, the girdle**: a modern girdle (fitted stretch shorts holding the pads), tight to the
+  thighs: hip pads over the trochanters, kidney and lower-back pads, a tailbone pad, thigh pads
+  where pucks hit, a cup pocket. Fitted to the body like the shin pad. Ice under a shell; roller
+  lighter and hotter.
+- **G3, the gap above the knee**: the girdle's thigh pad and the shin pad's knee shield and
+  thigh guard never touch, through the knee's and hip's bend (standing, skating stance,
+  kneeling), and the gap between them is as small as that allows. A clearance found over the
+  range of motion, so it needs the body posed (bent at the knee and hip), which D4 needs too.
+
+**G1, the body (2026-11-12).** `cargo run --release -- body scans/stand-in/022_fBW_R.ply` (~2
+min, `src/body.rs`); `docs/body/`.
+- MakeHuman's male body, eight of its sliders fitted together (Newton; the leg's three, plus
+  thigh length, thigh, hip and waist girths, and body weight: its average man is slimmer than
+  ANSUR's median soldier) to ANSUR II's medians for men 170-180 cm (RESEARCH.md 18, 21):
+
+  | | body | ANSUR |
+  |---|---|---|
+  | knee joint height | 466.0 | 466 |
+  | calf girth | 391.0 | 391 |
+  | girth 115 mm up | 225.8 | 225.8 (the scan) |
+  | crotch height | 842.0 | 842 |
+  | thigh girth, below the crotch | 625.0 | 625 |
+  | hip girth (buttocks) | 1016.0 | 1016 |
+  | **waist girth** at 1052 mm | **904.7** | **938** |
+  | lower thigh girth, 80 mm above the knee | 408.0 | 408 |
+  | *not fitted:* hip breadth at the trochanters' height | 362 | 344 |
+
+  The waist falls 33 mm (3.5%) short: MakeHuman's waist slider is at its end (+1.00).
+- **Standing:** each leg turns about its hip joint (6.8° in, 1.7° forward) until its knee is
+  over its ankle, blended in over the hip, so the pelvis stays level and the feet stand
+  hip-width (the stand-in leg turned about the ankle, which would tip a pelvis). The girths are
+  fitted on the body as MakeHuman stands it, legs apart: stood, the thighs press into each other
+  at the top, and a fit measuring there jumped between one loop and two and never settled (the
+  first try).
+- **Against the stand-in leg:** below the knee the same to 1 mm of girth (228 / 312 / 391 at
+  150 / 250 / 360 mm up), so the boot and the shin pad's lower part stand. Above the knee the
+  body's thigh is fuller (356 against 348 mm at 450, 407 against 385 at 550): the leg was fitted
+  only below the knee. The shin pad's knee shield and thigh guard should be rebuilt on the body,
+  and the leg taken from it, so all the gear sits on one body.
+
+  ![The stand-in body: front, side, back, three-quarter](body/body.png)
+
 ## Open questions for Jon
+
+- Answered 2026-11-12: the girdle's list (above, the girdle); a modern girdle, not pants.
 
 - Answered 2026-11-12: Jon's own shin pads are not the baseline (a different body); the
   comparison pads are modelled on the stand-in leg. Still open: anything else that bugs him
