@@ -5,6 +5,7 @@ pub mod body;
 pub mod boot;
 pub mod chassis;
 pub mod frame;
+pub mod girdle;
 pub mod check;
 pub mod fem;
 pub mod fit;

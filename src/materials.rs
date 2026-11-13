@@ -65,6 +65,12 @@ pub const STRAP: Material = Material {
     source: "assumed 0.8 g/cm3 for elastic webbing with hook-and-loop (like the lace); weigh a real strap",
 };
 
+pub const FABRIC: Material = Material {
+    name: "compression fabric (assumed)",
+    density: 250.0,
+    source: "assumed 250 g/m2 for a 1 mm compression knit (polyester-elastane), as 0.25 g/cm3 over 1 mm; weigh a real one",
+};
+
 pub const TI_6AL_4V: Material = Material {
     name: "Ti-6Al-4V",
     density: 4430.0,

@@ -123,6 +123,17 @@ fn main() {
                 std::process::exit(1);
             }
         }
+        "girdle" => {
+            let Some(path) = std::env::args().nth(2) else {
+                eprintln!("usage: girdle <scan> [out dir]");
+                std::process::exit(2);
+            };
+            let out = std::env::args().nth(3).unwrap_or_else(|| "out/girdle".into());
+            if let Err(e) = custom_skate::girdle::run(std::path::Path::new(&path), std::path::Path::new(&out)) {
+                eprintln!("{e}");
+                std::process::exit(1);
+            }
+        }
         "impact" => {
             if let Err(e) = custom_skate::impact::run_checks() {
                 eprintln!("{e}");
@@ -130,7 +141,7 @@ fn main() {
             }
         }
         other => {
-            eprintln!("unknown mode {other:?}; modes: check, pitch, scan, round1, chassis, boot, leg, pad, impact, body");
+            eprintln!("unknown mode {other:?}; modes: check, pitch, scan, round1, chassis, boot, leg, pad, impact, body, girdle");
             std::process::exit(2);
         }
     }

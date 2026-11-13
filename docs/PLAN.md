@@ -1499,6 +1499,34 @@ min, `src/body.rs`); `docs/body/`.
 
   ![The stand-in body: front, side, back, three-quarter](body/body.png)
 
+**G2, the girdle, round 1 (2026-11-12).** Jon: "commit and start G2". `cargo run --release --
+girdle scans/stand-in/022_fBW_R.ply` (~8 min on two threads, `src/girdle.rs`); `docs/girdle/`.
+- On the standing body (G1), each pad an offset from it like the shin pad's, its outline drawn
+  on one of two maps of the body laid flat: round the torso (about an axis between the hip
+  joints, 0 at the back, so the back pads don't straddle a seam) for the hip, kidney and
+  tailbone pads; round each thigh (about its hip-knee axis) for the thigh pads.
+- **Compression shorts** with no gap to the body ("tight to my thihgs"), 1 mm fabric from 585 to
+  1100 mm up, drawn as fabric on the body and weighed from their area (5718 cm²).
+- **Thigh pads** across the front of each thigh from the groin crease (880 outside, 800 inside,
+  clear of the crotch) down to 600 mm, 65° round to the outside and 50° to the inside: 12 mm
+  foam + 2 mm PA 12 (foam-heavy, from D3). Their bottom is G3's to set; standing it is ~20 mm
+  above the shin pad's thigh guard.
+- **Hip pads** over the trochanters (896 mm) up past the iliac crest (1058), 10 + 2 mm; a
+  **kidney pad** across the lower back, 12 + 1.5; a **tailbone pad** below it, 10 + 2. The cup is
+  a separate item.
+- **840 g**: pads 697 (thigh shells 123 g each, thigh foam 104 each, hip shells 38 and foam 27
+  each, kidney 47 + 53, tailbone 7 + 5), shorts 143. All placeholders: no girdle weighed yet,
+  and the layers aren't sized for a puck (D3's model would do it).
+- The first try left the fronts of the thighs bare: the thigh pads were kept within 120 mm of
+  the thigh's axis, and the femur sits so far back that the front of the upper thigh is ~115 mm
+  from it, so the pad's band was cut away there; now 180.
+
+  ![The girdle, round 1: front, side, back, three-quarter](girdle/girdle.png)
+
+**Next for the girdle:** posing the body (knee and hip bent: skating stance, kneeling), for G3's
+gap above the knee and D4's knee check; the thigh shells lighter (thinner where pucks don't
+land, or PE); a modern girdle's look (as the shin pad's rounds).
+
 ## Open questions for Jon
 
 - Answered 2026-11-12: the girdle's list (above, the girdle); a modern girdle, not pants.

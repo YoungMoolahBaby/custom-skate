@@ -233,16 +233,16 @@ pub enum Body {
     Hull(Field),
 }
 
-fn smin(a: f64, b: f64, k: f64) -> f64 {
+pub(crate) fn smin(a: f64, b: f64, k: f64) -> f64 {
     let h = (0.5 + 0.5 * (b - a) / k).clamp(0.0, 1.0);
     b + (a - b) * h - k * h * (1.0 - h)
 }
 
-fn smax(a: f64, b: f64, k: f64) -> f64 {
+pub(crate) fn smax(a: f64, b: f64, k: f64) -> f64 {
     -smin(-a, -b, k)
 }
 
-fn smoothstep(e0: f64, e1: f64, x: f64) -> f64 {
+pub(crate) fn smoothstep(e0: f64, e1: f64, x: f64) -> f64 {
     let t = ((x - e0) / (e1 - e0)).clamp(0.0, 1.0);
     t * t * (3.0 - 2.0 * t)
 }
@@ -446,13 +446,13 @@ impl Part {
 }
 
 /// A smooth bump, 1 at 0, falling to 0 (with zero slope) at |x| = 1.
-fn bump(x: f64) -> f64 {
+pub(crate) fn bump(x: f64) -> f64 {
     let t = 1.0 - x * x;
     if t > 0.0 { t * t } else { 0.0 }
 }
 
 /// A rounded rectangle's signed distance in 2D: centred, half-extents `hx`, `hy`, corner `r`.
-fn rounded_rect(x: f64, y: f64, hx: f64, hy: f64, r: f64) -> f64 {
+pub(crate) fn rounded_rect(x: f64, y: f64, hx: f64, hy: f64, r: f64) -> f64 {
     let qx = x.abs() - (hx - r);
     let qy = y.abs() - (hy - r);
     (qx.max(0.0).powi(2) + qy.max(0.0).powi(2)).sqrt() + qx.max(qy).min(0.0) - r
@@ -460,7 +460,7 @@ fn rounded_rect(x: f64, y: f64, hx: f64, hy: f64, r: f64) -> f64 {
 
 /// Chaikin's corner cutting on a closed polygon: each round replaces every edge by its points
 /// at 1/4 and 3/4, so the outline converges to a smooth (quadratic B-spline) curve.
-fn chaikin(p: &[(f64, f64)]) -> Vec<(f64, f64)> {
+pub(crate) fn chaikin(p: &[(f64, f64)]) -> Vec<(f64, f64)> {
     let n = p.len();
     let mut out = Vec::with_capacity(2 * n);
     for i in 0..n {
@@ -473,7 +473,7 @@ fn chaikin(p: &[(f64, f64)]) -> Vec<(f64, f64)> {
 
 /// A symmetric outline from its half on the medial side (s >= 0), listed from the top of the
 /// centre line round to the bottom of it.
-fn mirrored(half: &[(f64, f64)]) -> Vec<(f64, f64)> {
+pub(crate) fn mirrored(half: &[(f64, f64)]) -> Vec<(f64, f64)> {
     let mut v = half.to_vec();
     for i in (1..half.len() - 1).rev() {
         v.push((-half[i].0, half[i].1));
@@ -980,7 +980,7 @@ pub fn build_parts(pad: &Pad) -> Vec<(Part, IndexedMesh, f64)> {
 /// Draw to `path`; if that file can't be written (Windows holds a picture open in a viewer:
 /// "a file with a user-mapped section open", 2026-11-12), draw to `<name>-new.png` instead and
 /// say so, rather than stopping the run.
-fn draw(layers: &[Layer], views: &[View], px_per_mm: f64, path: &Path, style: Style) -> Result<(), String> {
+pub(crate) fn draw(layers: &[Layer], views: &[View], px_per_mm: f64, path: &Path, style: Style) -> Result<(), String> {
     match render_styled(layers, views, px_per_mm, path, style) {
         Ok(_) => Ok(()),
         Err(err) => {
@@ -999,7 +999,7 @@ fn lean_mesh(m: &IndexedMesh, zp: f64, deg: f64) -> IndexedMesh {
     out
 }
 
-fn close_between(m: &IndexedMesh, z0: f64, z1: f64) -> IndexedMesh {
+pub(crate) fn close_between(m: &IndexedMesh, z0: f64, z1: f64) -> IndexedMesh {
     let mut c = clip_mesh_against_plane(m, Point3::new(0.0, 0.0, z1), -Vector3::z());
     c = clip_mesh_against_plane(&c, Point3::new(0.0, 0.0, z0), Vector3::z());
     weld_vertices(&mut c, 1e-6);
