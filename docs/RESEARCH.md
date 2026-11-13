@@ -616,11 +616,38 @@ further than that.
   shorts and a strapped pad move with the skin and can also slide on it. These numbers say how
   far the skin alone goes, not how far gear goes.
 
+## 23. The skating stance's knee angle (2026-11-13)
+
+For G3, round 2: the shin pad's knee shield built as a cup on the knee bent as in skating.
+- **Lockwood et al. (2023)** (section 1, the Brock / George Brown poster): treadmill forward
+  skating, n = 11 male collegiate players, Xsens IMUs. Hip / knee / ankle angle **59.57 / 65.54
+  / 12.67°** (fixed holder; 59.87 / 65.07 / 12.50 dynamic). The poster doesn't say at which
+  instant of the stride these are taken, or whether they are means over it.
+- **Yu, Bi, Wang, Qin, Song & Wu (2025)**, "What are the differences between on-ice and off-ice
+  side-cutting maneuver? A kinematic and electromyographic comparative analysis of ice hockey
+  players", *Frontiers in Bioengineering and Biotechnology*, doi 10.3389/fbioe.2025.1692676
+  (open access). 20 elite male players, 18.0 ± 0.7 years. Table 2, peaks: knee flexion
+  **75.18 ± 6.21°** on ice (63.22 ± 4.81 off ice), hip flexion **65.83 ± 11.48°** on ice
+  (43.39 ± 3.51 off). A side-cut, not the forward stride, and peaks, not a typical angle.
+- **Buckeridge, LeVangie, Stetter, Nigg & Nigg (2015)**, "An On-Ice Measurement Approach to
+  Analyse the Biomechanics of Ice Hockey Skating", *PLoS ONE* 10(5): e0127324. 9 high- and
+  9 low-calibre players on ice, electrogoniometers at the hip and knee. Its knee angles are
+  curves only (Figs 7-8, knee flexion positive); the text gives no degrees. In steady strides
+  the knee is more flexed at ice contact than in acceleration strides.
+- Not used: a coaching page's "90-110° for elite skaters, 120-140° for average" (included angles,
+  so 70-90° and 40-60° of flexion), credited to a University of Calgary lab without a citation.
+- **So the cup is built at 70° of knee flexion and 60° at the hip:** between the stride's 65.5
+  and the cut's peak of 75. The hip doesn't shape the knee in the model (the skin there moves
+  with the thigh and shin bones only).
+
 ## Still to find
 
 - How far gear shifts on the leg in play (G3's margin): a girdle's shorts riding down the thigh,
   a shin pad moving on its straps under a sock or pants.
-- The knee angle of the on-ice skating stance, for the knee shield's cup.
+- The knee's flexion through a forward stride, as numbers (contact, glide, push-off): theses from
+  Pearsall's lab at McGill are the likely source (their pages moved to mcgill.scholaris.ca).
+- How modern shin pads join the knee cap to the shin shell, and how far it turns on it (G3,
+  round 2: the cup turns up to 69° on the shin between straight and a deep crouch).
 
 - Frame design loads for hockey: Stidwill's thesis numbers; the EN 13843 test loads (paid).
 - How a hockey boot is built and what each part does: shell, toe cap, tendon guard, liner, tongue,

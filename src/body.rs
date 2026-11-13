@@ -182,6 +182,11 @@ pub fn motion_to_mm(m: &Motion, floor: f64, shift: (f64, f64)) -> Motion {
 /// The body below `z_top` mm (its connected piece holding the pelvis: hands hang free of it),
 /// as triangles in the foot frame.
 fn lower_body(m: &Model, skin: &[Vector3<f64>], floor: f64, shift: (f64, f64), z_top: f64) -> IndexedMesh {
+    mesh_of_quads(skin, floor, shift, &lower_quads(m, skin, floor, z_top))
+}
+
+/// `lower_body`'s quads, as indices into the smoothed skin.
+fn lower_quads(m: &Model, skin: &[Vector3<f64>], floor: f64, z_top: f64) -> Vec<[u32; 4]> {
     let h = |i: u32| 100.0 * (skin[i as usize].y - floor);
     let cand: Vec<[u32; 4]> = m.quads.iter().copied().filter(|q| q.iter().all(|&i| h(i) < z_top)).collect();
     let mut parent: Vec<u32> = (0..skin.len() as u32).collect();
@@ -209,10 +214,15 @@ fn lower_body(m: &Model, skin: &[Vector3<f64>], floor: f64, shift: (f64, f64), z
         .min_by(|&a, &b| (skin[a as usize] - pelvis).norm().total_cmp(&(skin[b as usize] - pelvis).norm()))
         .unwrap_or(0);
     let root = find(&mut parent, seed);
-    let keep: Vec<[u32; 4]> = cand.into_iter().filter(|q| find(&mut parent, q[0]) == root).collect();
+    cand.into_iter().filter(|q| find(&mut parent, q[0]) == root).collect()
+}
+
+/// Triangles from some of the smoothed skin's quads, vertices numbered as they first appear (so
+/// the same quads give the same mesh in any pose).
+fn mesh_of_quads(skin: &[Vector3<f64>], floor: f64, shift: (f64, f64), keep: &[[u32; 4]]) -> IndexedMesh {
     let mut map = vec![u32::MAX; skin.len()];
     let mut mesh = IndexedMesh::default();
-    for q in &keep {
+    for q in keep {
         let ids = q.map(|i| {
             if map[i as usize] == u32::MAX {
                 map[i as usize] = mesh.vertices.len() as u32;
@@ -291,6 +301,8 @@ pub struct Body {
     pub raw: Vec<Vector3<f64>>,
     pub floor: f64,
     pub shift: (f64, f64),
+    /// The standing mesh's quads (indices into the smoothed skin), to pose it face for face.
+    pub quads: std::sync::Arc<Vec<[u32; 4]>>,
 }
 
 impl Body {
@@ -417,6 +429,15 @@ impl Body {
         let mesh = lower_body(&self.model, &skin, self.floor, self.shift, top);
         (mesh, pj.into_iter().map(|(k, v)| (k, to_mm(v, self.floor, self.shift))).collect())
     }
+
+    /// The body in another pose with the standing mesh's faces and vertex order (`posed` picks
+    /// its faces again by height, so a foot raised past `top`, the hip flexed 110 deg with the
+    /// knee straight, changed the mesh: 2026-11-13).
+    pub fn posed_like_standing(&self, legs: [LegPose; 2]) -> (IndexedMesh, HashMap<String, Point3<f64>>) {
+        let (skin, pj, _) = posed(&self.model, &self.raw, legs);
+        let mesh = mesh_of_quads(&skin, self.floor, self.shift, &self.quads);
+        (mesh, pj.into_iter().map(|(k, v)| (k, to_mm(v, self.floor, self.shift))).collect())
+    }
 }
 
 pub fn build(scan_path: &Path, top: f64) -> Result<Body, String> {
@@ -466,7 +487,8 @@ pub fn build(scan_path: &Path, top: f64) -> Result<Body, String> {
     let shift = (foot_c.0 - c.x, foot_c.1 - c.y);
     let (_, raw) = m.at(&w);
     let (skin, pj, tilts) = posed(&m, &raw, [LegPose::default(); 2]);
-    let mesh = lower_body(&m, &skin, floor, shift, top);
+    let quads = lower_quads(&m, &skin, floor, top);
+    let mesh = mesh_of_quads(&skin, floor, shift, &quads);
     let joints: HashMap<String, Point3<f64>> = pj.into_iter().map(|(k, v)| (k, to_mm(v, floor, shift))).collect();
     println!(
         "fitted ({:.0} s): {}; sliders {}",
@@ -474,7 +496,7 @@ pub fn build(scan_path: &Path, top: f64) -> Result<Body, String> {
         (0..N).map(|i| format!("{} {:.1} ({:.0})", names[i], f[i], goal[i])).collect::<Vec<_>>().join(", "),
         TARGETS.iter().zip(w).map(|(n, x)| format!("{} {x:+.2}", n.trim_start_matches("measure-"))).collect::<Vec<_>>().join(", ")
     );
-    Ok(Body { mesh, weights: w, measured: f, joints, tilts, raw, floor, shift, model: std::sync::Arc::new(m) })
+    Ok(Body { mesh, weights: w, measured: f, joints, tilts, raw, floor, shift, quads: std::sync::Arc::new(quads), model: std::sync::Arc::new(m) })
 }
 
 /// `cargo run --release -- body <scan> [out]`: the stand-in body, measured against ANSUR II and

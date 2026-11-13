@@ -133,6 +133,16 @@ fn main() {
                 std::process::exit(1);
             }
         }
+        "cup" => {
+            let Some(path) = std::env::args().nth(2) else {
+                eprintln!("usage: cup <scan>");
+                std::process::exit(2);
+            };
+            if let Err(e) = custom_skate::cup::run(std::path::Path::new(&path)) {
+                eprintln!("{e}");
+                std::process::exit(1);
+            }
+        }
         "gap" => {
             let Some(path) = std::env::args().nth(2) else {
                 eprintln!("usage: gap <scan>");

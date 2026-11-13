@@ -46,7 +46,7 @@ use crate::render::{Layer, Style, View, render_styled};
 use crate::round1::mesh_of;
 
 /// mm of arc per radian round the leg: turns an angle into a distance for the parts' edges.
-const R_REF: f64 = 45.0;
+pub(crate) const R_REF: f64 = 45.0;
 
 /// Round 2 (2026-11-12), the modern pad (Jon: "having them look like modern shinpads ... but
 /// maybe a bit lighter because of the custom fit instead of fully relying on squish"; his
@@ -645,6 +645,217 @@ pub struct Pad {
     /// tongue), not from the leg and tongue blended.
     pub flush: bool,
     pub o: Arc<Outlines>,
+    /// Built on the body in another pose (the knee cup, `cup.rs`): the leg's angles and heights
+    /// carried there by the skin, read here in place of the point's own.
+    pub warp: Option<Arc<Warp>>,
+    /// Part boxes that replace `bounds`' own (for a pad built on a posed body).
+    pub boxes: Option<Arc<Vec<(Part, Aabb)>>>,
+    /// Parts built on another body that the knee shield laps over (the cup over the pad's lower
+    /// parts): it stays `LAP_CLEAR` outside them, full thickness, whatever its own offset says.
+    pub lap: Option<Arc<Vec<NearMesh>>>,
+}
+
+/// The knee shield's clearance over the parts it laps, mm (as its lifts in `Pad::field`).
+pub const LAP_CLEAR: f64 = 0.4;
+/// The blend between the shield's own offset and the one over a lapped part, mm (the shield
+/// stands at most a quarter of it further out where they meet).
+pub const LAP_BLEND: f64 = 3.0;
+
+/// The pad frame's angle round the leg and height, carried by the skin from the standing leg to
+/// the body in another pose. On a grid, each node takes the values of the posed skin near it: at
+/// the skin, those of its closest point (barycentric across its triangle); further out, a blend
+/// of the skin's values round it (each triangle weighted by its area and a Gaussian of its
+/// distance, sigma `smooth` times the node's distance from the skin, 3-12 mm). Off a hollow, the
+/// closest point jumps from one rim to the other, and features placed by the carried height came
+/// out twice (the knee cup's first try, 2026-11-13). A query reads the grid trilinearly. The
+/// angle is kept as (cos, sin) so it interpolates across +-180 degrees.
+pub struct Warp {
+    lo: Point3<f64>,
+    cell: f64,
+    n: [usize; 3],
+    v: Vec<[f32; 3]>,
+}
+
+impl Warp {
+    /// `vals` per vertex of `skin`: (cos theta, sin theta, z) on the standing leg. Nodes further
+    /// than `reach` from the skin are left empty (a query near them reads as far away). `smooth`
+    /// 0: the closest point only.
+    #[allow(clippy::too_many_arguments)]
+    pub fn build(skin: &IndexedMesh, vals: &[[f64; 3]], faces: &[[u32; 3]], lo: Point3<f64>, hi: Point3<f64>, cell: f64, reach: f64, smooth: f64, threads: usize) -> Self {
+        use cortenforge::cf_geometry::closest_point_on_triangle;
+        let n = [0, 1, 2].map(|k| ((hi[k] - lo[k]) / cell).ceil() as usize + 1);
+        // Faces in buckets of `bk` mm, by their boxes.
+        let bk = 6.0;
+        let key = |p: Point3<f64>| [0, 1, 2].map(|k| ((p[k] - lo[k]) / bk).floor() as i64);
+        let mut buckets: std::collections::HashMap<[i64; 3], Vec<u32>> = std::collections::HashMap::new();
+        for (fi, f) in faces.iter().enumerate() {
+            let [a, b, c] = f.map(|i| skin.vertices[i as usize]);
+            let (ka, kb) = (key(Point3::from(a.coords.inf(&b.coords).inf(&c.coords))), key(Point3::from(a.coords.sup(&b.coords).sup(&c.coords))));
+            for i in ka[0]..=kb[0] {
+                for j in ka[1]..=kb[1] {
+                    for k in ka[2]..=kb[2] {
+                        buckets.entry([i, j, k]).or_default().push(fi as u32);
+                    }
+                }
+            }
+        }
+        // For the blend: each triangle once, by its centroid, in a dense grid of `gb` mm over the
+        // box grown by `reach`: (centroid, area, mean value).
+        let gb = 8.0;
+        let glo = lo - Vector3::repeat(reach);
+        let gn = [0, 1, 2].map(|k| ((hi[k] - lo[k] + 2.0 * reach) / gb).ceil() as usize + 1);
+        let tris: Vec<(Point3<f64>, f64, [f64; 3])> = faces
+            .iter()
+            .map(|f| {
+                let [a, b, c] = f.map(|i| skin.vertices[i as usize]);
+                let [va, vb, vc] = f.map(|i| vals[i as usize]);
+                (Point3::from((a.coords + b.coords + c.coords) / 3.0), 0.5 * (b - a).cross(&(c - a)).norm(), [0, 1, 2].map(|k| (va[k] + vb[k] + vc[k]) / 3.0))
+            })
+            .collect();
+        let mut cells: Vec<Vec<u32>> = vec![Vec::new(); gn[0] * gn[1] * gn[2]];
+        for (ti, (c, ..)) in tris.iter().enumerate() {
+            let g = [0, 1, 2].map(|k| ((c[k] - glo[k]) / gb).floor());
+            if (0..3).all(|k| g[k] >= 0.0 && (g[k] as usize) < gn[k]) {
+                cells[g[0] as usize + gn[0] * (g[1] as usize + gn[1] * g[2] as usize)].push(ti as u32);
+            }
+        }
+        let blend = |q: Point3<f64>, d: f64| -> Option<[f64; 3]> {
+            let sigma = (smooth * d).clamp(3.0, 12.0);
+            let r = 3.0 * sigma;
+            let g0 = [0, 1, 2].map(|k| (((q[k] - r - glo[k]) / gb).floor().max(0.0) as usize).min(gn[k] - 1));
+            let g1 = [0, 1, 2].map(|k| (((q[k] + r - glo[k]) / gb).floor().max(0.0) as usize).min(gn[k] - 1));
+            let (mut acc, mut wsum) = ([0.0f64; 3], 0.0);
+            for i in g0[0]..=g1[0] {
+                for j in g0[1]..=g1[1] {
+                    for k in g0[2]..=g1[2] {
+                        for &ti in &cells[i + gn[0] * (j + gn[1] * k)] {
+                            let (c, area, v) = tris[ti as usize];
+                            // Measured past the skin's own distance, so the nearest skin weighs 1.
+                            let e = ((c - q).norm_squared() - d * d).max(0.0);
+                            if e > r * r {
+                                continue;
+                            }
+                            let w = area * (-e / (2.0 * sigma * sigma)).exp();
+                            wsum += w;
+                            for m in 0..3 {
+                                acc[m] += w * v[m];
+                            }
+                        }
+                    }
+                }
+            }
+            (wsum > 0.0).then(|| acc.map(|x| x / wsum))
+        };
+        let rings = (reach / bk).ceil() as i64 + 1;
+        let node = |q: Point3<f64>| -> [f32; 3] {
+            let c = key(q);
+            let (mut best, mut at) = (f64::MAX, None);
+            for r in 0..=rings {
+                // Every face in this ring's buckets; stop once nothing further can be closer.
+                for i in -r..=r {
+                    for j in -r..=r {
+                        for k in -r..=r {
+                            if i.abs().max(j.abs()).max(k.abs()) != r {
+                                continue;
+                            }
+                            for &fi in buckets.get(&[c[0] + i, c[1] + j, c[2] + k]).map(|v| v.as_slice()).unwrap_or(&[]) {
+                                let f = faces[fi as usize];
+                                let [a, b, cc] = f.map(|x| skin.vertices[x as usize]);
+                                let p = closest_point_on_triangle(a, b, cc, q);
+                                let d = (p - q).norm_squared();
+                                if d < best {
+                                    best = d;
+                                    at = Some((fi, p));
+                                }
+                            }
+                        }
+                    }
+                }
+                if best.sqrt() <= r as f64 * bk {
+                    break;
+                }
+            }
+            match at {
+                Some((fi, p)) if best.sqrt() <= reach => {
+                    let f = faces[fi as usize];
+                    let [a, b, c] = f.map(|x| skin.vertices[x as usize]);
+                    let w = barycentric(p, a, b, c);
+                    let [va, vb, vc] = f.map(|x| vals[x as usize]);
+                    let cp = [0, 1, 2].map(|k| w[0] * va[k] + w[1] * vb[k] + w[2] * vc[k]);
+                    let d = best.sqrt();
+                    let t = if smooth > 0.0 { smoothstep(1.0, 4.0, d) } else { 0.0 };
+                    match (t > 0.0).then(|| blend(q, d)).flatten() {
+                        Some(g) => [0, 1, 2].map(|k| ((1.0 - t) * cp[k] + t * g[k]) as f32),
+                        None => cp.map(|x| x as f32),
+                    }
+                }
+                _ => [f32::NAN; 3],
+            }
+        };
+        let total = n[0] * n[1] * n[2];
+        let per = total.div_ceil(threads.max(1));
+        let v: Vec<[f32; 3]> = std::thread::scope(|sc| {
+            let hs: Vec<_> = (0..threads.max(1))
+                .map(|t| {
+                    let node = &node;
+                    sc.spawn(move || {
+                        (t * per..((t + 1) * per).min(total))
+                            .map(|id| {
+                                let (i, j, k) = (id % n[0], (id / n[0]) % n[1], id / (n[0] * n[1]));
+                                node(lo + Vector3::new(i as f64, j as f64, k as f64) * cell)
+                            })
+                            .collect::<Vec<_>>()
+                    })
+                })
+                .collect();
+            hs.into_iter().flat_map(|h| h.join().unwrap()).collect()
+        });
+        Warp { lo, cell, n, v }
+    }
+
+    /// (theta degrees, z) at q; outside the grid or near an empty node, far from any part.
+    pub fn at(&self, q: Point3<f64>) -> (f64, f64) {
+        match self.raw(q) {
+            Some(a) => (a[1].atan2(a[0]).to_degrees(), a[2]),
+            None => (180.0, -1.0e4),
+        }
+    }
+
+    /// The three carried values at q, trilinear; none outside the grid or near an empty node.
+    pub fn raw(&self, q: Point3<f64>) -> Option<[f64; 3]> {
+        let f = [0, 1, 2].map(|k| (q[k] - self.lo[k]) / self.cell);
+        if (0..3).any(|k| f[k] < 0.0 || f[k] > (self.n[k] - 1) as f64) {
+            return None;
+        }
+        let i = [0, 1, 2].map(|k| (f[k] as usize).min(self.n[k] - 2));
+        let u = [0, 1, 2].map(|k| f[k] - i[k] as f64);
+        let mut acc = [0.0f64; 3];
+        for c in 0..8 {
+            let d = [c & 1, (c >> 1) & 1, (c >> 2) & 1];
+            let w: f64 = (0..3).map(|k| if d[k] == 1 { u[k] } else { 1.0 - u[k] }).product();
+            let node = self.v[(i[0] + d[0]) + self.n[0] * ((i[1] + d[1]) + self.n[1] * (i[2] + d[2]))];
+            if node[0].is_nan() {
+                return None;
+            }
+            for k in 0..3 {
+                acc[k] += w * node[k] as f64;
+            }
+        }
+        Some(acc)
+    }
+}
+
+/// Barycentric weights of p (on or near triangle abc).
+pub(crate) fn barycentric(p: Point3<f64>, a: Point3<f64>, b: Point3<f64>, c: Point3<f64>) -> [f64; 3] {
+    let (v0, v1, v2) = (b - a, c - a, p - a);
+    let (d00, d01, d11, d20, d21) = (v0.dot(&v0), v0.dot(&v1), v1.dot(&v1), v2.dot(&v0), v2.dot(&v1));
+    let den = d00 * d11 - d01 * d01;
+    if den.abs() < 1e-18 {
+        return [1.0, 0.0, 0.0];
+    }
+    let v = (d11 * d20 - d01 * d21) / den;
+    let w = (d00 * d21 - d01 * d20) / den;
+    [1.0 - v - w, v, w]
 }
 
 impl Pad {
@@ -668,8 +879,11 @@ impl Pad {
 
     /// (theta degrees, s mm of arc, z) at a point.
     fn tsz(&self, q: Point3<f64>) -> (f64, f64, f64) {
-        let th = self.f.theta(q);
-        (th, th.to_radians() * R_REF, q.z)
+        let (th, z) = match &self.warp {
+            Some(w) => w.at(q),
+            None => (self.f.theta(q), q.z),
+        };
+        (th, th.to_radians() * R_REF, z)
     }
 
     /// A shin shell piece between `inner` and `outer` mm off what it is offset from. Flush (tongue
@@ -795,7 +1009,17 @@ impl Pad {
                 let inner = base + lift_f.max(lift_s).max(lift_t);
                 let vz = self.knee_z - 8.0 + 0.55 * s.abs();
                 let chevron = p.chevron_h * bump((z - vz) / 3.5) * (1.0 - smoothstep(40.0, 55.0, s.abs()));
-                Self::band(self.body.eval(q), inner, inner + p.wall + chevron)
+                let w = p.wall + chevron;
+                // Its offset past the inner surface; over lapped parts, past them by LAP_CLEAR
+                // (the shield is the layer outside both), blended over LAP_BLEND: a plain min
+                // creased the shield where the two offsets, nearly parallel, cross (2026-11-13).
+                let mut t = self.body.eval(q) - inner;
+                if let Some(lap) = self.lap.as_ref().filter(|_| t >= 0.0 && t < w + 4.0) {
+                    for m in lap.iter() {
+                        t = smin(t, m.eval(q) - LAP_CLEAR, LAP_BLEND);
+                    }
+                }
+                (-t).max(t - w)
             }
             Part::ThighGuard => Self::band(self.body.eval(q), p.ease + p.thigh_foam, p.ease + p.thigh_foam + p.wall),
             Part::ThighFoam => Self::band(self.body.eval(q), p.ease, p.ease + p.thigh_foam),
@@ -807,6 +1031,9 @@ impl Pad {
     }
 
     pub fn bounds(&self, part: Part) -> Aabb {
+        if let Some(b) = self.boxes.as_ref().and_then(|bs| bs.iter().find(|(p, _)| *p == part)) {
+            return b.1;
+        }
         let m = 25.0;
         let p = &self.p;
         let o = &self.o;
@@ -954,8 +1181,12 @@ pub fn measure(pad: &Pad, parts: Vec<(Part, IndexedMesh, f64)>, leg_mesh: &Index
 /// Mesh and weigh every part, `PAD_THREADS` (default 4) at a time: each uniform mesh holds its
 /// whole grid while it runs, and all 16 parts at once used too much memory (2026-11-12).
 pub fn build_parts(pad: &Pad) -> Vec<(Part, IndexedMesh, f64)> {
+    build_these(pad, &Part::all())
+}
+
+/// `build_parts` for some of the parts.
+pub fn build_these(pad: &Pad, all: &[Part]) -> Vec<(Part, IndexedMesh, f64)> {
     let n = std::env::var("PAD_THREADS").ok().and_then(|v| v.parse::<usize>().ok()).unwrap_or(4).max(1);
-    let all = Part::all();
     let mut out = Vec::with_capacity(all.len());
     for chunk in all.chunks(n) {
         let done: Vec<(Part, IndexedMesh, f64)> = std::thread::scope(|sc| {
@@ -1051,17 +1282,29 @@ fn stock_pad(
     Ok(Pad { name: name.into(), body: Arc::new(Body::Hull(field)), z_bot: Ring::flat(z_bottom), ..base.clone() })
 }
 
-pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
-    let t0 = Instant::now();
-    std::fs::create_dir_all(out).map_err(|e| e.to_string())?;
-    let docs = Path::new("docs/pad");
-    std::fs::create_dir_all(docs).map_err(|e| e.to_string())?;
-    let boot_dir = std::env::var_os("PAD_BOOT_DIR").map(PathBuf::from).unwrap_or_else(|| PathBuf::from("out/boot"));
-    let load = |n: &str| load_mesh(boot_dir.join(n)).map_err(|e| format!("{}: {e} (run `boot` first)", boot_dir.join(n).display()));
-    let (shell_m, plate, laces_m, eyelets, guard) =
-        (load("shell.stl")?, load("tongue_plate.stl")?, load("laces.stl")?, load("eyelets.stl")?, load("tendon_guard.stl")?);
+/// The stand-in leg leaned like the boot, and the pad's frame on it.
+pub struct Leaned {
+    pub lg: leg::Leg,
+    pub mesh: IndexedMesh,
+    /// The lean: about the ankle's height `zp`, `lean` degrees (`hockey_boot::lean_dx_at`).
+    pub zp: f64,
+    pub lean: f64,
+    pub knee: Point3<f64>,
+    pub y_crest: f64,
+    pub f: Frame,
+}
 
-    // The leg, leaned like the boot.
+impl Leaned {
+    pub fn lean(&self, p: Point3<f64>) -> Point3<f64> {
+        Point3::new(p.x + lean_dx_at(self.zp, self.lean, p.z), p.y, p.z)
+    }
+
+    pub fn unlean(&self, p: Point3<f64>) -> Point3<f64> {
+        Point3::new(p.x - lean_dx_at(self.zp, self.lean, p.z), p.y, p.z)
+    }
+}
+
+pub fn leaned_leg(scan_path: &Path) -> Result<Leaned, String> {
     let lg = leg::build(scan_path, 600.0)?;
     let lm = landmarks(&lg.foot, lg.scan_top());
     let zp = 0.5 * (lm.medial.z + lm.lateral.z);
@@ -1087,6 +1330,23 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
         knee.z,
         f.u.x.atan2(f.u.z).to_degrees()
     );
+    Ok(Leaned { lg, mesh: leaned, zp, lean, knee, y_crest, f })
+}
+
+pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
+    let t0 = Instant::now();
+    std::fs::create_dir_all(out).map_err(|e| e.to_string())?;
+    let docs = Path::new("docs/pad");
+    std::fs::create_dir_all(docs).map_err(|e| e.to_string())?;
+    let boot_dir = std::env::var_os("PAD_BOOT_DIR").map(PathBuf::from).unwrap_or_else(|| PathBuf::from("out/boot"));
+    let load = |n: &str| load_mesh(boot_dir.join(n)).map_err(|e| format!("{}: {e} (run `boot` first)", boot_dir.join(n).display()));
+    let (shell_m, plate, laces_m, eyelets, guard) =
+        (load("shell.stl")?, load("tongue_plate.stl")?, load("laces.stl")?, load("eyelets.stl")?, load("tendon_guard.stl")?);
+
+    // The leg, leaned like the boot.
+    let ll = leaned_leg(scan_path)?;
+    let (leaned, lean, knee, y_crest, f) = (&ll.mesh, ll.lean, ll.knee, ll.y_crest, ll.f);
+    let leaned = leaned.clone();
 
     // Fields: the leg (exact near the skin), the tongue (a grid: its lattice cavity counts as
     // inside), the laces (exact, near their top only), the boot's shell (exact, for checks).
@@ -1120,6 +1380,9 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
         hi,
         flush: false,
         o: Arc::new(Outlines::new(knee.z)),
+        warp: None,
+        boxes: None,
+        lap: None,
     };
     // Tongue under, flush: the same, but the shell's offset from the leg alone, so the outside
     // stays slim over the tongue; where the tongue reaches past the shell's inside, the run

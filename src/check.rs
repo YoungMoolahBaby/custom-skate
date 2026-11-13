@@ -83,6 +83,130 @@ fn pose_checks(t: &mut Tally) {
         worst < 1e-9 && (det - 1.0).abs() < 1e-12,
         format!("worst {worst:.1e} mm, determinant {det:.12}"),
     );
+    cup_checks(t);
+}
+
+/// The cup's tools (G3, round 2): the rigid fit gives back a known motion; the warp reads a
+/// cylinder's angle and height at points off its surface as those of the foot of the normal.
+fn cup_checks(t: &mut Tally) {
+    use crate::cup::kabsch;
+    use crate::pad::Warp;
+    use cortenforge::mesh::types::IndexedMesh;
+    use nalgebra::Point3;
+    let axis = nalgebra::Unit::new_normalize(Vector3::new(-0.2, 0.9, 0.4));
+    let r = nalgebra::Rotation3::from_axis_angle(&axis, 1.1);
+    let tr = Vector3::new(30.0, -12.0, 85.0);
+    let a: Vec<Point3<f64>> = (0..40).map(|i| Point3::new((i as f64 * 7.3).sin() * 60.0, (i as f64 * 3.1).cos() * 45.0, i as f64 * 4.0)).collect();
+    let b: Vec<Point3<f64>> = a.iter().map(|p| Point3::from(r * p.coords + tr)).collect();
+    let m = kabsch(&a, &b);
+    let err = a.iter().zip(&b).map(|(p, q)| (m.apply(p.coords) - q.coords).norm()).fold(0.0, f64::max);
+    let dang = crate::cup::turn_deg(&(m.r.inverse() * r));
+    t.item("the rigid fit (Kabsch) gives back a known turn and shift", err < 1e-9 && dang < 1e-7, format!("worst {err:.1e} mm, turn off by {dang:.1e} deg"));
+
+    // A cylinder r = 50, z 0..200, 5-degree facets every 5 mm; the values (cos, sin, z).
+    let (nt, nz) = (72usize, 41usize);
+    let mut cyl = IndexedMesh::default();
+    let mut vals = Vec::new();
+    for j in 0..nz {
+        for i in 0..nt {
+            let th = (i as f64 * 5.0).to_radians();
+            let z = j as f64 * 5.0;
+            cyl.vertices.push(Point3::new(50.0 * th.cos(), 50.0 * th.sin(), z));
+            vals.push([th.cos(), th.sin(), z]);
+        }
+    }
+    for j in 0..nz - 1 {
+        for i in 0..nt {
+            let (a0, a1) = ((j * nt + i) as u32, (j * nt + (i + 1) % nt) as u32);
+            let (b0, b1) = (a0 + nt as u32, a1 + nt as u32);
+            cyl.faces.push([a0, a1, b1]);
+            cyl.faces.push([a0, b1, b0]);
+        }
+    }
+    let w = Warp::build(&cyl, &vals, &cyl.faces, Point3::new(-80.0, -80.0, 20.0), Point3::new(80.0, 80.0, 180.0), 1.5, 30.0, crate::cup::WARP_SMOOTH, 4);
+    let mut worst = (0.0f64, 0.0f64);
+    for (th, z, r) in [(37.0, 113.0, 62.0), (-150.0, 41.3, 55.0), (178.0, 160.0, 70.0), (-2.5, 99.9, 58.0)] {
+        let tr = f64::to_radians(th);
+        let (got_t, got_z) = w.at(Point3::new(r * tr.cos(), r * tr.sin(), z));
+        let dt = ((got_t - th + 540.0).rem_euclid(360.0) - 180.0).abs();
+        worst = (worst.0.max(dt), worst.1.max((got_z - z).abs()));
+    }
+    // The resting fit: a sphere patch moved rigidly comes back exactly; a piece built on a dome
+    // (r 80, 30 deg round) set on flat skin rests on its rim (the dome's 10.7 mm stands off)
+    // instead of splitting the difference as least squares does (5.4 in, 5.4 off).
+    let patch: Vec<Point3<f64>> = (0..15)
+        .flat_map(|i| (0..24).map(move |j| (i, j)))
+        .map(|(i, j)| {
+            let (a, b) = ((2.0 + 2.0 * i as f64).to_radians(), (15.0 * j as f64).to_radians());
+            Point3::new(80.0 * a.sin() * b.cos(), 80.0 * a.sin() * b.sin(), 80.0 * a.cos() - 80.0)
+        })
+        .collect();
+    let idx: Vec<usize> = (0..patch.len()).collect();
+    let from = IndexedMesh { vertices: patch.clone(), ..Default::default() };
+    let moved = IndexedMesh { vertices: patch.iter().map(|p| Point3::from(r * p.coords + tr)).collect(), ..Default::default() };
+    let n_moved: Vec<Vector3<f64>> = patch.iter().map(|p| r * (p.coords - Vector3::new(0.0, 0.0, -80.0)).normalize()).collect();
+    let m = crate::cup::fit(&idx, &from, &moved, &n_moved);
+    let err = patch.iter().zip(&moved.vertices).map(|(p, q)| (m.apply(p.coords) - q.coords).norm()).fold(0.0, f64::max);
+    let flat = IndexedMesh { vertices: patch.iter().map(|p| Point3::new(p.x, p.y, 0.0)).collect(), ..Default::default() };
+    let up = vec![Vector3::z(); patch.len()];
+    let rest = crate::cup::fit(&idx, &from, &flat, &up);
+    let (into, off, _) = crate::cup::sit(&idx, &from, &flat, &rest, &up);
+    let (k_in, k_off, _) = crate::cup::sit(&idx, &from, &flat, &kabsch(&patch, &flat.vertices), &up);
+    // By hand: it rises until only the rim ring presses in, by d where the rings balance along
+    // z: PUSH_OVER_PULL x d (the rim) = sum over the other rings of (rim depth - depth - d).
+    let depth = |deg: f64| 80.0 * (1.0 - f64::to_radians(deg).cos());
+    let rim = depth(30.0);
+    let others: Vec<f64> = (0..14).map(|i| depth(2.0 + 2.0 * i as f64)).collect();
+    let d = others.iter().map(|x| rim - x).sum::<f64>() / (crate::cup::PUSH_OVER_PULL + others.len() as f64);
+    let off_hand = rim - depth(2.0) - d;
+    t.item(
+        "the resting fit gives back a rigid motion, and rests a dome on flat skin by its rim as the balance by hand says",
+        err < 1e-6 && (into - d).abs() < 0.01 && (off - off_hand).abs() < 0.01,
+        format!("worst {err:.1e} mm; on flat skin {into:.3} mm in, {off:.2} off (by hand {d:.3}, {off_hand:.2}; least squares {k_in:.1} in, {k_off:.1} off)"),
+    );
+    t.item(
+        "the warp reads a cylinder's angle and height 5-20 mm off its surface",
+        worst.0 < 0.3 && worst.1 < 0.2,
+        format!("worst {:.3} deg, {:.3} mm", worst.0, worst.1),
+    );
+
+    // Off a hollow: a V valley (sides at 35 deg, its floor along y), carrying the distance along
+    // the skin from the floor. 18 mm above the floor, the closest point jumps from one side to
+    // the other at the middle (by hand 2 x 18 sin 35 = 20.7 mm along the skin); the blend runs
+    // through it smoothly and never turns back.
+    let tn = f64::to_radians(35.0).tan();
+    let (nx, ny) = (61usize, 61usize);
+    let mut vee = IndexedMesh::default();
+    let mut vv = Vec::new();
+    for j in 0..ny {
+        for i in 0..nx {
+            let (x, y) = (-60.0 + 2.0 * i as f64, -60.0 + 2.0 * j as f64);
+            vee.vertices.push(Point3::new(x, y, x.abs() * tn));
+            vv.push([x / f64::to_radians(35.0).cos(), 0.0, 0.0]);
+        }
+    }
+    for j in 0..ny - 1 {
+        for i in 0..nx - 1 {
+            let a = (j * nx + i) as u32;
+            let (b, c, d) = (a + 1, a + nx as u32 + 1, a + nx as u32);
+            vee.faces.push([a, b, c]);
+            vee.faces.push([a, c, d]);
+        }
+    }
+    let (lo, hi) = (Point3::new(-30.0, -10.0, 0.0), Point3::new(30.0, 10.0, 40.0));
+    let along = |w: &Warp| -> (f64, f64) {
+        let us: Vec<f64> = (0..=120).map(|k| w.raw(Point3::new(-15.0 + 0.25 * k as f64, 0.0, 18.0)).map_or(f64::NAN, |a| a[0])).collect();
+        let steps: Vec<f64> = us.windows(2).map(|p| p[1] - p[0]).collect();
+        (steps.iter().cloned().fold(f64::MIN, f64::max), steps.iter().cloned().fold(f64::MAX, f64::min))
+    };
+    let (cp_max, _) = along(&Warp::build(&vee, &vv, &vee.faces, lo, hi, 1.5, 30.0, 0.0, 4));
+    let (bl_max, bl_min) = along(&Warp::build(&vee, &vv, &vee.faces, lo, hi, 1.5, 30.0, crate::cup::WARP_SMOOTH, 4));
+    let jump = 2.0 * 18.0 * f64::to_radians(35.0).sin();
+    t.item(
+        "the warp's blend runs smoothly off a hollow where the closest point jumps",
+        cp_max > 3.0 && bl_max < 1.0 && bl_min >= -1e-9,
+        format!("largest step along 0.25 mm: closest point {cp_max:.1} mm (its jump {jump:.1} over a 1.5 mm cell), blended {bl_max:.2} mm, never back ({bl_min:.3})"),
+    );
 }
 
 /// A heavy flat impactor on a soft block (a spring, k = E A / L): deepest compression

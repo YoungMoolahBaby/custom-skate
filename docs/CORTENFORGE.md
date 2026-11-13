@@ -84,6 +84,17 @@ type (bug, docs, API, perf, setup, works), date, file:line under
 
 ## cf-geometry
 
+- **works** (2026-11-13, the knee cup): `closest_point_on_triangle` (query/closest_point.rs:343)
+  carries the shin pad's outlines from the standing leg to the bent knee: 2.6M grid nodes, each
+  the closest point on 6,924 skin triangles found in 6 mm buckets, barycentric weights taken
+  from it (`pad::Warp`), 107 s on two threads. Checked on a faceted cylinder in `check`: angle
+  within 0.2 deg (the 5-degree facets), height exact.
+- **API** (2026-11-13): no closest point that also says which triangle and where on it.
+  `mesh_measure::closest_point_on_mesh` (distance.rs:133) loops over every triangle and returns
+  the point only; `Signed::closest_point` (mesh-sdf oracle.rs:106) is accelerated but also
+  returns only the point. Carrying a per-vertex field to nearby points needs the face and its
+  barycentric weights. Instead: our own buckets around `closest_point_on_triangle`.
+
 - **works** (2026-11-12, the shin pad): `convex_hull` on 90-100k points of a leg (the pad's
   modelled stock shells) gives clean hulls of 12-15k faces, closed, ready for mesh-sdf.
 - **works** (2026-11-10): `convex_hull` (convex_hull.rs:167, Quickhull) takes 10,074 forefoot
@@ -125,6 +136,10 @@ type (bug, docs, API, perf, setup, works), date, file:line under
   between them), gives the shin pad's clearance to it for 180 posed cases in ~6 min on two
   threads, carrying 5M points as well. Its inside test held on meshes that `clip_mesh_against_plane`
   cut and `auto_cap_open_boundaries` closed (cf-scan-prep-core).
+- **works** (2026-11-13, the knee cup): the body bent at the knee, clipped by three planes (the
+  midline, across the shin, across the thigh), welded and capped (`auto_cap_open_boundaries`),
+  then `CachedGridSdf` at 2 mm: 4.1M nodes in 17.8 s (~4 us a node on the knee's smaller mesh),
+  and the cup's parts offset from it.
 - **perf** (2026-11-12, the shin pad): grids are most of the pad's ~17 min run: the leaned leg
   at 2 mm (3.8M nodes, 683k triangles) 103 s, ~27 us a node; the tongue plate at 1.25 mm
   (2.9M nodes, 641k triangles) 57 s; two convex hulls at 1.5 mm, 71 s and 61 s.
@@ -332,6 +347,18 @@ Nice-to-haves for CortenForge, with what this project built instead.
   from the body to a nearby mesh (each point a mix of its nearest skin vertices' weights, as
   MakeHuman fits clothes), then posed with the body. Instead: `body::Body::weights_near` and
   `moves`.
+- **Closest point with its triangle** (2026-11-13, the knee cup): a BVH query returning the face
+  index and barycentric weights with the point (`TriMeshDistance` has the tree already), and on
+  top of it, carrying a per-vertex field (UVs, outline coordinates, skin weights) to points near
+  a surface. The closest point alone isn't enough off a hollow: it jumps from rim to rim, and
+  the knee cup's first try drew its V ridge twice; a blend over the surface round the point,
+  wider further out, runs through (checked on a V valley in `check`). Instead: `pad::Warp`,
+  buckets around `cf_geometry::closest_point_on_triangle` and an area-weighted Gaussian.
+- **Resting a rigid part on a surface** (2026-11-13, the knee cup): a rigid fit where the target
+  may stand off but not pass through (one-sided weights on the normal offset, point-to-plane),
+  next to the rigid registration wish above: how a pad, brace or insole sits on a body in a new
+  pose. Instead: `cup::fit` (Gauss-Newton from Kabsch, checked against the balance by hand for a
+  dome on flat skin).
 - **Impacts in sim-soft-explicit** (2026-11-12, D3): a free rigid body as the obstacle (mass,
   velocity, moved by the contact force each step), so a dropped or thrown impactor needs no
   host-side loop; contact between two soft bodies (a rubber puck on a pad); a crushable-foam

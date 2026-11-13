@@ -4,6 +4,7 @@
 pub mod body;
 pub mod boot;
 pub mod chassis;
+pub mod cup;
 pub mod frame;
 pub mod gap;
 pub mod girdle;

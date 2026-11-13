@@ -1599,25 +1599,125 @@ What it shows:
   ![The gap: standing, skating stance, kneeling, deep crouch; shin pad rigid with the shin,
   thigh pad pushed down by the belly; red within 40 mm](girdle/gap.png)
 
+**G3, round 2: the knee shield as a cup (2026-11-13).** Jon, on round 1's `gap.png`: "im
+noticing the knee cup sticks out instead of stays cupped to the knee. but i supposed thats
+because theres no sock holding it on. but the knee part is usually more of a cup, as hockey
+players usually are always skating with a knee bend, and wearing socks, or in roller hockey,
+pants". `cargo run --release -- cup scans/stand-in/022_fBW_R.ply` (~6 min on two threads,
+`src/cup.rs`; run `pad` first): `docs/pad/cup.txt`, `cup.png`, `cup_close.png`. Then `gap`
+(now round 2: `docs/girdle/gap2.txt`, `gap2.png`, ~11 min).
+- **Built at 70° of knee flexion** from standing (hip 60°): between the treadmill stride's 65.5°
+  (Lockwood et al. 2023) and the on-ice side-cut's peak of 75.2° (Yu et al. 2025); no paper
+  found gives the on-ice forward stride's knee angle as a number (RESEARCH.md 23). The studies
+  measure from a standing calibration, as the pose does. MakeHuman's standing body has the hip
+  49 mm behind the knee, so its joint lines are 5.9° apart standing and 75.9° at this bend.
+- **On the body, bent:** the knee shield, its liner, the thigh guard and its foam are offsets
+  from the body posed by MakeHuman's skeleton and weights, read into the shin's frame and leaned
+  6° like the boot, so the pad's lower parts (built on the leg) meet them as before. The bent
+  body's knee joint lands on the leg's to the millimetre, (103, 18, 466) leaned. The outlines are
+  the ones drawn on the standing leg: the skin carries them to the bent knee, each point near it
+  reading the angle and height its skin had standing (`pad::Warp`).
+  - The first try read the closest skin point alone. Off the hollow below the kneecap the
+    closest point jumps from one rim to the other, and the shield came out creased with its V
+    ridge drawn twice. Now each point reads a blend of the skin round it, wider the further out
+    it is (a Gaussian, sigma 0.6 times the distance). Checked on a V valley in `check`: 18 mm
+    above its floor the closest point jumps 20.7 mm along the skin, and the blend runs through
+    without turning back.
+  - The shield laps over the front shell, the side panels and the shin liner's border, which
+    are built on the leg. Just below the knee the bent body's skin is ~1 mm from the leg's, and
+    the first try had the front shell's top up to 1.0 mm inside the shield (10,038 vertices).
+    Now the shield wraps those parts' own meshes, 0.4 mm clear, blended over 3 mm: 0.20 mm at
+    the closest after meshing, nothing inside. The straight shield of round 3, checked the same
+    way, overlaps them slightly: the front shell by 0.07 mm, the shin liner by 0.53 mm.
+- **95.5 g** against the straight pieces' 91.0 g (shield 55.4 / 52.2, liner 24.4 / 24.1, thigh
+  guard 11.5 / 10.8, foam 4.3 / 4.0), so the pad goes from 372 to 377 g.
+- **How it sits.** The sock or pants hold each hard piece on, and each rests on the skin under
+  it: the knee shield with its liner (765 skin points), the thigh guard with its foam (120). A
+  rigid fit where skin pushing into the liner costs 100 times what the liner standing off the
+  skin does (the foam against the sock's pull), plus a weak hold along the skin (`cup::fit`).
+  Checked in `check` against the balance by hand for a dome set on flat skin: it rests on its
+  rim, 0.888 mm in, as the hand sum says (least squares would put it 6.7 mm in). Hip 60°:
+
+  | Knee | Shield: into the liner / off the skin | Skin sliding under it | Shield's turn on the shin / on the thigh | Thigh guard: in / off |
+  |---|---|---|---|---|
+  | 0 (straight) | 6.8 / 20.7 mm | 39.5 mm | 52.8 / 21.2° | 0.1 / 0.7 mm |
+  | 30 | 4.0 / 11.1 | 25.5 | 32.0 / 12.0 | 0.1 / 0.5 |
+  | 45 | 2.5 / 6.6 | 16.9 | 20.9 / 7.3 | 0.0 / 0.4 |
+  | 60 | 1.0 / 2.5 | 7.1 | 8.8 / 2.9 | 0.0 / 0.2 |
+  | **70 (built)** | 0 / 0 | 0 | 0 / 0 | 0 / 0 |
+  | 90 | 0.6 / 8.4 | 10.1 | 18.5 / 1.7 | 0.0 / 0.7 |
+  | 105 | 1.2 / 13.7 | 21.0 | 34.6 / 0.8 | 0.1 / 1.3 |
+  | 120 | 1.8 / 17.0 | 33.7 | 52.1 / 2.2 | 0.1 / 2.0 |
+  | 135 | 2.3 / 18.4 | 45.2 | 69.0 / 4.6 | 0.2 / 2.7 |
+
+  Most of each, over the piece. "Sliding" is the skin stretching and moving under a rigid
+  piece as the knee bends.
+
+  ![The cup on the knee bent 70°, in the boot: outside, front three-quarter, front](pad/cup.png)
+
+What it shows:
+1. **Through the skating range it fits.** From 60° to 90° the skin presses at most 1 mm into
+   the 9 mm liner, and the shield stands off it by 2.5-8.4 mm somewhere.
+2. **Straight, the cup sits proud.** A cup shaped for 70° can't follow a straight knee: it rests
+   on the kneecap and the thigh, presses 6.8 mm into the liner there, and stands off 20.7 mm
+   elsewhere. Standing in the picture below, it sticks out in front of the knee.
+3. **Past 90° the shield goes with the thigh, not the shin.** It turns at most 4.6° on the
+   thigh but up to 69° on the shin, and its bottom lip, which laps the front shell's top, lifts
+   off the shin (the "beak" in the deep crouch below). In the model the shield and the front
+   shell are separate pieces. On a real pad they are joined where they lap (rivets, elastic),
+   and that joint decides what happens here: it has to let the shield turn that far on the
+   shell, or the shell drags the shield off the kneecap. **The next design question.**
+4. **The thigh guard rides the thigh:** at most 2.7° of turn and 0.2 mm into its foam.
+
+**G3, the gap again, with the cup.** The shin pad's lower parts with the shin; the knee shield
+and thigh guard each resting on the skin as above; the girdle's thigh pad carried by the skin.
+Closest approach, mm (the thigh pad where the skin carries it / pushed down the thigh by the
+belly, as in round 1):
+
+| hip \ knee | 0 | 15 | 30 | 45 | 60 | 75 | 90 | 105 | 120 | 135 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| −20 | 18/18 | 18/18 | 19/19 | 20/20 | 20/20 | 20/20 | 20/20 | 20/20 | 20/20 | 16/16 |
+| 0 | 18/18 | 18/18 | 19/19 | 20/20 | 20/20 | 22/22 | 23/23 | 24/24 | 20/20 | 16/16 |
+| 30 | 18/18 | 18/18 | 19/19 | 20/20 | 20/20 | 20/20 | 20/20 | 20/20 | 20/20 | 16/16 |
+| 60 | 18/18 | 18/18 | 19/19 | 20/20 | 20/20 | 20/20 | 20/20 | 20/20 | 20/20 | 20/20 |
+| 90 | 18/**2** | 18/4 | 19/4 | 20/3 | 20/3 | 22/3 | 23/**1** | 24/**1** | 25/2 | 20/2 |
+| 110 | 18/11 | 18/11 | 19/4 | 20/5 | 20/6 | 20/6 | 20/5 | 22/5 | 23/4 | 20/4 |
+
+1. **The gap no longer depends on the knee.** Both pads now ride the thigh, so the gap is the
+   one they are built with: 18-20 mm, 16 at the deepest bend (the shield's top, knee 135°), up
+   to 25 where the cup tips forward. The thigh guard's top is the closest part in almost every
+   pose. In round 1 the shin pad swung away with the shin and the straight knee set the gap;
+   now no pose does.
+2. **If the belly pushes the thigh pad down the thigh** (hip 75° and more, as in round 1), it
+   comes within 1.2 mm of the cup (hip 90°, knee 90-105°) but never overlaps. Round 1, with
+   the shin pad rigid on the shin, overlapped by 6 mm at hip 90-110° and knee 15-30°.
+3. So the margin is the whole question, and it's the same at every pose: how far the girdle's
+   shorts ride down the thigh and the cup moves on the knee in play. The model says 18 mm
+   standing with nothing moving.
+4. The body's skin reaches 2.3 mm into the shin liner beside the knee (z 468, the outside):
+   that liner is still built on the leg, whose knee is slimmer than the body's.
+
+  ![The gap with the cup: standing, skating stance (knee 70), kneeling, deep crouch; the thigh
+  pad pushed down by the belly; red within 40 mm](girdle/gap2.png)
+
 **G3 next:**
-- **The knee shield as a cup on the bent knee.** Jon, on `gap.png`: "im noticing the knee cup
-  sticks out instead of stays cupped to the knee. but i supposed thats because theres no sock
-  holding it on. but the knee part is usually more of a cup, as hockey players usually are
-  always skating with a knee bend, and wearing socks, or in roller hockey, pants". So:
-  - carry the knee shield and thigh guard as a rigid cup that follows the skin over the knee
-    (the sock or pants hold it there), the front shell and calf wraps with the shin;
-  - build the knee shield on the body posed at a skating knee angle (from published on-ice
-    kinematics), so it is a cup round the bent knee. This also moves the knee region onto the
-    body (above: its thigh is fuller than the leg's);
-  - then rerun G3.
+- **The joint between the knee shield and the front shell** (point 3 above): how far the shield
+  turns on the shell from straight to a deep crouch (up to 69°), and what joins them: an elastic
+  strap, rivets in slots, a fabric hinge. Then model it, so the shell pulls the shield's bottom
+  along as it would.
 - **The margin: research first.** Jon: "this is something we'd likely research too". How far a
   girdle (or the shorts holding its pads) rides down a thigh in play, and how far a shin pad
-  shifts on its straps under a sock. Then his experience, then set `thigh_bottom` (600 now,
-  20 mm above the thigh guard).
+  shifts on its straps under a sock. Then his experience, then set `thigh_bottom` (600 now).
+- The rest of the knee region onto the body: the shin liner near the knee and the side panels'
+  tops are still built on the leg (2.3 mm of the body's knee in the shin liner).
 - The thigh pad's top could give rather than push: its shell stops short of the foam's top, so
   the belly in a deep crouch presses foam, not a hard edge.
 
 ## Open questions for Jon
+
+- The knee cup (G3, round 2): on his own pads, does the knee cap move on the shin shell when he
+  crouches or kneels (a hinge, elastic, or fixed)? And standing straight, does a cup that sits
+  proud of the knee bother him, or does it only matter in the stance?
 
 - Answered 2026-11-12: the girdle's list (above, the girdle); a modern girdle, not pants.
 

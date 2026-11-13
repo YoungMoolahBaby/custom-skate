@@ -93,7 +93,8 @@ cargo run --release -- impact        # puck impacts (sim-soft-explicit) against 
 cargo run --release -- body <scan>   # the stand-in body, waist to feet
 cargo run --release -- girdle <scan> # the girdle on the body
 cargo run --release -- poses <scan>  # the body posed: standing, skating stance, kneeling, crouch
-cargo run --release -- gap <scan>    # the girdle-to-shin-pad gap through the knee's and hip's bend (run `pad` first)
+cargo run --release -- cup <scan>    # the shin pad's knee as a cup on the bent knee (run `pad` first)
+cargo run --release -- gap <scan>    # the girdle-to-shin-pad gap through the knee's and hip's bend (run `pad`, `cup` first)
 ```
 
 The pad, girdle and gap runs take 8-30 minutes; `PAD_THREADS=2` keeps their memory down.
@@ -270,15 +271,25 @@ Army's ANSUR II medians for men 170-180 cm, joined to the stand-in foot scan.
   warm one.
 - **A modern girdle**, compression shorts holding thigh, hip, kidney and tailbone pads: 840 g,
   layers still placeholders.
+- **The knee as a cup**, built on the body bent 70° at the knee, the skating stance from
+  published motion capture (65° on a skating treadmill, 75° at the peak of an on-ice cut). The
+  sock or pants hold it on. **95.5 g**, 4.5 g more than the straight knee shield and thigh
+  guard: the pad is now 377 g. From 60° to 90° of knee bend it fits within 1 mm of the liner;
+  standing straight it sits proud of the knee, and in a deep crouch it stays on the kneecap
+  while the shin swings away.
+
+![The knee cup on the bent knee, in the boot](docs/pad/cup.png)
+
 - **Posed** with MakeHuman's skeleton and skin weights: standing, skating stance, kneeling, deep
-  crouch. Through that range, the girdle's thigh pad and the shin pad never meet: bending the knee
-  holds the 20 mm gap between them or opens it. Only a hip flexed past 75° with the knee nearly
-  straight could push the thigh pad down onto the shin pad.
+  crouch. Through that range the girdle's thigh pad and the shin pad never meet. With the cup
+  riding the knee, the gap between them stays at the 18-20 mm they're built with, whatever the
+  knee does. Only if the belly pushes the thigh pad down the thigh (hip past 75°) does it come
+  close: 1.2 mm, no overlap.
 
-![The girdle and the shin pad posed: standing, skating stance, kneeling, deep crouch](docs/girdle/gap.png)
+![The girdle and the shin pad posed: standing, skating stance, kneeling, deep crouch](docs/girdle/gap2.png)
 
-Next: the knee shield shaped as a cup around the bent knee of a skating stance, held on by the
-sock or pants; how far a girdle and a shin pad shift in play, which sets the gap; the roller pad.
+Next: the joint between the knee cup and the shin shell, which has to let the cup turn up to 69°
+on it; how far a girdle and a shin pad shift in play, which sets the gap; the roller pad.
 Pictures and numbers: `docs/pad/`, `docs/girdle/`, `docs/body/`, and `docs/PLAN.md` (Track D).
 
 ## Status
@@ -286,8 +297,8 @@ Pictures and numbers: `docs/pad/`, `docs/girdle/`, `docs/body/`, and `docs/PLAN.
 Phase 0 (the science, the pitch model, the mass tool checked), round 1 (the whole skate on an
 example foot), round 2's first step (the chassis to weight), the like-for-like FEM sizing of
 step 2 and round 2 of the boot (a hockey boot from the scan) are done. On the gear: the shin
-pad's third round with its impact model, the girdle's first round, and posing the body with
-the girdle-to-shin-pad gap. See `docs/PLAN.md` for what comes next and `docs/CORTENFORGE.md` for
+pad's third round with its impact model, the girdle's first round, posing the body, and the
+knee as a cup on the bent knee with the girdle-to-shin-pad gap round it. See `docs/PLAN.md` for what comes next and `docs/CORTENFORGE.md` for
 what CortenForge did well and where it fell short.
 
 ## Patents

@@ -1,0 +1,26 @@
+the cup (G3, round 2): the knee shield and thigh guard built on the stand-in body (scans/stand-in/022_fBW_R.ply) bent to hip 60, knee 70 deg, in the shin's frame leaned 6 deg like the boot
+knee joint: the leg's (103, 18, 466), the bent body's in the shin's frame (103, 18, 466) mm; the line from knee to hip 81.5 deg from the shin's axis, leaned (standing 5.9: the hip stands behind the knee, so the bend from standing is the angle less that, and the lean adds a little)
+outlines carried to the bent knee: 6924 skin triangles, a 172 x 172 x 200 mm grid at 1.5 mm (117.0 s)
+built 4 parts (39 s)
+weights, the cup against the straight pieces (same outlines, layers and PA 12):
+  knee shield    55.4 g (straight  52.2 g)  481458 triangles
+  knee liner     24.4 g (straight  24.1 g)  111844 triangles
+  thigh guard    11.5 g (straight  10.8 g)  106836 triangles
+  thigh foam      4.3 g (straight   4.0 g)  35440 triangles
+  the cup        95.5 g (straight  91.0 g)
+bent skin to the cup: 0.94 mm at the closest (the knee liner; the sock is 1 mm)
+  the front shell to the knee shield: cup 0.20 mm at the closest, 0 vertices inside; straight -0.07 mm at the closest, 132 vertices inside;
+  the shin liner to the knee shield: cup 0.28 mm at the closest, 0 vertices inside; straight -0.53 mm at the closest, 672 vertices inside;
+  the side panel, inside to the knee shield: cup 2.76 mm at the closest, 0 vertices inside; straight -0.03 mm at the closest, 37 vertices inside;
+  the side panel, outside to the knee shield: cup 4.08 mm at the closest, 0 vertices inside; straight -0.06 mm at the closest, 31 vertices inside;
+through the knee's range (hip 60): each piece resting on the skin under it (765 points under the shield, 120 under the thigh guard; the skin pushing into the liner 100 times as hard as the sock pulls where it stands off), from the bent pose to each. The skin past the piece's inside (into the liner) and short of it (standing off), and sliding along it, most of each, mm; the shield's turn on the shin and on the thigh, the thigh guard's on the thigh, deg:
+  knee    0:  knee shield  6.8 in / 20.7 off, slides 39.5, turns 52.8 on the shin, 21.2 on the thigh;  thigh guard  0.1 in /  0.7 off, slides  4.2, turns  2.1 on the thigh;
+  knee   15:  knee shield  5.4 in / 15.9 off, slides 32.9, turns 42.5 on the shin, 16.8 on the thigh;  thigh guard  0.1 in /  0.6 off, slides  3.2, turns  1.3 on the thigh;
+  knee   30:  knee shield  4.0 in / 11.1 off, slides 25.5, turns 32.0 on the shin, 12.0 on the thigh;  thigh guard  0.1 in /  0.5 off, slides  2.3, turns  0.8 on the thigh;
+  knee   45:  knee shield  2.5 in /  6.6 off, slides 16.9, turns 20.9 on the shin,  7.3 on the thigh;  thigh guard  0.0 in /  0.4 off, slides  1.6, turns  0.6 on the thigh;
+  knee   60:  knee shield  1.0 in /  2.5 off, slides  7.1, turns  8.8 on the shin,  2.9 on the thigh;  thigh guard  0.0 in /  0.2 off, slides  0.7, turns  0.3 on the thigh;
+  knee   70:  knee shield  0.0 in /  0.0 off, slides  0.0, turns  0.0 on the shin,  0.0 on the thigh;  thigh guard  0.0 in /  0.0 off, slides  0.0, turns  0.0 on the thigh;
+  knee   90:  knee shield  0.6 in /  8.4 off, slides 10.1, turns 18.5 on the shin,  1.7 on the thigh;  thigh guard  0.0 in /  0.7 off, slides  1.6, turns  0.4 on the thigh;
+  knee  105:  knee shield  1.2 in / 13.7 off, slides 21.0, turns 34.6 on the shin,  0.8 on the thigh;  thigh guard  0.1 in /  1.3 off, slides  2.8, turns  0.9 on the thigh;
+  knee  120:  knee shield  1.8 in / 17.0 off, slides 33.7, turns 52.1 on the shin,  2.2 on the thigh;  thigh guard  0.1 in /  2.0 off, slides  3.9, turns  1.6 on the thigh;
+  knee  135:  knee shield  2.3 in / 18.4 off, slides 45.2, turns 69.0 on the shin,  4.6 on the thigh;  thigh guard  0.2 in /  2.7 off, slides  4.9, turns  2.5 on the thigh;
