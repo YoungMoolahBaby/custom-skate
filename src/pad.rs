@@ -113,7 +113,7 @@ impl Default for PadParams {
     fn default() -> Self {
         PadParams {
             ease: 1.0,
-            liner_front: 8.0,
+            liner_front: 14.0,
             liner_side: 5.0,
             wall: 2.0,
             side_to: 105.0,
@@ -672,10 +672,19 @@ impl Pad {
         (th, th.to_radians() * R_REF, q.z)
     }
 
-    /// What the hard shin parts are offset from: the leg alone when flush (a lap joint over the
-    /// tongue), else what the pad wraps.
-    fn shin_d(&self, q: Point3<f64>) -> f64 {
-        if self.flush { self.leg.eval(q) } else { self.body.eval(q) }
+    /// A shin shell piece between `inner` and `outer` mm off what it is offset from. Flush (tongue
+    /// under, a lap joint): off the leg, and where the tongue would come through it, lifted to
+    /// clear the tongue by 1 mm, a small local bulge (2026-11-12: with 14 mm of front foam the
+    /// tongue's curled top corners still stood 2.8 mm proud of a shell offset from the leg alone).
+    fn shell_band(&self, q: Point3<f64>, inner: f64, outer: f64) -> f64 {
+        if !self.flush {
+            return Self::band(self.body.eval(q), inner, outer);
+        }
+        let mut base = self.leg.eval(q) - inner;
+        if let Body::Fitted { tongue: Some(t), .. } = &*self.body {
+            base = smin(base, t.eval(q) - 1.0, 3.0);
+        }
+        (-base).max(base - (outer - inner))
     }
 
     /// The knee shield's dome: extra stand-off over the kneecap (its centre ~15 mm above the
@@ -769,10 +778,10 @@ impl Pad {
             // thinner and the outside stays flush.
             Part::ShinLiner if self.flush => (p.ease - self.body.eval(q)).max(self.leg.eval(q) - (p.ease + lt)),
             Part::ShinLiner => Self::band(self.body.eval(q), p.ease, p.ease + lt),
-            Part::ShinShell => Self::band(self.shin_d(q), p.ease + lt, self.front_outer(s, z, lt)),
+            Part::ShinShell => self.shell_band(q, p.ease + lt, self.front_outer(s, z, lt)),
             Part::SidePanel(_) => {
                 let inner = self.side_inner(s, z, lt);
-                Self::band(self.shin_d(q), inner, inner + p.wall)
+                self.shell_band(q, inner, inner + p.wall)
             }
             Part::KneeLiner => Self::band(self.body.eval(q), p.ease, p.ease + p.knee_liner + self.dome(s, z)),
             // The shield lifts over whatever it laps: the front shell's top, the side panels'

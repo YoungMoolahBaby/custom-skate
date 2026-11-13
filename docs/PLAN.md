@@ -1354,6 +1354,25 @@ In his words, each with a first engineering take. Item 9 above is where this sta
 
   **Next for the look:** rolled edges (thicker for the last few mm, turned out), overlapping
   plates down the front with a bolder spine, padded calf wraps; Jon's marks.
+
+  **The foam from D3 (2026-11-12).** Jon: "so the hard shell should be on the outside, foam on
+  the inside. like how shin pads currently are. then we can increase the foam however youd
+  like" (it is built that way already: the shell outside, the liner against the shin). From D3's
+  runs, **14 mm at the front** (tapering to 5 mm at the sides, 105° round): a third off the force
+  that reaches the shin (12.4 kN against 18.5 with 8 mm, on D3's rigid shin), with the front's
+  bulk 19.6 mm, still under the modelled undersized pad's 23.4. 16 mm would take 6% more off for
+  2 mm more bulk.
+  - **372 g** (337 with 8 mm): the liner +25.5 g (the thicker foam tapers over a wide band round
+    the shin), the shells +10 g (they sit further out, so they're bigger), +4 g for the bulge
+    below. Bulk: front 19.6 mm, ±45° 14.2 / 13.8, sides 9.6 / 9.4 (unchanged).
+  - **The tongue under the flush pad:** the thicker front foam did not make room for it as hoped:
+    the tongue's top curls forward and its corners stood 2.8 mm proud of the shell. Now the
+    shell clears the tongue by 1 mm wherever it would come through (`Pad::shell_band`): the
+    tongue is covered (0.0 mm through), with a local bulge over its top, **27.2 mm off the skin
+    at the bottom front** (round 1's hook was 33.6). A flatter tongue top on the boot would let
+    the pad sit at ~20 mm there too: Jon's call, a boot change.
+  - The modelled stock and undersized pads still carry 8 mm of foam (round 2's runs); the
+    like-for-like comparison needs them rerun with 14.
 - **D3, impact**: a puck on the shell over its liner, peak force on the leg. Checked first
   against a textbook impact. `sim-soft-explicit` (explicit dynamics, hyperelastic and
   Kelvin-Voigt, contact with a moving rigid body) is the candidate; it has no crushable-foam
@@ -1403,14 +1422,16 @@ In his words, each with a first engineering take. Item 9 above is where this sta
     | shell 2.5 mm | 17.8 kN | -4% | 5.9 mm |
     | shell 3.0 mm | 17.1 kN | -8% | 5.8 mm |
     | **foam 12 mm** | **13.8 kN** | **-26%** | 7.8 mm |
+    | foam 14 mm | 12.4 kN | -33% | 8.5 mm |
+    | foam 16 mm | 11.35 kN | -39% | 9.0 mm |
     | no shell | crushed through: elements inverted at 0.28 ms, the run stopped | | |
     | warm puck (22 °C) | 12.5 kN | -32% | 5.3 mm |
     | 30 m/s | 30.3 kN | +64% | 6.8 mm |
 
-    - **Foam thickness is the lever.** 4 mm more foam takes 26% off; 1 mm more shell 8%. And
-      foam is light: 4 mm more over ~150 cm² of the front of the shin is ~9 g of foam at 0.15
-      g/cm³, where 0.5 mm more PA 12 shell over ~300 cm² is ~15 g for 4%. Thick foam where pucks
-      land, a thin shell: more protection per gram.
+    - **Foam thickness is the lever,** with diminishing returns: 8 to 12 mm takes 1.2 kN off per
+      mm, 14 to 16 mm 0.5. 1 mm more shell takes 8% off. Thick foam where pucks land, a thin
+      shell: more protection per gram. (An estimate here said 4 mm more foam would weigh ~9 g; in
+      the pad it was more, below.)
     - **The foam's stiffness has a best value** for its thickness: 10 MPa beat 5 (which
       compresses further and stiffens as it closes up) and 20 (which hardly gives). Which foam
       at which thickness is a design choice to make with these runs.
