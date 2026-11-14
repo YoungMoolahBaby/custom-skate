@@ -71,6 +71,14 @@ type (bug, docs, API, perf, setup, works), date, file:line under
   field (`user_fn`s sharing an `Arc`), plus primitives (grommets as cylinders, laces as a
   `pipe`), meshed in parallel threads (the uniform mesher; weights converge, shell +0.0% from
   0.75 to 0.5 mm cells).
+- **note** (2026-11-13, the knee cup): `FlexZone` (mechanism/part.rs:70) marks a thin section of
+  a part as a flexure; `flex_split` (mechanism/flex_split.rs:1-22) splits the part there into
+  bodies joined by a spring-damper joint, k = E·I/L for a revolute one (Euler-Bernoulli), for
+  simulation in MJCF. The knee cup's two flex hinges are that kind of joint, but it isn't used
+  here: where the cup sits in a pose is a static rest on the posed skin, not a simulation, and
+  the joints would need contact with a moving skin to mean anything (`cup::place` instead, the
+  hinges as firm ties). A stiffness alone also doesn't say whether a hinge survives its range:
+  the surface strain t·θ/(2L) of a strip t thick bent θ over L is what limits a living hinge.
 
 ## sim-opt
 

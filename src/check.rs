@@ -83,7 +83,68 @@ fn pose_checks(t: &mut Tally) {
         worst < 1e-9 && (det - 1.0).abs() < 1e-12,
         format!("worst {worst:.1e} mm, determinant {det:.12}"),
     );
+    kneecap_checks(t);
     cup_checks(t);
+}
+
+/// The kneecap (`pose::Patella`, RESEARCH.md 24) on a made-up knee (dm, MakeHuman's axes: the
+/// shin turns about +x through the origin): its three rules hold through the range (it turns
+/// 0.7 times the knee, its centre stays on its circle, its tendon keeps its length), and in a rig
+/// the skin it takes over moves with it.
+fn kneecap_checks(t: &mut Tally) {
+    use crate::pose::{Bone, PATELLA_FLEX, Patella, Rig};
+    use nalgebra::Rotation3;
+    use std::collections::HashMap;
+    let rx = |deg: f64| Rotation3::from_axis_angle(&Vector3::x_axis(), deg.to_radians());
+    let (knee, centre, low, tub) = (Vector3::zeros(), Vector3::new(0.0, 0.17, 0.42), Vector3::new(0.0, -0.03, 0.42), Vector3::new(0.0, -0.47, 0.36));
+    let p = Patella { bone: 2, femur: 0, shin: 1, knee, centre, low, tub };
+    let (mut worst, mut shares) = ([0.0f64; 4], Vec::new());
+    for deg in [5.0, 20.0, 45.0, 70.0, 90.0, 135.0] {
+        let Some((a, k)) = p.on_thigh(&rx(deg)) else {
+            t.item("a kneecap: a turn round the knee keeps its tendon", false, format!("none at knee {deg}"));
+            return;
+        };
+        let c = a.apply(centre);
+        let errs = [
+            (a.r.matrix() - rx(PATELLA_FLEX * deg).matrix()).norm(),
+            ((c - knee).norm() - (centre - knee).norm()).abs(),
+            ((a.apply(low) - rx(deg) * tub).norm() - (low - tub).norm()).abs(),
+            c.x.abs(),
+        ];
+        for (w, e) in worst.iter_mut().zip(errs) {
+            *w = w.max(e);
+        }
+        shares.push(format!("{deg:.0}: {k:.3}"));
+    }
+    t.item(
+        "a kneecap turns 0.7 times the knee, its centre on its circle, its tendon its length, in the knee's plane",
+        worst.iter().all(|&e| e < 1e-9),
+        format!("worst: turn {:.1e}, radius {:.1e} dm, tendon {:.1e} dm, out of plane {:.1e} dm; round the knee per degree of it: {}", worst[0], worst[1], worst[2], worst[3], shares.join(", ")),
+    );
+    // In a rig: thigh, shin, and a skin vertex over the kneecap shared 0.6 / 0.4 between them,
+    // all of it handed to the kneecap.
+    let raw = vec![Vector3::new(0.0, 1.0, 0.0), knee, Vector3::new(0.0, 0.17, 0.5)];
+    let mut rig = Rig {
+        bones: vec![
+            Bone { name: "upperleg02.R".into(), head: "hip".into(), tail: "knee".into(), parent: None },
+            Bone { name: "lowerleg01.R".into(), head: "knee".into(), tail: String::new(), parent: Some(0) },
+        ],
+        index: HashMap::from([("upperleg02.R".to_string(), 0), ("lowerleg01.R".to_string(), 1)]),
+        joints: HashMap::from([("hip".to_string(), vec![0]), ("knee".to_string(), vec![1])]),
+        weights: vec![vec![(2, 0.6)], vec![(2, 0.4)]],
+        patellae: Vec::new(),
+    };
+    let ok = rig.add_patella(&raw, "R", centre, low, tub, &[(2, 1.0)]).is_ok();
+    let moves = rig.motions(&raw, &HashMap::from([("lowerleg01.R".to_string(), rx(70.0))]));
+    let skinned = rig.skin(&raw, &moves)[2];
+    let want = p.on_thigh(&rx(70.0)).map_or(Vector3::repeat(f64::NAN), |(a, _)| a.apply(raw[2]));
+    let left: f64 = rig.weights[..2].iter().flatten().map(|w| w.1).sum();
+    let err = (skinned - want).norm();
+    t.item(
+        "a kneecap in a rig: the skin it takes over moves with it, the thigh and shin left none of it",
+        ok && err < 1e-12 && left.abs() < 1e-12,
+        format!("skin {err:.1e} dm from the kneecap's motion; thigh and shin keep {left:.1e}"),
+    );
 }
 
 /// The cup's tools (G3, round 2): the rigid fit gives back a known motion; the warp reads a
@@ -145,11 +206,11 @@ fn cup_checks(t: &mut Tally) {
     let from = IndexedMesh { vertices: patch.clone(), ..Default::default() };
     let moved = IndexedMesh { vertices: patch.iter().map(|p| Point3::from(r * p.coords + tr)).collect(), ..Default::default() };
     let n_moved: Vec<Vector3<f64>> = patch.iter().map(|p| r * (p.coords - Vector3::new(0.0, 0.0, -80.0)).normalize()).collect();
-    let m = crate::cup::fit(&idx, &from, &moved, &n_moved);
+    let m = crate::cup::fit(&idx, &from, &moved, &n_moved, &[]);
     let err = patch.iter().zip(&moved.vertices).map(|(p, q)| (m.apply(p.coords) - q.coords).norm()).fold(0.0, f64::max);
     let flat = IndexedMesh { vertices: patch.iter().map(|p| Point3::new(p.x, p.y, 0.0)).collect(), ..Default::default() };
     let up = vec![Vector3::z(); patch.len()];
-    let rest = crate::cup::fit(&idx, &from, &flat, &up);
+    let rest = crate::cup::fit(&idx, &from, &flat, &up, &[]);
     let (into, off, _) = crate::cup::sit(&idx, &from, &flat, &rest, &up);
     let (k_in, k_off, _) = crate::cup::sit(&idx, &from, &flat, &kabsch(&patch, &flat.vertices), &up);
     // By hand: it rises until only the rim ring presses in, by d where the rings balance along
@@ -163,6 +224,34 @@ fn cup_checks(t: &mut Tally) {
         "the resting fit gives back a rigid motion, and rests a dome on flat skin by its rim as the balance by hand says",
         err < 1e-6 && (into - d).abs() < 0.01 && (off - off_hand).abs() < 0.01,
         format!("worst {err:.1e} mm; on flat skin {into:.3} mm in, {off:.2} off (by hand {d:.3}, {off_hand:.2}; least squares {k_in:.1} in, {k_off:.1} off)"),
+    );
+    // Hinges: ties alone give back a motion; a turn about the hinge line reads as that turn,
+    // with no stretch.
+    let tie_pts = [Point3::new(10.0, -40.0, 5.0), Point3::new(-20.0, 30.0, 12.0), Point3::new(35.0, 15.0, -8.0), Point3::new(0.0, 0.0, 40.0)];
+    let ties: Vec<(Point3<f64>, Point3<f64>)> = tie_pts.iter().map(|p| (*p, Point3::from(r * p.coords + tr))).collect();
+    let none = IndexedMesh::default();
+    let mt = crate::cup::fit(&[], &none, &none, &[], &ties);
+    let tie_err = ties.iter().map(|(a, b)| (mt.apply(a.coords) - b.coords).norm()).fold(0.0, f64::max);
+    let line: Vec<Point3<f64>> = (0..9).map(|k| Point3::new(20.0, -40.0 + 10.0 * k as f64, 7.0)).collect();
+    let turn = nalgebra::Rotation3::from_axis_angle(&Vector3::y_axis(), f64::to_radians(30.0));
+    let about = crate::pose::Motion { r: turn, t: Vector3::new(20.0, 0.0, 7.0) - turn * Vector3::new(20.0, 0.0, 7.0) };
+    let (h_turn, h_stretch) = crate::cup::hinge(&line, &about, &crate::pose::Motion::identity());
+    // Its give, across the hinge (+z) and out of the surface (+x): none for the turn; a 2 mm
+    // shift across reads as 2 mm opening, back the other way as closing.
+    let dirs = vec![(Vector3::z(), Vector3::x()); line.len()];
+    let id = crate::pose::Motion::identity();
+    let g0 = crate::cup::give(&line, &dirs, &about, &id);
+    let shift = |d: f64| crate::pose::Motion { r: nalgebra::Rotation3::identity(), t: Vector3::new(0.0, 0.0, d) };
+    let (g1, g2) = (crate::cup::give(&line, &dirs, &shift(2.0), &id), crate::cup::give(&line, &dirs, &shift(-2.0), &id));
+    let give_ok = [g0.open, g0.close, g0.lift, g0.side].iter().all(|x| x.abs() < 1e-9)
+        && (g1.open - 2.0).abs() < 1e-12
+        && g1.close.abs() < 1e-12
+        && (g2.close - 2.0).abs() < 1e-12
+        && g1.lift.abs() + g1.side.abs() < 1e-12;
+    t.item(
+        "a hinge: ties alone give back a motion; a 30 deg turn about the hinge line reads 30 deg, no stretch, no give; a shift across it reads as opening or closing",
+        tie_err < 1e-6 && (h_turn - 30.0).abs() < 1e-9 && h_stretch < 1e-9 && give_ok,
+        format!("ties worst {tie_err:.1e} mm; hinge {h_turn:.6} deg, stretch {h_stretch:.1e} mm; give for the turn {:.1e} mm, for +2 mm open {:.3} close {:.3}, for -2 mm close {:.3}", g0.open.max(g0.close).max(g0.lift).max(g0.side), g1.open, g1.close, g2.close),
     );
     t.item(
         "the warp reads a cylinder's angle and height 5-20 mm off its surface",

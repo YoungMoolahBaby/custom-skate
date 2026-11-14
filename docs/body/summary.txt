@@ -12,6 +12,17 @@ legs stood at the hips: right 6.8 deg in, 1.7 deg forward; left 6.8, 1.7
   hip girth: 1016.0 mm
   waist girth: 904.7 mm
   lower thigh girth: 408.0 mm
+right kneecap (a bone MakeHuman lacks; RESEARCH.md 24): its centre 14.3 mm under the skin over it (20 mm above the knee joint), 47.0 mm from the knee's axis; its tendon 45.2 mm to the tibial tuberosity, 45 mm below the joint, at +7 deg to the leg's axis (+: leaning forward at the top); 8 skin control vertices move with it, by share
+  through the knee's range: its turn on the thigh and on the shin, deg; how far round the knee its centre goes per degree of the knee's; its tendon's stretch and the centre's change of distance from the knee's turning centre, mm:
+    knee    0: on the thigh   0.0, on the shin   0.0; round the knee 0.000 per deg; tendon +0.0e0, radius +0.0e0
+    knee   15: on the thigh  10.5, on the shin   4.5; round the knee 1.028 per deg; tendon -2.8e-14, radius -1.1e-14
+    knee   30: on the thigh  21.0, on the shin   9.0; round the knee 1.037 per deg; tendon +5.6e-15, radius +1.1e-14
+    knee   45: on the thigh  31.5, on the shin  13.5; round the knee 1.047 per deg; tendon +4.4e-14, radius +2.2e-14
+    knee   70: on the thigh  49.0, on the shin  21.0; round the knee 1.062 per deg; tendon -2.8e-14, radius -5.6e-15
+    knee   90: on the thigh  63.0, on the shin  27.0; round the knee 1.074 per deg; tendon +1.7e-14, radius +2.2e-14
+    knee  110: on the thigh  77.0, on the shin  33.0; round the knee 1.085 per deg; tendon +1.7e-14, radius -2.2e-14
+    knee  135: on the thigh  94.5, on the shin  40.5; round the knee 1.098 per deg; tendon -1.0e-13, radius -3.3e-14
+  the skin over it assumed 5 mm: at 3 or 8 mm instead, the skin over its centre lands at most 1.8 mm elsewhere (at 8 mm, knee 135)
   lower thigh girth 80 mm above the knee joint, legs stood: 403 mm (fitted with legs apart; ANSUR 408)
   hip breadth at the trochanters' height (896 mm): 362 mm (ANSUR 344)
   right leg against the stand-in leg (out/leg/leg.stl): z 150: body 228, leg 228; z 250: body 312, leg 313; z 360: body 391, leg 391; z 450: body 356, leg 348; z 550: body 407, leg 385

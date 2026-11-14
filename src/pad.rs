@@ -46,7 +46,7 @@ use crate::render::{Layer, Style, View, render_styled};
 use crate::round1::mesh_of;
 
 /// mm of arc per radian round the leg: turns an angle into a distance for the parts' edges.
-pub(crate) const R_REF: f64 = 45.0;
+pub const R_REF: f64 = 45.0;
 
 /// Round 2 (2026-11-12), the modern pad (Jon: "having them look like modern shinpads ... but
 /// maybe a bit lighter because of the custom fit instead of fully relying on squish"; his
@@ -107,6 +107,19 @@ pub struct PadParams {
     pub strap_at: [f64; 2],
     /// Tongue over: how far the pad's bottom reaches down behind the tongue's top.
     pub over_overlap: f64,
+    /// The knee cup's flex hinge across the knee shield (Jon's pads, 2026-11-13): its height above
+    /// the knee joint on the standing leg, and the gap it leaves in the hard shell. None: one
+    /// shield.
+    pub knee_hinge: Option<f64>,
+    pub hinge_gap: f64,
+    /// How far round the leg from the front the knee shield's hard shell (and its liner) reaches,
+    /// degrees; None: the whole knee outline (to ~115 deg at the joint).
+    pub knee_wrap: Option<f64>,
+    /// The knee shield in two shells that slide (G3, round 4): the cap up to the first height,
+    /// the top down to the second (mm above the knee joint, standing), the top lapping over the
+    /// cap between them, `slide_clear` off it. Overrides `knee_hinge`.
+    pub knee_lap: Option<(f64, f64)>,
+    pub slide_clear: f64,
 }
 
 impl Default for PadParams {
@@ -143,6 +156,11 @@ impl Default for PadParams {
             strap_t: 2.0,
             strap_at: [0.3, 0.72],
             over_overlap: 30.0,
+            knee_hinge: None,
+            hinge_gap: 3.0,
+            knee_wrap: None,
+            knee_lap: None,
+            slide_clear: 1.0,
         }
     }
 }
@@ -370,6 +388,11 @@ pub enum Part {
     /// a V ridge across it, its bottom a V lapped over the front shell's top.
     KneeCap,
     KneeLiner,
+    /// With a hinge across the knee shield (`PadParams::knee_hinge`, the knee cup): the shield's
+    /// top above it, a flap that lies on the thigh, and its liner. `KneeCap` and `KneeLiner` are
+    /// then the part below it, over the kneecap.
+    KneeTop,
+    KneeTopLiner,
     /// The thigh guard, tucked under the knee shield's top, and its foam.
     ThighGuard,
     ThighFoam,
@@ -391,11 +414,11 @@ impl Part {
 
     /// The hard parts (the shell pieces), the ones a puck meets.
     pub fn hard(&self) -> bool {
-        matches!(self, Part::ShinShell | Part::SidePanel(_) | Part::KneeCap | Part::ThighGuard)
+        matches!(self, Part::ShinShell | Part::SidePanel(_) | Part::KneeCap | Part::KneeTop | Part::ThighGuard)
     }
 
     pub fn foam(&self) -> bool {
-        matches!(self, Part::ShinLiner | Part::KneeLiner | Part::ThighFoam | Part::WingFoam(_))
+        matches!(self, Part::ShinLiner | Part::KneeLiner | Part::KneeTopLiner | Part::ThighFoam | Part::WingFoam(_))
     }
 
     pub fn name(&self) -> String {
@@ -406,6 +429,8 @@ impl Part {
             Part::ShinLiner => "shin liner".into(),
             Part::KneeCap => "knee shield".into(),
             Part::KneeLiner => "knee liner".into(),
+            Part::KneeTop => "knee top".into(),
+            Part::KneeTopLiner => "knee top liner".into(),
             Part::ThighGuard => "thigh guard".into(),
             Part::ThighFoam => "thigh foam".into(),
             Part::WingFoam(m) => format!("calf foam, {}", side(m)),
@@ -436,13 +461,35 @@ impl Part {
     /// as dark fabric, since they show round the shells' edges.
     pub fn color(&self) -> [f64; 3] {
         match self {
-            Part::ShinShell | Part::KneeCap | Part::ThighGuard => [0.62, 0.72, 0.84],
+            Part::ShinShell | Part::KneeCap | Part::KneeTop | Part::ThighGuard => [0.62, 0.72, 0.84],
             Part::SidePanel(_) => [0.17, 0.18, 0.20],
             p if p.foam() => [0.11, 0.12, 0.14],
             Part::Wing(_) => [0.21, 0.22, 0.24],
             _ => [0.06, 0.06, 0.07],
         }
     }
+}
+
+/// The knee shield's outline at (s, z), cut at `PadParams::knee_wrap` round the leg if set
+/// (corners rounded 4 mm).
+pub fn knee_eval(o: &Outlines, p: &PadParams, s: f64, z: f64) -> f64 {
+    match p.knee_wrap {
+        Some(w) => smax(o.knee.eval(s, z), s.abs() - w.to_radians() * R_REF, 4.0),
+        None => o.knee.eval(s, z),
+    }
+}
+
+/// The shin liner's thickness at `th` degrees round the leg.
+pub(crate) fn liner_at(p: &PadParams, th: f64) -> f64 {
+    let s = (th.abs() / p.side_to).min(1.0);
+    p.liner_side + (p.liner_front - p.liner_side) * (FRAC_PI_2 * s).cos().powi(2)
+}
+
+/// The knee shield's dome: extra stand-off over the kneecap (its centre ~15 mm above the knee
+/// joint `kz`), falling smoothly to 0 ~55 mm away.
+pub(crate) fn dome(p: &PadParams, kz: f64, s: f64, z: f64) -> f64 {
+    let dz = (z - (kz + 15.0)) / 55.0;
+    p.dome_h * bump((dz * dz + (s / 55.0).powi(2)).sqrt())
 }
 
 /// A smooth bump, 1 at 0, falling to 0 (with zero slope) at |x| = 1.
@@ -614,7 +661,7 @@ impl Outlines {
             (22.0, kz - 36.0),
             (0.0, kz - 46.0),
         ]);
-        let thigh = mirrored(&[(0.0, kz + 115.0), (28.0, kz + 112.0), (44.0, kz + 98.0), (42.0, kz + 80.0), (24.0, kz + 70.0), (0.0, kz + 66.0)]);
+        let thigh = mirrored(&THIGH.map(|(s, z)| (s, kz + z)));
         let calf = [(74.0, kz - 70.0), (108.0, kz - 76.0), (121.0, kz - 110.0), (123.0, 250.0), (114.0, 175.0), (88.0, 150.0), (72.0, 150.0)];
         Outlines {
             front: Outline::new(&front, 4),
@@ -624,7 +671,19 @@ impl Outlines {
             calf: Outline::new(&calf, 4),
         }
     }
+
+    /// The thigh guard's outline stretched up from its bottom so its top is `top` mm above the
+    /// knee joint (`THIGH`'s is 115).
+    pub fn with_thigh_top(mut self, kz: f64, top: f64) -> Self {
+        let (bot, top0) = (THIGH[5].1, THIGH[0].1);
+        let k = (top - bot) / (top0 - bot);
+        self.thigh = Outline::new(&mirrored(&THIGH.map(|(s, z)| (s, kz + bot + (z - bot) * k))), 4);
+        self
+    }
 }
+
+/// The thigh guard's outline, half of it (s >= 0), mm above the knee joint.
+const THIGH: [(f64, f64); 6] = [(0.0, 115.0), (28.0, 112.0), (44.0, 98.0), (42.0, 80.0), (24.0, 70.0), (0.0, 66.0)];
 
 /// One pad on the leg.
 #[derive(Clone)]
@@ -653,6 +712,9 @@ pub struct Pad {
     /// Parts built on another body that the knee shield laps over (the cup over the pad's lower
     /// parts): it stays `LAP_CLEAR` outside them, full thickness, whatever its own offset says.
     pub lap: Option<Arc<Vec<NearMesh>>>,
+    /// The built knee cap, for the top to lap over (sliding shells, `PadParams::knee_lap`): the
+    /// top stays `slide_clear` outside its mesh, whatever its own offset says.
+    pub over: Option<Arc<NearMesh>>,
 }
 
 /// The knee shield's clearance over the parts it laps, mm (as its lifts in `Pad::field`).
@@ -860,8 +922,7 @@ pub(crate) fn barycentric(p: Point3<f64>, a: Point3<f64>, b: Point3<f64>, c: Poi
 
 impl Pad {
     fn liner_at(&self, th: f64) -> f64 {
-        let s = (th.abs() / self.p.side_to).min(1.0);
-        self.p.liner_side + (self.p.liner_front - self.p.liner_side) * (FRAC_PI_2 * s).cos().powi(2)
+        liner_at(&self.p, th)
     }
 
     /// A reference height below the knee (bulk is measured below it).
@@ -901,11 +962,8 @@ impl Pad {
         (-base).max(base - (outer - inner))
     }
 
-    /// The knee shield's dome: extra stand-off over the kneecap (its centre ~15 mm above the
-    /// knee joint), falling smoothly to 0 ~55 mm away.
     fn dome(&self, s: f64, z: f64) -> f64 {
-        let dz = (z - (self.knee_z + 15.0)) / 55.0;
-        self.p.dome_h * bump((dz * dz + (s / 55.0).powi(2)).sqrt())
+        dome(&self.p, self.knee_z, s, z)
     }
 
     /// The side panel's outline at (s, z): its own outline (mirrored), less the front shell's
@@ -958,10 +1016,30 @@ impl Pad {
                 e
             }
             Part::ShinLiner => smax(o.front.eval(s, z).min(o.side.eval(s.abs(), z)) - p.liner_border, bot, 3.0),
-            Part::KneeCap => o.knee.eval(s, z),
-            Part::KneeLiner => {
+            // With the hinge: the cap below it, the top above it, a gap between them in the hard
+            // shell; the liner split at the line.
+            // Sliding instead: the cap up to its top, the top down over it to its bottom.
+            Part::KneeCap => match (p.knee_lap, p.knee_hinge) {
+                (Some((cap_top, _)), _) => knee_eval(o, p, s, z).max(z - (self.knee_z + cap_top)),
+                (None, Some(h)) => knee_eval(o, p, s, z).max(z - (self.knee_z + h - 0.5 * p.hinge_gap)),
+                (None, None) => knee_eval(o, p, s, z),
+            },
+            Part::KneeTop => match (p.knee_lap, p.knee_hinge) {
+                (Some((_, top_bottom)), _) => knee_eval(o, p, s, z).max(self.knee_z + top_bottom - z),
+                (None, Some(h)) => knee_eval(o, p, s, z).max(self.knee_z + h + 0.5 * p.hinge_gap - z),
+                (None, None) => 1.0e3,
+            },
+            Part::KneeLiner | Part::KneeTopLiner => {
                 let shin = o.front.eval(s, z).min(o.side.eval(s.abs(), z)) - p.liner_border;
-                (o.knee.eval(s, z) + 2.0).max(0.5 - shin).max(0.5 - o.thigh.eval(s, z))
+                let e = (knee_eval(o, p, s, z) + 2.0).max(0.5 - shin).max(0.5 - o.thigh.eval(s, z));
+                // Sliding shells: one foam under both (in the suit, not in either shell).
+                let hinge = if p.knee_lap.is_some() { None } else { p.knee_hinge };
+                match (part, hinge) {
+                    (Part::KneeLiner, Some(h)) => e.max(z - (self.knee_z + h)),
+                    (Part::KneeTopLiner, Some(h)) => e.max(self.knee_z + h - z),
+                    (Part::KneeTopLiner, None) => 1.0e3,
+                    _ => e,
+                }
             }
             Part::ThighGuard => o.thigh.eval(s, z),
             Part::ThighFoam => o.thigh.eval(s, z) + 2.0,
@@ -997,19 +1075,33 @@ impl Pad {
                 let inner = self.side_inner(s, z, lt);
                 self.shell_band(q, inner, inner + p.wall)
             }
-            Part::KneeLiner => Self::band(self.body.eval(q), p.ease, p.ease + p.knee_liner + self.dome(s, z)),
+            Part::KneeLiner | Part::KneeTopLiner => Self::band(self.body.eval(q), p.ease, p.ease + p.knee_liner + self.dome(s, z)),
             // The shield lifts over whatever it laps: the front shell's top, the side panels'
             // tops, the thigh guard's bottom.
-            Part::KneeCap => {
+            Part::KneeCap | Part::KneeTop => {
                 let base = p.ease + p.knee_liner + self.dome(s, z);
                 let w = |d: f64| 1.0 - smoothstep(-1.0, 5.0, d);
                 let lift_f = w(o_eval(&self.o.front, s, z)) * (self.front_outer(s, z, lt) + 0.4 - base).max(0.0);
                 let lift_s = w(self.side_panel(s, z)) * (self.side_inner(s, z, lt) + p.wall + 0.4 - base).max(0.0);
                 let lift_t = w(o_eval(&self.o.thigh, s, z)) * (p.ease + p.thigh_foam + p.wall + 0.4 - base).max(0.0);
-                let inner = base + lift_f.max(lift_s).max(lift_t);
                 let vz = self.knee_z - 8.0 + 0.55 * s.abs();
-                let chevron = p.chevron_h * bump((z - vz) / 3.5) * (1.0 - smoothstep(40.0, 55.0, s.abs()));
-                let w = p.wall + chevron;
+                let side_fade = 1.0 - smoothstep(40.0, 55.0, s.abs());
+                let chevron = p.chevron_h * bump((z - vz) / 3.5) * side_fade;
+                // Sliding shells: the top lifts over the cap's outside by its wall and
+                // `slide_clear` where it laps it and 1 mm past the cap's edge, fading out over the
+                // next 6 mm; over the cap's ridge by a smooth bump 16 mm wide, the top itself
+                // without a ridge. Then it wraps the cap's mesh as built (`over`), which this
+                // offset alone doesn't know.
+                let top_lap = part == Part::KneeTop && p.knee_lap.is_some();
+                let lift_c = match p.knee_lap.filter(|_| top_lap) {
+                    Some((cap_top, _)) => {
+                        let cap = knee_eval(&self.o, p, s, z).max(z - (self.knee_z + cap_top));
+                        w(cap - 2.0) * (p.wall + p.chevron_h * bump((z - vz) / 8.0) * side_fade + p.slide_clear)
+                    }
+                    None => 0.0,
+                };
+                let inner = base + lift_f.max(lift_s).max(lift_t) + lift_c;
+                let w = p.wall + if top_lap { 0.0 } else { chevron };
                 // Its offset past the inner surface; over lapped parts, past them by LAP_CLEAR
                 // (the shield is the layer outside both), blended over LAP_BLEND: a plain min
                 // creased the shield where the two offsets, nearly parallel, cross (2026-11-13).
@@ -1018,6 +1110,9 @@ impl Pad {
                     for m in lap.iter() {
                         t = smin(t, m.eval(q) - LAP_CLEAR, LAP_BLEND);
                     }
+                }
+                if let Some(cap) = self.over.as_ref().filter(|_| top_lap && t >= 0.0 && t < w + 4.0) {
+                    t = smin(t, cap.eval(q) - p.slide_clear, LAP_BLEND);
                 }
                 (-t).max(t - w)
             }
@@ -1042,7 +1137,7 @@ impl Pad {
             Part::ShinShell => (zb - 2.0, o.front.z_max + 2.0),
             Part::SidePanel(_) => (zb - 2.0, o.side.z_max + 2.0),
             Part::ShinLiner => (zb - 2.0, o.front.z_max.max(o.side.z_max) + p.liner_border + 2.0),
-            Part::KneeCap | Part::KneeLiner => (o.knee.z_min - 2.0, o.knee.z_max + 2.0),
+            Part::KneeCap | Part::KneeLiner | Part::KneeTop | Part::KneeTopLiner => (o.knee.z_min - 2.0, o.knee.z_max + 2.0),
             Part::ThighGuard | Part::ThighFoam => (o.thigh.z_min - 2.0, o.thigh.z_max + 2.0),
             Part::WingFoam(_) | Part::Wing(_) => (zb + 13.0, o.calf.z_max + 2.0),
             Part::Strap(i) => {
@@ -1383,6 +1478,7 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
         warp: None,
         boxes: None,
         lap: None,
+        over: None,
     };
     // Tongue under, flush: the same, but the shell's offset from the leg alone, so the outside
     // stays slim over the tongue; where the tongue reaches past the shell's inside, the run

@@ -1653,7 +1653,8 @@ pants". `cargo run --release -- cup scans/stand-in/022_fBW_R.ply` (~6 min on two
   Most of each, over the piece. "Sliding" is the skin stretching and moving under a rigid
   piece as the knee bends.
 
-  ![The cup on the knee bent 70°, in the boot: outside, front three-quarter, front](pad/cup.png)
+  (Its pictures, `docs/pad/cup.png` and `cup_close.png`, are in commit 9e67e39; the files now
+  show round 4.)
 
 What it shows:
 1. **Through the skating range it fits.** From 60° to 90° the skin presses at most 1 mm into
@@ -1697,14 +1698,205 @@ belly, as in round 1):
 4. The body's skin reaches 2.3 mm into the shin liner beside the knee (z 468, the outside):
    that liner is still built on the leg, whose knee is slimmer than the body's.
 
-  ![The gap with the cup: standing, skating stance (knee 70), kneeling, deep crouch; the thigh
-  pad pushed down by the belly; red within 40 mm](girdle/gap2.png)
+  (Its picture, `docs/girdle/gap2.png`, is in commit 9e67e39; the file now shows round 4.)
+
+Round 2's outputs are in commit 9e67e39; `cup` and `gap` now give round 4's.
+
+**G3, round 3: the cup in hinged pieces, on a body with a kneecap (2026-11-13).** Jon's pads
+(his experience, under Open questions): two flex hinges, the knee cap to the shin shell, and one
+near the cup's top that flattens it onto the thigh when he straightens. He put the upper one just
+above the kneecap: 45 mm above the joint (mid-patella is 20 mm above it, ANSUR). So the shield is
+split there with a 3 mm gap into a **knee cap** (lapping the front shell's top, as before) and a
+**top** that carries the thigh guard. At each pose each piece rests on the skin under it as in
+round 2, and the hinges are tied at their middles, 20 mm each side of the front (11 and 7
+points), so they turn but hold their edges together (`cup::place`, Gauss-Newton on both pieces;
+checked in `check`: ties alone give back a motion, a turn about the hinge line reads as that turn
+with no stretch).
+- **First, on MakeHuman's body as it was:** tied loosely, the hinges stretched 12-27 mm; tied
+  firmly, the skin went 20.1 mm into the cap's 9 mm liner at a straight knee, the lower hinge
+  turned 80.6°, and the girdle gap went to −6 mm. **MakeHuman has no kneecap**: its knee skin
+  blends the thigh's and shin's motions and follows the thigh, where the real patella flexes
+  0.7 times the knee on the femur, so mostly with the shin (RESEARCH.md 24).
+- **A kneecap bone** (`pose::Patella`, added to the fitted body in `body.rs`): on the thigh, it
+  turns 0.7 times the knee (Amis et al. 2006, cadavers); its centre runs on a circle about the
+  knee's axis (Iranpour et al. 2010); its tendon keeps its length to the tibial tuberosity. Sized
+  from MRI means (Janani et al. 2023: patella 40.3 mm long, 18.6 thick, tendon 45.2) and placed
+  under the skin at ANSUR's mid-patella height, with 5 mm of skin and fat over it (assumed: no
+  source found). On the stand-in body its centre is 47 mm from the knee's axis and the
+  tuberosity 45 mm below the joint; 8 control vertices of the skin move with it, fully within
+  20 mm of the skin over its centre, none past 40. Its centre goes 1.03-1.10° round the knee per
+  degree of knee flexion; from 70° to straight it turns 21° on the shin and 49° on the thigh.
+  3 or 8 mm of soft tissue instead of 5 moves the skin over it at most 1.8 mm (`body` run,
+  `docs/body/summary.txt`). Checked in `check`: the three rules hold to 1e-16 on a made-up knee,
+  and in a rig the skin it takes moves with it.
+- **With the kneecap the cap fitted better but not well:** 11.6 mm into the liner straight. The
+  deepest point was the tip of its inside wing, ~110° round from the front near the joint
+  (the knee outline wraps ~115° there), not the kneecap; free of its hinges it still pressed
+  4.3 mm in there, and handing the kneecap a wider patch of skin (to 70 mm) changed little (9.6).
+  A rigid cup shaped at 70° doesn't fit the inner knee straight or crouched that far round
+  (a probe whose first version read this; `examples/probe_cup_sit.rs` now sweeps that cup's
+  hinges from free to firm, cut at the sides).
+- **Hard shell coverage from Jon's reference** (2026-11-13: "lets just use that photo for the
+  hard shell coverage reference", a photo of a Bauer Vapor shin pad): the hard knee cap reaches
+  round to the sides of the knee, not past them; the side panel covers the side below. The cup's
+  shield and liner are cut at 90° round (`cup::CUP_WRAP`; the straight pad keeps its outline).
+
+**Results** (the cup run; its files now hold round 4's), hip 60°, the hinges at the default hold. Give is the hinge's
+tied middle moving: opening (the piece above moving away across the hinge), closing (moving in
+over the one below), lifting off the surface, sideways; the most over its points, mm:
+
+| Knee | Cap: into the liner / off | Top: in / off | Lower hinge: turn, give (open / close / lift / side) | Upper hinge: turn, give |
+|---|---|---|---|---|
+| 0 (straight) | 3.6 / 18.4 mm | 3.6 / 22.6 | 51.7°, 3.0 / 3.1 / 6.4 / 3.0 | 26.1°, 2.5 / 2.3 / 1.3 / 1.4 |
+| 30 | 2.3 / 8.9 | 2.4 / 12.5 | 24.5°, 1.6 / 1.3 / 3.8 / 1.7 | 16.1°, 1.0 / 1.3 / 0.9 / 0.6 |
+| 60 | 1.6 / 2.4 | 0.4 / 2.3 | 5.5°, 0.4 / 0.3 / 1.1 / 0.5 | 3.5°, 0.3 / 0.3 / 0.2 / 0.1 |
+| **70 (built)** | 0 / 0 | 0 / 0 | 0 | 0 |
+| 90 | 1.2 / 6.9 | 0.2 / 8.1 | 3.3°, 0.1 / 0.4 / 0.4 / 0.3 | 15.0°, 1.1 / 1.1 / 0.3 / 0.3 |
+| 120 | 3.6 / 21.1 | 2.2 / 22.5 | 5.1°, 0.1 / 0.7 / 0.6 / 0.4 | 36.1°, 2.6 / 3.0 / 0.7 / 0.5 |
+| 135 | 4.8 / 28.7 | 4.1 / 29.3 | 5.0°, 0.1 / 0.7 / 0.3 / 0.4 | 43.6°, 3.2 / 3.7 / 0.7 / 0.6 |
+
+**The hinges from soft to firm.** The hold isn't a measured stiffness: the skin's push, the
+sock's pull and the hinge are all relative weights. So the trade-off is shown whole: over the
+range, the most the skin presses into each liner and the most each hinge gives, mm:
+
+| Hold per tied point | Skin into the cap / the top | Lower hinge: open / close / lift / side | Upper hinge: open / close / lift / side |
+|---|---|---|---|
+| 0 (free) | 2.2 / 1.6 | 31.6 / 32.0 / 10.6 / 32.7 | 53.0 / 25.8 / 46.6 / 40.5 |
+| 5 | 3.3 / 4.0 | 18.0 / 17.6 / 4.9 / 17.9 | 16.9 / 18.6 / 12.5 / 11.7 |
+| 20 | 4.1 / 4.4 | 9.7 / 9.0 / 4.3 / 9.3 | 7.4 / 10.4 / 3.9 / 3.9 |
+| 100 | 4.6 / 4.4 | 4.4 / 4.4 / 6.1 / 4.2 | 4.0 / 4.7 / 1.8 / 1.7 |
+| **500 (default)** | 4.8 / 4.1 | 3.0 / 3.1 / 6.4 / 3.0 | 3.2 / 3.7 / 1.3 / 1.4 |
+| 5000 | 8.7 / 5.7 | 2.5 / 2.6 / 5.4 / 2.9 | 2.4 / 2.8 / 1.4 / 1.2 |
+
+**99.6 g** against the straight pieces' 91.0 g and round 2's 95.5: knee cap 36.7, top 18.7,
+their liners 19.3 and 8.8, thigh guard 11.8, its foam 4.3 (PA 12 and the assumed liner foam).
+
+**The gap again** (the gap run; its files now hold round 4's), closest approach, mm (the thigh pad where the skin
+carries it / pushed down the thigh by the belly):
+
+| hip \ knee | 0 | 15 | 30 | 45 | 60 | 75 | 90 | 105 | 120 | 135 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| −20 | −6/−6 | −6/−6 | −6/−6 | 1/1 | 14/14 | 20/20 | 24/24 | 29/29 | 32/32 | 32/32 |
+| 0 | −6/−6 | −6/−6 | −6/−6 | 1/1 | 14/14 | 26/26 | 33/33 | 39/39 | 34/34 | 20/20 |
+| 30 | −6/−6 | −6/−6 | −6/−6 | 1/1 | 14/14 | 20/20 | 35/35 | >40/>40 | 38/38 | 29/29 |
+| 60 | −6/−6 | −6/−6 | −6/−6 | 1/1 | 14/14 | 20/20 | 30/30 | 44/44 | >40/>40 | >40/>40 |
+| 90 | −6/−6 | −6/−6 | −6/−6 | 1/−3 | 14/1 | 26/3 | >40/5 | >40/6 | 34/19 | 20/20 |
+| 110 | −6/3 | −5/12 | −6/−3 | 1/−0 | 14/4 | 23/7 | 38/9 | >40/10 | 38/11 | 20/10 |
+
+What it shows:
+1. **With the photo's coverage the cup stays within its liner** through the whole range: the
+   skin at most 4.8 mm into the 9 mm liner (deep crouch), 3.6 straight.
+2. **The hinges' range:** the lower one turns up to 52° (straight) and only ~5° past 90°; the
+   upper one 26° straight and 44° in the deep crouch, the other way. Neither piece simply rides
+   the kneecap (21° and 49° straight by the cadaver ratio): each rests on all the skin under it.
+3. **How much a hinge gives is the design lever,** and the model can't pick it yet: a soft hinge
+   lets each piece sit on its own skin and has to give 10-30 mm; a firm one gives ~3 mm (the
+   cap's bottom still lifts 6.4 mm off the shell straight) and presses the skin harder.
+4. **The girdle gap is worse: −6 mm from straight to 30°, at every hip.** Hinged to the cap, the
+   top and the thigh guard on it are dragged up the thigh as the knee straightens, and tip out
+   instead of lying flat as Jon's do (the picture). Round 2's thigh guard rested on the thigh on
+   its own and kept 18 mm. The top lies flat here only with its hinge nearly free, and then it
+   slides 10-25 mm over the cap's edge.
+5. A strip across a hinge strains t·θ/(2L) in bending plus its give over its free length: 1.5
+   mm thick over 10 mm at 52° is 6.8%, and 3-6 mm of give over the same 10 mm is 30-64% more.
+   The give, not the bend, sizes it.
+
+  (Round 3's pictures weren't kept: the same files now show round 4.)
+
+**G3, round 4: two shells sliding over foam in a compression suit (2026-11-13).** Jon: "i think
+we should tune it so when its flat it just goes like right below the girdle, but still full
+covers the knee when bent". Hinged to the cap as in round 3, the top's upper edge rides 64 mm up
+the thigh's skin from the stance to straight (58 at hip 110) and 19-46 mm down by 135°: as the
+knee straightens its front unwraps, and the kneecap goes back up the thigh bone (its centre ~61
+mm round the knee from 70° to straight, in the model: 1.06° a degree at 47 mm). Resting
+on the thigh by itself, the top stays within ~8 mm (`examples/probe_top_ride.rs`). So:
+- **The top rests on the thigh and the cap slides under it.** The top's lower part laps over the
+  cap's upper part, 1 mm off it (`PadParams::knee_lap`, `slide_clear`), and is built over the
+  cap's mesh as built, which the cap's own lap over the front shell pushes out a little (offset
+  alone, the cap went 1.35 mm into the top just above the front shell's top). Only the cap is
+  hinged, to the front shell.
+- **The foam is in a compression suit, not in the shells.** Fixed in each shell, the foams would
+  leave a band as tall as the slide (~65 mm) unpadded at the stance; a separate knee sleeve could
+  creep (Jon). The girdle's compression shorts made full length carry it, so it rides the skin.
+  Washable (Jon's requirement): closed-cell foams, by the sources found so far; no wash-cycle
+  data yet (RESEARCH.md 25).
+- **Tuned on the runs:** the cap up to 52 mm above the joint, the top down over it to 25 mm below
+  the joint (77 mm of overlap: with 50 a 17 mm gap opened at 135°, with 72 0.7 mm was left), the
+  thigh guard's top up to 125 mm (at 121 the girdle came no closer than 8.4 mm). The hard shells
+  cut at 90° round, as in round 3.
+
+**Results** (`docs/pad/cup.txt`), hip 60°, the hinge at the default hold. The cap's top edge's
+middle against the top: how far it slides up under the top, and down out of it; the overlap left
+of the 77 mm built (none: a gap opens), and the room left below the top's upper edge (73 mm
+built); how close the shells come (negative: the cap presses into the top, which the foam under
+the top or the top's flex has to take):
+
+| Knee | Cap: into the foam / off | Top: in / off | Hinge: turn, give (open / close / lift / side) | Cap under the top: up / down | Overlap left | Room left | Shells |
+|---|---|---|---|---|---|---|---|
+| 0 (straight) | 4.4 / 18.3 mm | 0.3 / 1.7 | 51.8°, 2.4 / 3.5 / 6.1 / 2.9 | 62.9 / 0 | 77.0 | 10.1 | −1.0 |
+| 30 | 2.7 / 8.5 | 0.5 / 3.2 | 23.5°, 1.3 / 1.8 / 3.8 / 1.5 | 31.5 / 0 | 77.0 | 41.5 | −1.0 |
+| 60 | 1.7 / 2.2 | 0.2 / 1.1 | 5.4°, 0.3 / 0.3 / 1.1 / 0.5 | 6.5 / 0 | 77.0 | 66.5 | −1.3 |
+| **70 (built)** | 0 / 0 | 0 / 0 | 0 | 0 | 77.0 | 73.0 | +0.9 |
+| 90 | 1.1 / 9.7 | 0.3 / 4.3 | 2.6°, 0.1 / 0.3 / 0.4 / 0.2 | 0 / 19.8 | 57.2 | 73.0 | −1.2 |
+| 105 | 2.1 / 18.1 | 0.6 / 8.0 | 3.7°, 0.1 / 0.4 / 0.5 / 0.3 | 0 / 36.0 | 41.0 | 73.0 | −1.3 |
+| 120 | 3.3 / 27.1 | 0.8 / 11.6 | 4.1°, 0.1 / 0.5 / 0.5 / 0.3 | 0 / 53.3 | 23.7 | 73.0 | −1.2 |
+| 135 | 4.2 / 36.3 | 1.0 / 15.0 | 3.5°, 0.1 / 0.4 / 0.4 / 0.3 | 0 / 71.5 | 5.5 | 73.0 | −1.3 |
+
+The hinge from soft to firm, over the range (`cup.txt`): free, it gives up to 36 mm and the skin
+presses 2.6 mm into the cap's foam; at the default hold, 2.4-6.1 mm of give and 4.4 mm into the
+foam; ten times firmer, 8.4 mm into the foam for 0.2-0.9 mm less give. The top's numbers don't
+change with it: it rests on its own.
+
+**147.2 g** with the foam, against the straight pieces' 91.0: the hard shells **113.6 g** (cap
+42.4, top 57.0, thigh guard 14.2) against 62.9 (straight shield and thigh guard); the foam 33.6 g
+(28.3 over the knee, 5.3 on the thigh) against 28.0, now in the suit rather than the shin pad.
+
+**The gap** (`docs/girdle/gap2.txt`), closest approach of the shin pad's hard parts to the
+girdle's thigh pad, mm (where the skin carries it / pushed down the thigh by the belly):
+
+| hip \ knee | 0 | 15 | 30 | 45 | 60 | 75 | 90 | 105 | 120 | 135 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| −20 | 6/6 | 5/5 | 6/6 | 8/8 | 10/10 | 12/12 | 13/13 | 14/14 | 14/14 | 12/12 |
+| 0 | 6/6 | 5/5 | 6/6 | 8/8 | 10/10 | 12/12 | 13/13 | 14/14 | 14/14 | 12/12 |
+| 30 | 6/6 | 5/5 | 6/6 | 8/8 | 10/10 | 12/12 | 14/14 | 15/15 | 14/14 | 12/12 |
+| 60 | 6/6 | 5/5 | 6/6 | 8/8 | 10/10 | 12/12 | 14/14 | 15/15 | 16/16 | 15/15 |
+| 90 | 6/**−4** | 5/1 | 6/1 | 8/1 | 10/2 | 12/3 | 14/4 | 15/4 | 16/4 | 15/4 |
+| 110 | 6/9 | 6/7 | 6/1 | 8/4 | 10/5 | 12/7 | 14/8 | 15/8 | 16/9 | 15/9 |
+
+What it shows:
+1. **Both of Jon's conditions hold on the stand-in.** Straight, the top lies on the thigh (0.3 mm
+   into its foam, 1.7 off at most) with its edge 6 mm below the girdle's thigh pad; 4.7 mm at the
+   closest (hip 60, knee 15). Bent, the cap stays under the top to 135° (5.5 mm of overlap left
+   there, 24 at 120°), so the hard shell covers the knee all the way.
+2. **The gap now depends on the top, not on the knee:** 5-6 mm from straight to 30°, 12 mm at the
+   stance, 12-16 mm deep. The margin question (how far the girdle's shorts and the top move in
+   play) is still open, and with the knee's foam and the girdle's thigh pad on one suit, part of
+   the girdle's movement is now shared.
+3. **The cap slides 63 mm up under the top straightening and 72 mm down out of it by 135°:** a
+   135 mm stroke. Where it slides past the top's built clearance the two shells press together by
+   up to 1.3 mm, which the foam under the top has to take.
+4. **The cost is weight.** The overlap doubles the hard shell over the knee: 113.6 g of shell
+   against 62.9 for a straight shield and thigh guard, 50.7 g more.
+5. **If the belly pushes the thigh pad down the thigh** (hip 90, knee 0: sitting with the legs
+   out), it reaches the cap by 4.4 mm.
+6. The cap's hinge to the shell turns 52° straight and only ~4° past 90°; it gives 2-6 mm.
+
+  ![The two sliding shells on the knee bent 70°, cut at the sides: outside, front three-quarter,
+  front](pad/cup.png)
+
+  ![The gap with the sliding shells: standing, skating stance (knee 70), kneeling, deep crouch;
+  red within 40 mm](girdle/gap2.png)
 
 **G3 next:**
-- **The joint between the knee shield and the front shell** (point 3 above): how far the shield
-  turns on the shell from straight to a deep crouch (up to 69°), and what joins them: an elastic
-  strap, rivets in slots, a fabric hinge. Then model it, so the shell pulls the shield's bottom
-  along as it would.
+- **The suit:** the knee's foam and the girdle's pads in one full-length compression garment.
+  Which foam (closed-cell, washable, from a maker's datasheet with wash data), a slick face for
+  the shells to slide on, and whether to join the knee foam to the girdle's thigh foam (15 mm of
+  the suit between them now: the thigh foam's top 123 mm above the joint, the girdle's thigh pad
+  starting at 134).
+- **Lighter shells:** where the top laps the cap, one of the two could be thinner, or the
+  overlap shorter where the knee is less exposed.
+- **The cap's hinge as a part:** a strip or fabric sized for 52° and 2-6 mm of give, with its
+  weight, once its stiffness can be set against the foam and the sock (their moduli, cited).
 - **The margin: research first.** Jon: "this is something we'd likely research too". How far a
   girdle (or the shorts holding its pads) rides down a thigh in play, and how far a shin pad
   shifts on its straps under a sock. Then his experience, then set `thigh_bottom` (600 now).
@@ -1715,9 +1907,26 @@ belly, as in round 1):
 
 ## Open questions for Jon
 
-- The knee cup (G3, round 2): on his own pads, does the knee cap move on the shin shell when he
-  crouches or kneels (a hinge, elastic, or fixed)? And standing straight, does a cup that sits
-  proud of the knee bother him, or does it only matter in the stance?
+- Answered 2026-11-13, the knee's foam (G3, round 4): Jon wants the cup's top "so when its flat
+  it just goes like right below the girdle, but still full covers the knee when bent". Built
+  that way, the cap (on the kneecap) and the top (on the thigh) slide ~65 mm past each other, so
+  foam fixed in each shell would leave an unpadded band; foam in a sleeve could creep ("my only
+  concern is the foam sleeve will move around"). So the knee's foam goes into a full-length
+  compression suit (the girdle's shorts made full length), the shells sliding over it: "oh,
+  thats really smart. to build it into a compression suit. the only thing would be to make sure
+  the compression suit is washable/the gear in it is washable in a laundry machine".
+  **Requirement: the suit and everything in it machine washable** (foams that don't take up
+  water, or pads that come out).
+- Answered 2026-11-13, hard shell coverage (G3, round 3): "lets just use that photo for the hard
+  shell coverage reference, we can proceed to model our soft hinge at the knee", on a photo of a
+  Bauer Vapor shin pad: the knee cap reaches round to the sides of the knee, not past them.
+- Answered 2026-11-13, where the upper hinge goes: just above the kneecap (45 mm above the
+  joint), the top a flap with the thigh guard that lies flat on the thigh when straight.
+- Answered 2026-11-13, the knee cup (G3, round 2), from his own pads: the knee cap joins the
+  shin shell by "like a flex hinge. and when i stand straigth up there like another flex hinge,
+  for the other way, so it like flattents at the top of the cup when my leg straightens". So two
+  flex hinges: one at the shell, opening as he crouches; one near the cup's top, opening the
+  other way as the leg straightens, so the top lies flat on the thigh standing.
 
 - Answered 2026-11-12: the girdle's list (above, the girdle); a modern girdle, not pants.
 

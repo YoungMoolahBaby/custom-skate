@@ -3,9 +3,12 @@
 //! also yet the gap between the bottom of the girdle and top of the knee pad should be as small
 //! as it can be without them interfering with each other").
 //!
-//! Round 2 (2026-11-13): the shin pad's knee pieces are the cup (`cup.rs`), built on the knee
-//! bent for skating and held on by the sock or pants: at each pose the knee shield (with its
-//! liner) and the thigh guard (with its foam) each sit where they best fit the skin under them.
+//! Round 4 (2026-11-13): the shin pad's knee pieces are the cup (`cup.rs`), built on the knee
+//! bent for skating and held on by the sock or pants: two hard shells, each resting on the skin
+//! under it at each pose, the knee cap flex-hinged to the front shell, the top (with the thigh
+//! guard) on the thigh, sliding over the cap. The foam under them is in the compression suit
+//! with the girdle, so it isn't part of the shin pad here. (Rounds 2 and 3, one shield, then two
+//! hinged pieces, are in docs/PLAN.md.)
 //! The pad's lower parts (front shell, side panels, liners, calf wraps, straps) are strapped to
 //! the shin and move with it. Round 1 (the straight shield, carried by the skin or with the shin)
 //! is in docs/PLAN.md.
@@ -29,7 +32,7 @@ use nalgebra::{Point3, Vector3};
 use crate::body;
 use crate::cup;
 use crate::girdle::{self, GPart, GirdleParams};
-use crate::pad::{self, NearMesh, Outlines, Part, close_between, draw};
+use crate::pad::{self, NearMesh, Part, close_between, draw};
 use crate::pose::{LegPose, Motion};
 use crate::render::{Layer, Style, View};
 
@@ -150,7 +153,7 @@ pub fn run(scan_path: &Path) -> Result<(), String> {
     let bk = b.joints["r knee"];
     let shin = b.bone("lowerleg01.R").ok_or("no lowerleg01.R")?;
     say(format!(
-        "G3, round 2: the gap between the girdle's thigh pad and the shin pad over the hip's and knee's range, on the stand-in body ({}); the shin pad's knee pieces the cup built at knee {} deg",
+        "G3, round 4: the gap between the girdle's thigh pad and the shin pad over the hip's and knee's range, on the stand-in body ({}); the shin pad's knee pieces the cup built at knee {} deg",
         scan_path.display(),
         cup::KNEE_BUILD
     ));
@@ -161,14 +164,14 @@ pub fn run(scan_path: &Path) -> Result<(), String> {
 
     // The cup's build pose, and the skin under each of its pieces.
     let (build_m, _, build_v) = cup::posed(&b, cup::build_pose())?;
-    let anc = cup::anchors(&b, &ll, &Outlines::new(kz));
     let to_body = build_v[shin];
     let fs = cup::front_of_shin(&b);
+    let hd = cup::hold(&b, &ll, &cup::outlines(kz), &cup::cup_params(), &build_m, &cup::normals(&build_m, fs));
 
     // The shin pad: lower parts stood up again (the lean taken out); the cup's parts from the
     // leaned shin frame to the body in the build pose.
     let mut pieces = Vec::new();
-    for part in Part::all() {
+    for part in Part::all().into_iter().filter(|p| !cup::CUP_PARTS.contains(p)).chain(cup::CUP_PARTS.into_iter().filter(|p| !cup::SUIT_PARTS.contains(p))) {
         let (name, carry) = match cup::Piece::of(part) {
             Some(k) => (cup::stl_name(part), Carry::Cup(k)),
             None => (format!("fitted_tongue_under_flush-{}.stl", part.name().replace([' ', ','], "_").replace("__", "_")), Carry::Shin),
@@ -243,11 +246,11 @@ pub fn run(scan_path: &Path) -> Result<(), String> {
     let gpts: Vec<Point3<f64>> = girdle_parts.iter().flat_map(|m| m.vertices.iter().copied()).collect();
     let gw = b.weights_near(&gpts, 6);
     say(format!(
-        "carried: {} thigh pad points by the skin (6 nearest control vertices each, {:.0} s); the shin pad's lower parts with the shin; the cup's knee shield and thigh guard each fitted to the skin under them ({} and {} skin points)",
+        "carried: {} thigh pad points by the skin (6 nearest control vertices each, {:.0} s); the shin pad's lower parts with the shin; the cup's knee cap and top each resting on the skin under them ({} and {} skin points), the cap flex-hinged to the front shell, the top sliding on the cap; the knee's foam in the suit (not the shin pad's)",
         gpts.len(),
         t1.elapsed().as_secs_f64(),
-        anc[0].len(),
-        anc[1].len()
+        hd.anchors[0].len(),
+        hd.anchors[1].len()
     ));
 
     // Hip flexion against the torso: the thigh pad is one hard piece, so where the thigh's turn
@@ -317,7 +320,7 @@ pub fn run(scan_path: &Path) -> Result<(), String> {
     let placed = |p: LegPose| -> Result<Placed, String> {
         let (qm, _, mv) = cup::posed(&b, p)?;
         let n = cup::normals(&qm, fs);
-        let fits = [0, 1].map(|k| cup::fit(&anc[k], &build_m, &qm, &n));
+        let fits = cup::place(&hd, &build_m, &qm, &n, &mv[shin].after(&build_v[shin].inverse()));
         Ok(Placed { shin: mv[shin], moves: mv, cup: fits })
     };
 
@@ -409,7 +412,7 @@ pub fn run(scan_path: &Path) -> Result<(), String> {
         meshes.push((shift(m), [0.85, 0.70, 0.60], None));
         meshes.push((shift(posed_g[0].clone()), [0.20, 0.22, 0.26], None));
         for ((pc, pm), gp) in pieces.iter().zip(posed_s).zip(gaps) {
-            if matches!(pc.part, Part::WingFoam(_) | Part::KneeLiner | Part::ThighFoam) {
+            if matches!(pc.part, Part::WingFoam(_) | Part::KneeLiner | Part::KneeTopLiner | Part::ThighFoam) {
                 continue;
             }
             let base = pc.part.color();

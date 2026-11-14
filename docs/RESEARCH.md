@@ -640,14 +640,77 @@ For G3, round 2: the shin pad's knee shield built as a cup on the knee bent as i
   and the cut's peak of 75. The hip doesn't shape the knee in the model (the skin there moves
   with the thigh and shin bones only).
 
+## 24. How the kneecap moves (2026-11-13)
+
+For the knee cup's hinges (G3): the cap rides the kneecap, so its turn on the shin shell and on
+the thigh is the patella's.
+- **Amis, Senavongse & Bull (2006)**, "Patellofemoral kinematics during knee flexion-extension:
+  an in vitro study", *Journal of Orthopaedic Research* (December 2006). Eight fresh-frozen
+  cadaver knees, the quadriceps loaded. "As the knee flexed, the patella flexed by 0.7 times the
+  tibiofemoral flexion angle" (relative to the femur, so 0.3 times relative to the tibia). It
+  moved medially 4 mm at 20° to engage the trochlear groove, then laterally to 7 mm by 90°.
+  Read from the abstract (via read.qxmd.com); cadavers, not living knees.
+- **Li, Papannagari, Nha, DeFrate, Gill & Rubash (2007)**, "The coupled motion of the femur and
+  patella during in vivo weightbearing knee flexion", *Journal of Biomechanical Engineering*
+  129(6):937-43 (PMID 18067400). Ten living knees, dual fluoroscopy and MRI, weight-bearing
+  flexion from full extension to the most each could bend, the patella measured relative to the
+  tibia: "Knee flexion was strongly correlated with patellar flexion (R(2)=0.91)". The slope
+  isn't in the abstract, so no living-knee ratio to set against the cadavers' 0.7.
+- **Iranpour, Merican, Baena, Cobb & Amis (2010)**, "Patellofemoral joint kinematics: the
+  circular path of the patella around the trochlear axis", *Journal of Orthopaedic Research*
+  28(5):589-94 (PMID 19950364). Seven cadaver knees, the quadriceps loaded, CT and an optical
+  tracker: "The path of the center of the patella was circular and uniplanar (root-mean-square
+  error 0.3 mm) above 16+/-3 degrees (mean+/-SD) knee flexion", the circle within 1-3° of square
+  to the epicondylar and trochlear axes. Read from the abstract (PubMed).
+- **Janani, Lakshmi, Prakash et al. (2023)**, "Preoperative templating of bone-patellar
+  tendon-bone graft for anterior cruciate ligament reconstruction: a morphometry-based graft
+  harvest method", *Clinics in Orthopedic Surgery* 15(3):410-417 (PMID 37274507). MRI of 1,002
+  knees, 18-50 years, 712 men and 290 women, in Chennai: patella length 40.3 mm, width 40.2,
+  thickness 18.6; patellar tendon length 45.2 mm (Insall-Salvati ratio 1.13). Means for both
+  sexes together, from the abstract; one population, not split by sex.
+- Not found: how thick the skin and fat over the kneecap are in a lean adult (searched PubMed and
+  the web, 2026-11-13: studies measure prepatellar fat in knee replacement patients, most of them
+  heavy). The body model takes 5 mm and checks what 3 or 8 would change.
+- **MakeHuman's body has no kneecap.** Its skin over the knee blends the thigh's and shin's
+  motions. Fitted to that skin, the knee shield turned about 21° on the thigh and 53° on the shin
+  as the knee straightened from 70° (G3, round 2): it follows the thigh, where the real patella,
+  by the ratio above, turns 49° on the thigh and 21° on the shin. **The body now has one**
+  (`pose::Patella`, 2026-11-13), a bone on the thigh built from the three sources above: it turns
+  0.7 times the knee's turn (Amis); its centre stays on a circle about the knee's axis (Iranpour;
+  the model's axis is MakeHuman's knee joint, not the trochlea's); its tendon keeps its length to
+  the tibial tuberosity (Janani's sizes, placed under the skin from ANSUR's mid-patella height).
+  The tendon makes its centre go further round the knee than it turns: 1.03-1.10° a degree of
+  the knee's (the `body` run). Not checked against a measured path in a living knee.
+
+## 25. Foams that go in a washing machine (2026-11-13)
+
+For the compression suit (G3, round 4): the knee's foam and the girdle's pads in it have to be
+machine washable (Jon's requirement, PLAN.md, Open questions).
+- **Rogers Corporation** (the maker of PORON), Dave Sherman, "Foam Properties: What Makes One
+  Foam Different From Another?", PORON Cushioning blog, 21 August 2018: "If your application
+  requires lighter weight and washability, opt for a closed cell foam." Closed-cell foams ("or
+  EVA foams") are sealed bubbles of air; "padding made solely from closed cell foam become[s]
+  less comfortable over time" as the air leaks and the foam goes flat. "All PORON Comfort
+  materials are open cell polyurethane foams." A maker's blog, not a test.
+- **Biomechanical Services** (an orthotics lab), "Foam Utilization" (undated, site © 2011-19):
+  closed-cell polyolefin foam (their Polyfoam, Plastazote) "is lightweight, easy to form, with
+  excellent washable surfaces"; open-cell foam (PORON) "is subject to break down, as cell walls
+  break apart".
+- Not found: wash-cycle test data for any of these foams (how many washes, at what temperature,
+  before they shrink, take a set or come apart). That needs a maker's datasheet for the foam
+  chosen. An Italian distributor (Gierre Gomma, "PORON urethanes") describes PORON's
+  polyurethanes, the XRD impact foam among them, as "cellule calibrate semichiuse" (semi-closed
+  cells), 240-480 kg/m³, sealing well against water; nothing on washing.
+
 ## Still to find
 
 - How far gear shifts on the leg in play (G3's margin): a girdle's shorts riding down the thigh,
   a shin pad moving on its straps under a sock or pants.
 - The knee's flexion through a forward stride, as numbers (contact, glide, push-off): theses from
   Pearsall's lab at McGill are the likely source (their pages moved to mcgill.scholaris.ca).
-- How modern shin pads join the knee cap to the shin shell, and how far it turns on it (G3,
-  round 2: the cup turns up to 69° on the shin between straight and a deep crouch).
+- How modern shin pads join the knee cap to the shin shell and the top to the cap, and how much
+  those joints give (G3, round 3: hinged, the cap turns up to 52° on the shell and the top up to
+  44° on the cap, and how far they give depends on how stiff they are; PLAN.md, G3).
 
 - Frame design loads for hockey: Stidwill's thesis numbers; the EN 13843 test loads (paid).
 - How a hockey boot is built and what each part does: shell, toe cap, tendon guard, liner, tongue,

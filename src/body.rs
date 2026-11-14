@@ -27,7 +27,7 @@ use cortenforge::mesh::io::save_mesh;
 use cortenforge::mesh::types::IndexedMesh;
 use nalgebra::{Point3, Rotation3, Vector3};
 
-use crate::leg::{Subdivision, load_base, load_target, makehuman_dir, tape_perimeter};
+use crate::leg::{Subdivision, ansur as ansur_leg, load_base, load_target, makehuman_dir, tape_perimeter};
 use crate::pose::{LegPose, Motion, Rig, leg_rotations};
 use crate::render::{Layer, Style, View, render_styled};
 use crate::scan;
@@ -133,6 +133,100 @@ impl Model {
         let idx = &self.joints[name];
         idx.iter().fold(Vector3::zeros(), |a, &i| a + raw[i as usize]) / idx.len() as f64
     }
+
+    /// Where a kneecap sits on the fitted body (`side` "r" or "l"), in the rest frame (dm), with
+    /// `soft` mm of skin and fat over it (`kneecap::SOFT`).
+    pub fn kneecap_at(&self, raw: &[Vector3<f64>], side: &str, soft: f64) -> Result<Kneecap, String> {
+        let skin = self.s2.apply(&self.s1.apply(&raw[..self.n_body]));
+        let joint = self.joint(raw, &format!("joint-{side}-knee"));
+        let up = (joint - self.joint(raw, &format!("joint-{side}-ankle"))).normalize();
+        let front = (Vector3::z() - up * up.z).normalize();
+        let across = up.cross(&front);
+        // The skin's front on the knee's midline `dz` mm above the joint.
+        let front_at = |dz: f64| -> Option<Vector3<f64>> {
+            let q = joint + up * (dz / 100.0);
+            skin.iter()
+                .filter(|v| {
+                    let d = *v - q;
+                    d.dot(&up).abs() < 0.03 && d.dot(&across).abs() < 0.1
+                })
+                .map(|v| (v - q).dot(&front))
+                .fold(None, |a: Option<f64>, x| Some(a.map_or(x, |a| a.max(x))))
+                .map(|d| q + front * d)
+        };
+        let skin_mid = front_at(ansur_leg::KNEE_HEIGHT_MID_PATELLA - ansur_leg::TIBIAL_HEIGHT).ok_or("no skin over the kneecap")?;
+        let centre = skin_mid - front * ((soft + 0.5 * kneecap::THICK) / 100.0);
+        let low = centre - up * (0.5 * kneecap::LENGTH / 100.0);
+        // The tuberosity: on the shin's front, `soft` under the skin, the tendon's length from the
+        // lower pole.
+        let tub_at = |dz: f64| front_at(dz).map(|s| s - front * (soft / 100.0));
+        let mut prev: Option<(f64, f64)> = None;
+        let mut tub = None;
+        for k in 0..=120 {
+            let dz = -(k as f64);
+            let Some(t) = tub_at(dz) else { continue };
+            let l = 100.0 * (t - low).norm();
+            if let Some((dz0, l0)) = prev
+                && l0 < kneecap::TENDON
+                && l >= kneecap::TENDON
+            {
+                let dz = dz0 + (dz - dz0) * (kneecap::TENDON - l0) / (l - l0);
+                tub = tub_at(dz);
+                break;
+            }
+            prev = Some((dz, l));
+        }
+        let tub = tub.ok_or("no tibial tuberosity within 120 mm below the knee")?;
+        Ok(Kneecap { skin: skin_mid, centre, low, tub, joint, up, front })
+    }
+
+    /// Kneecaps on both legs (`Rig::add_patella`): the skin over each takes its weight within
+    /// `kneecap::HOLD_IN` mm of the skin over its centre, none past `kneecap::HOLD_OUT`, smoothly
+    /// between (on the knee's front only).
+    fn add_kneecaps(&mut self, raw: &[Vector3<f64>]) -> Result<(), String> {
+        for (side, s) in [("r", "R"), ("l", "L")] {
+            let k = self.kneecap_at(raw, side, kneecap::SOFT)?;
+            let share: Vec<(u32, f64)> = raw[..self.n_body]
+                .iter()
+                .enumerate()
+                .filter_map(|(i, v)| {
+                    let d = 100.0 * (v - k.skin).norm();
+                    let a = 1.0 - crate::pad::smoothstep(kneecap::HOLD_IN, kneecap::HOLD_OUT, d);
+                    ((v - k.joint).dot(&k.front) > 0.0 && a > 0.0).then_some((i as u32, a))
+                })
+                .collect();
+            self.rig.add_patella(raw, s, k.centre, k.low, k.tub, &share)?;
+        }
+        Ok(())
+    }
+}
+
+/// A kneecap's points on the body standing, rest frame (dm): the skin over its centre, its
+/// centre, its lower pole, the tibial tuberosity; the knee joint, and the leg's up and front.
+pub struct Kneecap {
+    pub skin: Vector3<f64>,
+    pub centre: Vector3<f64>,
+    pub low: Vector3<f64>,
+    pub tub: Vector3<f64>,
+    pub joint: Vector3<f64>,
+    pub up: Vector3<f64>,
+    pub front: Vector3<f64>,
+}
+
+/// The kneecap's size and place (RESEARCH.md 24), mm.
+pub mod kneecap {
+    /// Patella length and thickness, and the patellar tendon's length: MRI of 1,002 knees, 18-50
+    /// years, 712 of them men (Janani et al. 2023), means.
+    pub const LENGTH: f64 = 40.3;
+    pub const THICK: f64 = 18.6;
+    pub const TENDON: f64 = 45.2;
+    /// Skin and fat over the kneecap and the tuberosity: assumed, not found in a source; the
+    /// `body` run moves it to 3 and 8 mm to see what it changes.
+    pub const SOFT: f64 = 5.0;
+    /// The skin moving with it: all of it within the patella's half-length of the skin over its
+    /// centre, none past its length.
+    pub const HOLD_IN: f64 = 0.5 * LENGTH;
+    pub const HOLD_OUT: f64 = LENGTH;
 }
 
 /// The body posed: each leg first stood (turned at the hip until its knee joint is over its
@@ -335,6 +429,69 @@ impl Body {
         stand
     }
 
+    /// The right kneecap (`pose::Patella`): where it sits, and how it moves through the knee's
+    /// range, and how much the assumed skin over it (`kneecap::SOFT`) changes that.
+    pub fn kneecap_report(&self) -> Result<Vec<String>, String> {
+        let m = &self.model;
+        let p = m.rig.patellae.first().ok_or("no kneecap")?;
+        let k = m.kneecap_at(&self.raw, "r", kneecap::SOFT)?;
+        let st = self.stand();
+        let turn = |knee: f64| leg_rotations(st, [LegPose { knee, ..Default::default() }, LegPose::default()])["lowerleg01.R"];
+        let axis = (st[0].inverse() * Vector3::x()).normalize();
+        let off_axis = |v: Vector3<f64>| 100.0 * { let d = v - p.knee; d - axis * d.dot(&axis) }.norm();
+        let tendon = p.tub - p.low;
+        let n_all = m.rig.weights[p.bone].iter().filter(|w| w.1 > 0.0).count();
+        let mut out = vec![
+            format!(
+                "right kneecap (a bone MakeHuman lacks; RESEARCH.md 24): its centre {:.1} mm under the skin over it ({:.0} mm above the knee joint), {:.1} mm from the knee's axis; its tendon {:.1} mm to the tibial tuberosity, {:.0} mm below the joint, at {:+.0} deg to the leg's axis (+: leaning forward at the top); {} skin control vertices move with it, by share",
+                kneecap::SOFT + 0.5 * kneecap::THICK,
+                100.0 * (k.skin - k.joint).dot(&k.up),
+                off_axis(p.centre),
+                100.0 * tendon.norm(),
+                -100.0 * (p.tub - k.joint).dot(&k.up),
+                (-tendon.dot(&k.front)).atan2(-tendon.dot(&k.up)).to_degrees(),
+                n_all
+            ),
+            "  through the knee's range: its turn on the thigh and on the shin, deg; how far round the knee its centre goes per degree of the knee's; its tendon's stretch and the centre's change of distance from the knee's turning centre, mm:".into(),
+        ];
+        for knee in [0.0, 15.0, 30.0, 45.0, 70.0, 90.0, 110.0, 135.0] {
+            let t = turn(knee);
+            let (a, share) = p.on_thigh(&t).ok_or(format!("kneecap: no turn round the knee keeps its tendon at knee {knee}"))?;
+            let tub = t * (p.tub - p.knee) + p.knee;
+            let stretch = 100.0 * ((a.apply(p.low) - tub).norm() - (p.low - p.tub).norm());
+            let radius = 100.0 * ((a.apply(p.centre) - p.knee).norm() - (p.centre - p.knee).norm());
+            let on_shin = crate::cup::turn_deg(&(t.inverse() * a.r));
+            out.push(format!(
+                "    knee {knee:>4.0}: on the thigh {:>5.1}, on the shin {:>5.1}; round the knee {share:.3} per deg; tendon {stretch:+.1e}, radius {radius:+.1e}",
+                crate::cup::turn_deg(&a.r),
+                on_shin
+            ));
+        }
+        // The assumed soft tissue: the skin over its centre carried with 3 or 8 mm instead.
+        let mut worst = (0.0f64, 0.0, 0.0);
+        for soft in [3.0, 8.0] {
+            let q = m.kneecap_at(&self.raw, "r", soft)?;
+            let alt = crate::pose::Patella { centre: q.centre, low: q.low, tub: q.tub, ..p.clone() };
+            for knee in (0..=135).step_by(5).map(f64::from) {
+                let t = turn(knee);
+                let (a, _) = p.on_thigh(&t).ok_or("kneecap: no turn")?;
+                let (b, _) = alt.on_thigh(&t).ok_or(format!("kneecap with {soft} mm over it: no turn at knee {knee}"))?;
+                let d = 100.0 * (a.apply(k.skin) - b.apply(k.skin)).norm();
+                if d > worst.0 {
+                    worst = (d, soft, knee);
+                }
+            }
+        }
+        out.push(format!(
+            "  the skin over it assumed {} mm: at 3 or 8 mm instead, the skin over its centre lands at most {:.1} mm elsewhere (at {} mm, knee {:.0})",
+            kneecap::SOFT,
+            worst.0,
+            worst.1,
+            worst.2
+        ));
+        Ok(out)
+    }
+
     /// Each bone's motion from standing to `legs`, mm in the foot frame (index as `model.rig`;
     /// one past the last bone is "no bone": the share of a vertex's weight that stays put).
     pub fn moves(&self, legs: [LegPose; 2]) -> Vec<Motion> {
@@ -486,6 +643,9 @@ pub fn build(scan_path: &Path, top: f64) -> Result<Body, String> {
     let (_, c) = right_girth(&unshifted, join_z).ok_or("no right leg at the join")?;
     let shift = (foot_c.0 - c.x, foot_c.1 - c.y);
     let (_, raw) = m.at(&w);
+    // Kneecaps on the fitted body (they don't move standing, so the fit doesn't see them).
+    let mut m = m;
+    m.add_kneecaps(&raw)?;
     let (skin, pj, tilts) = posed(&m, &raw, [LegPose::default(); 2]);
     let quads = lower_quads(&m, &skin, floor, top);
     let mesh = mesh_of_quads(&skin, floor, shift, &quads);
@@ -526,6 +686,9 @@ pub fn run(scan_path: &Path, out: &Path) -> Result<(), String> {
     let names = ["knee joint", "calf", "girth at 115", "crotch height", "thigh girth", "hip girth", "waist girth", "lower thigh girth"];
     for (i, n) in names.iter().enumerate() {
         say(format!("  {n}: {:.1} mm", b.measured[i]));
+    }
+    for l in b.kneecap_report()? {
+        say(l);
     }
     // The girths were fitted on the body standing as MakeHuman stands it; on the standing pose
     // the lower thigh should read the same. Not fitted, compared: the hip breadth.

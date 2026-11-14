@@ -272,24 +272,30 @@ Army's ANSUR II medians for men 170-180 cm, joined to the stand-in foot scan.
 - **A modern girdle**, compression shorts holding thigh, hip, kidney and tailbone pads: 840 g,
   layers still placeholders.
 - **The knee as a cup**, built on the body bent 70° at the knee, the skating stance from
-  published motion capture (65° on a skating treadmill, 75° at the peak of an on-ice cut). The
-  sock or pants hold it on. **95.5 g**, 4.5 g more than the straight knee shield and thigh
-  guard: the pad is now 377 g. From 60° to 90° of knee bend it fits within 1 mm of the liner;
-  standing straight it sits proud of the knee, and in a deep crouch it stays on the kneecap
-  while the shin swings away.
+  published motion capture (65° on a skating treadmill, 75° at the peak of an on-ice cut), held
+  on by the sock or pants. Two hard shells: a **knee cap**, flex-hinged to the shin shell, and a
+  **top** that rests on the thigh with its edge just below the girdle, the cap sliding under it
+  (63 mm as the leg straightens, 72 mm out the other way in a deep crouch). The foam under them
+  is in a full-length compression suit with the girdle, so it stays on the skin wherever the
+  shells slide; it has to go in a washing machine. Straight, the top lies flat on the thigh; bent
+  to 135° the shells still overlap, so the knee stays covered. The cost: **113.6 g** of shell,
+  51 g more than a straight knee shield and thigh guard (the shin pad ~395 g, plus 34 g of foam
+  in the suit).
+- **A kneecap for the body.** MakeHuman's body has none, and its knee skin followed the thigh.
+  Added as a bone from cadaver and MRI studies: it flexes 0.7 times the knee, runs on a circle
+  round it, and its tendon keeps its length.
 
 ![The knee cup on the bent knee, in the boot](docs/pad/cup.png)
 
 - **Posed** with MakeHuman's skeleton and skin weights: standing, skating stance, kneeling, deep
-  crouch. Through that range the girdle's thigh pad and the shin pad never meet. With the cup
-  riding the knee, the gap between them stays at the 18-20 mm they're built with, whatever the
-  knee does. Only if the belly pushes the thigh pad down the thigh (hip past 75°) does it come
-  close: 1.2 mm, no overlap.
+  crouch. The shin pad's top stays 5-6 mm below the girdle's thigh pad from straight to 30° of
+  knee bend, 12 mm at the stance, 12-16 deep. If the belly pushes the thigh pad down the thigh
+  with the legs straight (sitting, hip 90°), it reaches the knee cap by 4.4 mm.
 
 ![The girdle and the shin pad posed: standing, skating stance, kneeling, deep crouch](docs/girdle/gap2.png)
 
-Next: the joint between the knee cup and the shin shell, which has to let the cup turn up to 69°
-on it; how far a girdle and a shin pad shift in play, which sets the gap; the roller pad.
+Next: the suit (a washable foam, a slick face for the shells to slide on); lighter knee shells;
+how far a girdle and a shin pad shift in play, which sets the gap; the roller pad.
 Pictures and numbers: `docs/pad/`, `docs/girdle/`, `docs/body/`, and `docs/PLAN.md` (Track D).
 
 ## Status
@@ -298,7 +304,7 @@ Phase 0 (the science, the pitch model, the mass tool checked), round 1 (the whol
 example foot), round 2's first step (the chassis to weight), the like-for-like FEM sizing of
 step 2 and round 2 of the boot (a hockey boot from the scan) are done. On the gear: the shin
 pad's third round with its impact model, the girdle's first round, posing the body, and the
-knee as a cup on the bent knee with the girdle-to-shin-pad gap round it. See `docs/PLAN.md` for what comes next and `docs/CORTENFORGE.md` for
+knee as two sliding shells on the bent knee (with a kneecap added to the body) and the girdle-to-shin-pad gap round it. See `docs/PLAN.md` for what comes next and `docs/CORTENFORGE.md` for
 what CortenForge did well and where it fell short.
 
 ## Patents
