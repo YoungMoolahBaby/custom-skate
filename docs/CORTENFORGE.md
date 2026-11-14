@@ -79,6 +79,10 @@ type (bug, docs, API, perf, setup, works), date, file:line under
   the joints would need contact with a moving skin to mean anything (`cup::place` instead, the
   hinges as firm ties). A stiffness alone also doesn't say whether a hinge survives its range:
   the surface strain t·θ/(2L) of a strip t thick bent θ over L is what limits a living hinge.
+- **works** (2026-11-14, the glove): `Solid::user_fn` (solid/ops.rs:513) meshed 13 glove pieces
+  whose fields jump where a piece's inside switches from a cylinder about a joint to the skin's
+  offset (a step in the shell, by design): 0.5 mm cells, ~60 s for all 13 on two threads, every
+  mesh closed enough for `mesh_volume` to weigh it.
 
 ## sim-opt
 
@@ -151,6 +155,12 @@ type (bug, docs, API, perf, setup, works), date, file:line under
 - **perf** (2026-11-12, the shin pad): grids are most of the pad's ~17 min run: the leaned leg
   at 2 mm (3.8M nodes, 683k triangles) 103 s, ~27 us a node; the tongue plate at 1.25 mm
   (2.9M nodes, 641k triangles) 57 s; two convex hulls at 1.5 mm, 71 s and 61 s.
+- **note** (2026-11-14, the glove): `PseudoNormalSign` on an *open* patch of skin (one finger's
+  quads, to keep a piece from wrapping its neighbour) read points deep inside the finger as
+  outside, and stray bits of shell grew in there. The sign is documented for watertight meshes
+  (sdf.rs:445), so this was outside its contract. `Signed<D, S>` takes any pair, so the fix was
+  one line: the patch's `TriMeshDistance` with `ParitySign::new` on the whole hand, closed by
+  `auto_cap_open_boundaries`.
 
 ## mesh (measure, io, repair)
 
@@ -204,6 +214,10 @@ type (bug, docs, API, perf, setup, works), date, file:line under
   `weld_vertices(1e-6)`, then `auto_cap_open_boundaries` (cap.rs:63) turned MakeHuman's
   subdivided leg (an open tube from a whole body) into a closed mesh: 2 caps, 0 open edges,
   ready for mesh-sdf.
+- **works** (2026-11-14, the glove): `cross_section` keeps open chains as contours too
+  (`chain_segments`, cross_section.rs:472), so an open skin cut by a plane gives its section
+  lines. Drawn as thin strips in the plane, they made the glove's section picture: a cut mesh's
+  walls seen edge-on draw as nothing.
 
 ## sim-soft
 

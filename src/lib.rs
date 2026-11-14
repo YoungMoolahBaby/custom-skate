@@ -8,6 +8,7 @@ pub mod cup;
 pub mod frame;
 pub mod gap;
 pub mod girdle;
+pub mod glove;
 pub mod check;
 pub mod fem;
 pub mod fit;

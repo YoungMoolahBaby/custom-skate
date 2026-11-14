@@ -2127,6 +2127,68 @@ each mm the blocks stand off the finger adds 1.0-1.2 mm of lap at every joint, a
 shaft, checked from straight to a fist for laps that stay closed and parts that don't bind; then
 the elbow pad and the slash guard between it and the glove; the outside's look last.
 
+### Glove, round 1: the hard pieces on the hand (2026-11-14)
+
+`cargo run --release -- glove <scan>` (`src/glove.rs`; `docs/glove/summary.txt`, and with `fist`,
+`docs/glove/fist_laps/`). 13 hard pieces: the back of the hand and one over each finger bone, on
+the hand as U2 holds the shaft. Their inside is a 6 mm foam liner's outside (the liner on the
+skin, a liner glove, as the knee's foam is in the suit), their wall 2 mm of PA 12; both
+placeholders (no slash test found). Where two meet over a joint, the piece nearer the wrist laps
+over the other, 1 mm clear, and there both are cylinders about the joint's axis, so they slide
+and can't bind. The thumb waits for its own round: U2 turns its joints about axes set by the
+stick, not its own, and laps on those came out absurd (a 40 mm radius at its knuckle).
+- **How it's built, and what that needed.** Each lap's radius clears the liner under it at every
+  step of the sweep. The laps nest like a telescope: each at least a wall, the clearance and
+  1 mm (3 at the knuckle) wider than the next toward the tip. Without that, on the short middle
+  bones the lap behind and the lap in front met over the bone. Across the hand, each piece keeps
+  to a strip halfway to the neighbouring finger's nearest bone, 1 mm apart. Every finger joint
+  turns about one direction across the hand (within 0.0°), so pieces on different fingers never
+  meet. MakeHuman's fingers fan out a lot: from knuckle to tip the index runs 22.5 mm sideways,
+  the little finger 20.8 mm.
+- **The sweep:** straight, the grip (where the pieces are built), then on to each joint's guard
+  (a fist), nine steps. At each step: rays from each joint over its back must meet a piece; every
+  piece's surface is tested against every piece near it; and from each skin point under a piece,
+  how far the piece stands off the liner (empty space) or presses into it.
+
+Two designs: laps closed from straight to each joint's bend on the shaft plus 15° (beyond that,
+in a fist, they open over the liner), and laps closed to the full fist.
+
+| | closed to the grip + 15° | closed to a fist |
+|---|---|---|
+| hard pieces, PA 12 | 68.4 g | 71.1 g |
+| laps stand proud of the pieces either side: knuckles / middle joints / end joints | 17.0-18.2 / 11.1-12.7 / 7.3-8.6 mm | 17.8-19.8 / 11.1-12.7 / 7.7-8.6 mm |
+| laps closed | every lap, straight to the grip and on to step 1.5; in the fist the middle joints open 2-18° and the little knuckle 8° (as designed) | all but the index's and ring's middle joints, which leave a 4-6° sliver from the first step |
+| binding | none from step 0.25 to 1.25 (no point over 0.3 mm in); straight: the back plate 1.0 mm into the ring's first piece; from 1.5 on, toward the fist: the back plate and the index tip piece, 1.0 mm | the fist as the grip design (the plate and the index and little tip pieces); straight: the little's first and end pieces 1.0 mm, over its short middle bone; at 0.25 the index's first and middle pieces 1.0 mm |
+| empty space under each piece at the grip, mean / 90th percentile | 0.3-6.5 / 0.4-10.6 mm | 0.1-7.3 / 0.4-11.1 mm |
+| pressing into the liner | 0.8 mm at the grip (the back plate 2.0), up to 3.0 in the fist | the same |
+
+**What it says.**
+- **The scales work in principle**: laps over the joints that slide and stay closed from straight
+  to the grip, without binding, built from the hand on the stick.
+- **The cost is height, and the space under it.** One lap per joint has to cover the joint's
+  whole bend (70-86° on the grip design), so its radius about the joint has to clear the liner
+  well past the joint either side. The laps stand 7-18 mm proud of the pieces either side; under
+  them, with the finger straight, the 90th percentile of empty space is ~10 mm. Jon asked for no
+  empty space.
+- **Closing only to the grip + 15° buys little:** the grip already bends the joints 55-71°. The
+  full fist's version is 0.8-1.6 mm taller at the knuckles and binds on the short bones.
+- **Open at round 1's end:**
+  - straight, the back plate 1.0 mm into the ring's first piece (each nesting fix moved this
+    contact to another finger);
+  - in the fist, the index and little fingertips curl into the back plate's sides. That's partly
+    the model: its fingers fan out and stay fanned, where a real fist's fingers draw together.
+- **Model limits:**
+  - the fingers don't spread sideways in the model;
+  - MakeHuman's finger joints sit 2.3-3.9 mm under the back's skin (U2);
+  - the liner is a fixed offset.
+
+**Next, Jon's call: the joints.** Recommended: a short extra scale over each knuckle and middle
+joint, so that each lap covers half the bend. It should cut the height a lot (not yet run), at
+about 21 pieces instead of 13. The other ways:
+- hard pieces over the bones only, the joints soft (foam, as a stock glove's rolls), the lowest
+  and simplest, but the joints' backs only padded;
+- accept round 1's heights.
+
 ## Open questions for Jon
 
 - Answered 2026-11-14, the glove's cuff (U2): "yeah shorter glove then like a built in slash

@@ -505,34 +505,34 @@ pub const DOWEL_DIAMETER: f64 = 31.75;
 /// the palm, the shaft standing 19.3 mm out of it.
 pub const SHAFT: Section = Section { along: 29.8, out: 19.3, corner: 5.5 };
 
-type Pose = HashMap<String, Rotation3<f64>>;
+pub(crate) type Pose = HashMap<String, Rotation3<f64>>;
 
 /// A direction in the foot frame (x forward, y left, z up) in MakeHuman's (x left, y up, z
 /// forward). The map is a turn (det +1), so angles about an axis carry over.
-fn to_mh(v: Vector3<f64>) -> Vector3<f64> {
+pub(crate) fn to_mh(v: Vector3<f64>) -> Vector3<f64> {
     Vector3::new(v.y, v.z, v.x)
 }
 
 /// The right hand where it is posed (mm): the wrist joint, the hand's axis (wrist to the middle
 /// knuckle), the palm's normal (out of the palm) and the knuckles' line across it, and the
 /// middle of the knuckles.
-struct HandFrame {
-    wr: Point3<f64>,
-    axis: Vector3<f64>,
-    palm: Vector3<f64>,
-    across: Vector3<f64>,
-    knuckles: Point3<f64>,
+pub(crate) struct HandFrame {
+    pub wr: Point3<f64>,
+    pub axis: Vector3<f64>,
+    pub palm: Vector3<f64>,
+    pub across: Vector3<f64>,
+    pub knuckles: Point3<f64>,
 }
 
 /// A bone's end where it is posed, mm.
-fn posed_end(b: &Body, raw: &[Vector3<f64>], mo: &[Motion], bone: &str, tail: bool) -> Point3<f64> {
+pub(crate) fn posed_end(b: &Body, raw: &[Vector3<f64>], mo: &[Motion], bone: &str, tail: bool) -> Point3<f64> {
     let rig = &b.model.rig;
     let i = rig.index[bone];
     let name = if tail { &rig.bones[i].tail } else { &rig.bones[i].head };
     body::to_mm(mo[i].apply(rig.joint(raw, name).unwrap_or_default()), b.floor, b.shift)
 }
 
-fn hand_frame(b: &Body, raw: &[Vector3<f64>], mo: &[Motion]) -> HandFrame {
+pub(crate) fn hand_frame(b: &Body, raw: &[Vector3<f64>], mo: &[Motion]) -> HandFrame {
     // The frame from the wrist and the knuckles, which move with the hand as one; which way is
     // out of the palm from the rest pose, where the ring finger curls toward it (MakeHuman's rest
     // hand is relaxed; a posed hand's fingers may be straight).
@@ -586,7 +586,7 @@ fn elbow_pose(b: &Body, raw: &[Vector3<f64>], elbow: f64, relaxed: bool) -> Pose
 }
 
 /// Each control vertex's bone: the one with the most weight on it.
-fn dominant(b: &Body) -> Vec<usize> {
+pub(crate) fn dominant(b: &Body) -> Vec<usize> {
     let rig = &b.model.rig;
     let n = b.model.n_body;
     let mut best = vec![(usize::MAX, 0.0f64); n];
@@ -605,8 +605,8 @@ fn dominant(b: &Body) -> Vec<usize> {
 /// quoted (sources differ, e.g. the fingers' end joints 65-90); the run reports any that binds.
 /// The thumb (its base swinging out of the palm, then its middle and end joints), the fingers
 /// (knuckle, middle, end).
-const THUMB_LIMIT: [f64; 3] = [60.0, 50.0, 80.0];
-const FINGER_LIMIT: [f64; 3] = [90.0, 100.0, 80.0];
+pub(crate) const THUMB_LIMIT: [f64; 3] = [60.0, 50.0, 80.0];
+pub(crate) const FINGER_LIMIT: [f64; 3] = [90.0, 100.0, 80.0];
 
 /// The hand closed on a bar, and how.
 pub struct Grip {
@@ -620,6 +620,39 @@ pub struct Grip {
     /// The middle finger wraps the bar to its tip: its end joint stopped on the bar or the palm,
     /// not at its limit.
     pub wrapped: bool,
+    /// Each joint's axis, in its parent bone's frame as posed in the base pose (MakeHuman's
+    /// frame): turning it `angles` about these from the base gives `pose` (`hand_pose`).
+    pub axes: [[Vector3<f64>; 3]; 5],
+}
+
+/// The hand of `base` with each digit's joints turned `th` deg about `axes` (as `close_on`
+/// closes them): thumb, index, middle, ring, little; base to tip.
+pub(crate) fn hand_pose(base: &Pose, axes: &[[Vector3<f64>; 3]; 5], th: &[[f64; 3]; 5]) -> Pose {
+    let mut m = base.clone();
+    for k in 0..5 {
+        for j in 0..3 {
+            let name = format!("finger{}-{}.R", k + 1, j + 1);
+            let l0 = base.get(&name).copied().unwrap_or_else(Rotation3::identity);
+            let r = Rotation3::from_axis_angle(&nalgebra::Unit::new_normalize(axes[k][j]), th[k][j].to_radians());
+            m.insert(name, r * l0);
+        }
+    }
+    m
+}
+
+/// The right hand on the shaft as U2 holds it (`SHAFT` at ANSUR's median place, the elbow bent
+/// 90 deg): the base pose (the fingers straight) and the grip.
+pub(crate) fn shaft_grip(b: &Body, raw: &[Vector3<f64>]) -> Result<(Pose, Grip), String> {
+    let mut base = elbow_pose(b, raw, 90.0, true);
+    straighten_fingers(b, raw, &mut base);
+    let grip = close_on(b, raw, &base, &dominant(b), SHAFT, ansur::STYLION_GRIP_RANGE[1])?;
+    Ok((base, grip))
+}
+
+/// The hand's skin (the smoothed skin's quads, by index: the same in any pose): from halfway down
+/// the forearm.
+pub(crate) fn hand_quads(b: &Body, raw: &[Vector3<f64>]) -> Vec<[u32; 4]> {
+    Regions::new(b, raw).hand
 }
 
 /// Closes the right hand of `base` (the elbow pose, fingers straight) on a bar of `section` lying
@@ -698,18 +731,7 @@ fn close_on(b: &Body, raw: &[Vector3<f64>], base: &Pose, dom: &[usize], section:
         }
     }
     let limit = |k: usize, j: usize| if k == 0 { THUMB_LIMIT[j] } else { FINGER_LIMIT[j] };
-    let pose_of = |th: &[[f64; 3]; 5], axes: &[[Vector3<f64>; 3]; 5]| {
-        let mut m = base.clone();
-        for k in 0..5 {
-            for j in 0..3 {
-                let name = &rig.bones[bones[k][j]].name;
-                let l0 = base.get(name).copied().unwrap_or_else(Rotation3::identity);
-                let r = Rotation3::from_axis_angle(&nalgebra::Unit::new_normalize(axes[k][j]), th[k][j].to_radians());
-                m.insert(name.clone(), r * l0);
-            }
-        }
-        m
-    };
+    let pose_of = |th: &[[f64; 3]; 5], axes: &[[Vector3<f64>; 3]; 5]| hand_pose(base, axes, th);
     let mut th = [[0.0f64; 3]; 5];
     let mut stops = [[""; 3]; 5];
     let skin_of = |th: &[[f64; 3]; 5], axes: &[[Vector3<f64>; 3]; 5]| {
@@ -809,7 +831,7 @@ fn close_on(b: &Body, raw: &[Vector3<f64>], base: &Pose, dom: &[usize], section:
         }
     }
     let wrapped = stops[2][2] == "bar" || stops[2][2] == "palm";
-    Ok(Grip { pose: pose_of(&th, &axes), bar, angles: th, stops, wrapped })
+    Ok(Grip { pose: pose_of(&th, &axes), bar, angles: th, stops, wrapped, axes })
 }
 
 /// A grip, read: the hand closed on a bar, the elbow's back to the bar's centre (mm), how far the
@@ -958,7 +980,7 @@ fn straighten_fingers(b: &Body, raw: &[Vector3<f64>], pose: &mut Pose) {
 }
 
 /// A bar as a mesh, `length` long.
-fn bar_mesh(bar: &Bar, length: f64) -> IndexedMesh {
+pub(crate) fn bar_mesh(bar: &Bar, length: f64) -> IndexedMesh {
     let s = &bar.section;
     let n_side = bar.axis.cross(&bar.side);
     let (a, c, r) = (0.5 * s.along - s.corner, 0.5 * s.out - s.corner, s.corner);
