@@ -6,8 +6,8 @@ the same as a premium one-piece chassis; boot and chassis are designed together,
 is the part that rocks. The ice skate takes a dynamic (rocking) blade holder. Modelled with
 [CortenForge](https://crates.io/crates/cortenforge). The chassis came first, so most of this page
 is about it; the boot plan is in `docs/PLAN.md` (track B). The project has since grown into the
-rest of the gear: shin pads and a girdle fitted to the same stand-in body ([The gear](#the-gear),
-track D).
+rest of the gear: shin pads and a girdle fitted to the same stand-in body, with gloves, elbow
+pads and a helmet (a design study, not for wear) under way ([The gear](#the-gear), track D).
 
 **[Open the skates in 3D](https://youngmoolahbaby.github.io/custom-skate/)**: ice or roller, open or
 V throat, two colourways or your own, taken apart or cut through. Built on the stand-in foot;
@@ -81,7 +81,7 @@ found a gain only in backward skating. Details and numbers are in `docs/RESEARCH
 ## Run
 
 ```
-cargo run --release -- check         # every tool used, against known results (43/43)
+cargo run --release -- check         # every tool used, against known results (50/50)
 cargo run --release -- pitch         # the pitch tables above
 cargo run --release -- scan <file>   # measure a foot scan (OBJ, STL, PLY)
 cargo run --release -- round1 <scan> # the whole skate on one foot -> out/round1 (STL, PNG)
@@ -95,6 +95,7 @@ cargo run --release -- girdle <scan> # the girdle on the body
 cargo run --release -- poses <scan>  # the body posed: standing, skating stance, kneeling, crouch
 cargo run --release -- cup <scan>    # the shin pad's knee as a cup on the bent knee (run `pad` first)
 cargo run --release -- gap <scan>    # the girdle-to-shin-pad gap through the knee's and hip's bend (run `pad`, `cup` first)
+cargo run --release -- upper <scan>  # the stand-in body above the waist: arms, hands, head
 ```
 
 The pad, girdle and gap runs take 8-30 minutes; `PAD_THREADS=2` keeps their memory down.
@@ -250,10 +251,15 @@ viewer too, with custom colours for every part.*
 
 ## The gear
 
-Jon: "even though this says custom skate, id like to actually do full hockey equipment." The
-helmet is parked: a simulation can't certify one, and leagues want a HECC or CSA sticker. Shin
+Jon: "even though this says custom skate, id like to actually do full hockey equipment." Shin
 pads and a girdle came first, fitted to one stand-in body: MakeHuman's CC0 body set to the US
-Army's ANSUR II medians for men 170-180 cm, joined to the stand-in foot scan.
+Army's ANSUR II medians for men 170-180 cm, joined to the stand-in foot scan. Gloves, elbow pads
+and a helmet come next, on the same body.
+
+> **The helmet is a design study.** It is not certified (HECC, CSA or any other standard) and
+> has not passed any impact test. Do not wear it for hockey or anything else. A simulation can't
+> show that a helmet protects; only drop tests can, and sanctioned play needs a certified
+> helmet.
 
 ![The fitted shin pad, round 3: front, outside, back and inside, with a grid to mark up](docs/pad/pad_views.png)
 
@@ -294,9 +300,21 @@ Army's ANSUR II medians for men 170-180 cm, joined to the stand-in foot scan.
 
 ![The girdle and the shin pad posed: standing, skating stance, kneeling, deep crouch](docs/girdle/gap2.png)
 
-Next: the suit (a washable foam, a slick face for the shells to slide on); lighter knee shells;
-how far a girdle and a shin pad shift in play, which sets the gap; the roller pad.
-Pictures and numbers: `docs/pad/`, `docs/girdle/`, `docs/body/`, and `docs/PLAN.md` (Track D).
+- **The body above the waist**, for the gloves, elbow pads and helmet: MakeHuman's arms, hands
+  and head fitted to ANSUR II the same way (arm lengths, wrist, hand length and breadth, head
+  length, breadth and height, each measured as the army's handbook describes). The head's girth,
+  not fitted, comes out within 1.1% of the median; the hand is 6% thin round the knuckles, so the
+  glove's palm wants Jon's own hand. Nothing below the waist moved. The arm bends 90° at the
+  elbow and the hand closes on the army's 1¼" test dowel where its men held it, the fingers
+  wrapped evenly; the stick's own section goes in next.
+
+![The stand-in body above the waist, arms hung for measuring: what was measured in red and blue](docs/upper/measuring_pose.png)
+
+Next: the gloves, shaped round the hand gripping the stick, with elbow pads and the gap between
+them; the helmet as a design study; the suit (a washable foam, a slick face for the shells to
+slide on); lighter knee shells; how far a girdle and a shin pad shift in play, which sets the
+gap; the roller pad. Pictures and numbers: `docs/pad/`, `docs/girdle/`, `docs/body/`,
+`docs/upper/`, and `docs/PLAN.md` (Track D).
 
 ## Status
 
@@ -304,7 +322,7 @@ Phase 0 (the science, the pitch model, the mass tool checked), round 1 (the whol
 example foot), round 2's first step (the chassis to weight), the like-for-like FEM sizing of
 step 2 and round 2 of the boot (a hockey boot from the scan) are done. On the gear: the shin
 pad's third round with its impact model, the girdle's first round, posing the body, and the
-knee as two sliding shells on the bent knee (with a kneecap added to the body) and the girdle-to-shin-pad gap round it. See `docs/PLAN.md` for what comes next and `docs/CORTENFORGE.md` for
+knee as two sliding shells on the bent knee (with a kneecap added to the body) and the girdle-to-shin-pad gap round it, and the body above the waist for the gloves and the helmet. See `docs/PLAN.md` for what comes next and `docs/CORTENFORGE.md` for
 what CortenForge did well and where it fell short.
 
 ## Patents

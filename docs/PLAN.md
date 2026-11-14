@@ -14,8 +14,9 @@ boot, the ice skate on a dynamic (rocking) blade holder. Three tracks that meet 
   lever we have. Ice, a one-piece skate: the boot runs down into our own rocking holder, with
   our own runner and rocker insert (nothing proprietary, Jon 2026-11-11).
 - **Track D, the gear** (Jon, 2026-11-12: "id like to actually do full hockey equipment"):
-  shin pads first, made with the skate as one system; the helmet parked. Below, after Jon's
-  list.
+  shin pads first, made with the skate as one system; then the girdle; then (2026-11-13) the
+  gloves, elbow pads and the helmet, the helmet as a design study, not for wear. Below, after
+  Jon's list.
 
 Everything is modelled in CortenForge and checked against known results first (CLAUDE.md).
 
@@ -1119,6 +1120,9 @@ have (and changing a certified one voids it). The price isn't the protection eit
 liner's impact checked against the textbook stopping distance and VT's Hockey STAR speeds, then a
 home drop rig that tests his certified helmet and ours the same way.
 
+**Back as a design study (2026-11-13):** Jon, "probably should build a helmet too, even if it
+isnt certified, just add a disclaimer it isnt certified". U3, under the upper body below.
+
 ### Shin pads: Jon's goals (2026-11-12)
 
 In his words, each with a first engineering take. Item 9 above is where this started.
@@ -1904,6 +1908,154 @@ What it shows:
   tops are still built on the leg (2.3 mm of the body's knee in the shin liner).
 - The thigh pad's top could give rather than push: its shell stops short of the foam's top, so
   the belly in a deep crouch presses foam, not a hard edge.
+
+### The upper body: gloves, elbow pads, the helmet (2026-11-13)
+
+Jon: "what if we did gloves? like if we build the full bodysuit, geometry wise (probably should
+build a helmet too, even if it isnt certified, just add a disclaimer it isnt certified)". Then,
+on the plan below: "go ahead please".
+
+The plan:
+- **U1, the body above the waist:** MakeHuman's arms, hands and head fitted to ANSUR II, as G1
+  fitted the legs. Both the gloves and the helmet need it.
+- **U2, the gloves and the elbow pads.** The glove shaped round a hand gripping the stick, not a
+  flat hand (as the knee cup was built on the bent knee), its finger segments clear of each other
+  as the hand closes. The protective parts are ours (finger rolls, back of the hand, thumb,
+  cuff); the palm is fabric, for feel and grip on the stick, sewn or bought. The glove's cuff and
+  the elbow pad leave a gap on the forearm, the arm's version of G3's: as small as it can be
+  without them touching through the wrist's and elbow's bend. The elbow pad's foam can live in
+  the compression suit like the knee's (washable). The grip pose is checked against ANSUR's
+  forearm-center of grip length (the elbow at 90° gripping a 1¼" dowel, median 348 mm;
+  RESEARCH.md 26).
+- **U3, the helmet: a design study, not for wear.** The shell and liner on the fitted head, the
+  liner checked against the textbook stopping distance and Virginia Tech's Hockey STAR impact
+  speeds (RESEARCH.md 17), then a home drop rig that tests Jon's certified helmet and ours the
+  same way. It carries this disclaimer wherever it is published: **"This helmet is a design
+  study. It is not certified (HECC, CSA or any other standard) and has not passed any impact
+  test. Do not wear it for hockey or anything else."** Sanctioned play needs a certified helmet
+  anyway (Track D, above).
+- Later, Jon's own hand and head from the Otter, kept private in `scans/`: a hand is hard to scan
+  holding a grip (the fingers drift), and hair spoils a head scan (a swim cap).
+
+**U1, the body above the waist (2026-11-13).** `cargo run --release -- upper
+scans/stand-in/022_fBW_R.ply` (~2 min: G1's fit, then this one in 12 s; `src/upper.rs`);
+`docs/upper/`.
+- Eight more of MakeHuman's sliders (upper and lower arm length, wrist girth, hand size, finger
+  length, and the head's depth, width and height) fitted together, Newton as G1, to ANSUR II's
+  medians for the same men (RESEARCH.md 26), each measured as the measurer's handbook describes:
+
+  | | G1's body | fitted | ANSUR |
+  |---|---|---|---|
+  | acromion-radiale (shoulder tip to elbow) | 300.6 | 334.0 | 334 |
+  | radiale-stylion (elbow to wrist) | 267.5 | 266.0 | 266 |
+  | wrist girth | 158.4 | 175.0 | 175 |
+  | hand breadth (knuckles II-V) | 92.4 | 88.0 | 88 |
+  | hand length (wrist to middle fingertip) | 207.2 | 193.0 | 193 |
+  | head length | 202.0 | 200.0 | 200 |
+  | head breadth (above the ears) | 145.0 | 154.0 | 154 |
+  | tragion-top of head | 129.1 | 131.0 | 131 |
+  | *not fitted:* head circumference | | 568.1 | 574.5 |
+  | *not fitted:* hand circumference | | 199.8 | 212 |
+  | *not fitted:* acromial height | | 1454.0 | 1435 |
+  | *not fitted:* biacromial breadth | | 422.2 | 415 |
+  | *not fitted:* stature | | 1757.3 | 1750 |
+
+  Sliders: upper arm length +0.48, lower arm −0.02, wrist +0.43, hand scale −0.25, finger
+  length −0.35, head depth −0.14, width +0.32, height +0.07. Before them (G1's body: MakeHuman's
+  man with G1's sliders, body weight among them), the upper arm was shorter, the wrist thinner,
+  the hand longer and the head narrower than ANSUR's median soldier's.
+- **Below the waist nothing moved** (0.0000 mm on G1's mesh): these sliders act on the arms,
+  hands and head only, so the shin pad, the girdle and G3 stand as they were.
+- **The head's girth, not fitted, comes out within 6.4 mm (1.1%)** of ANSUR's median from the
+  three lengths fitted: the head's shape is close to the median man's, which is what the helmet
+  needs.
+- **The hand is 12 mm thinner round the knuckles** (199.8 against 212 mm, 6%): breadth and
+  length are fitted, and none of MakeHuman's hand sliders thickens the palm. The glove's palm
+  wants Jon's own hand.
+- **How each is measured on a mesh with no drawn landmarks:**
+  - The arms are hung straight down by the rig (MakeHuman stands them ~41° out from the body,
+    elbows bent ~46°), the hand in line with the forearm, the middle finger straightened
+    (MakeHuman's is curled ~20°).
+  - The acromion (the shoulder's tip): on the frontal section through the shoulder joint, the
+    point furthest up-and-out at 45°, where the shoulder's top turns down into the arm. It comes
+    out 19 mm higher than ANSUR's median acromial height and 7 mm wider apart, so the fitted
+    upper arm leans on a landmark that may sit a little high.
+  - Radiale and stylion (the radius's two ends, bony points under the skin) are taken at the
+    elbow's and wrist's joint levels: where they sit relative to those joints isn't sourced here,
+    so the forearm's 266 is the joint-to-joint length. Jon's own measurements would replace them.
+  - Tragion: one vertex of MakeHuman's base mesh (5499), picked by eye on side and three-quarter
+    views of the ear, at the top of the tragus just under the helix's front. MakeHuman's head is
+    taken as upright in the Frankfurt plane (not checked: orbitale isn't marked).
+  - Above the ears: the ear's top is where the head's outermost skin steps in from the ear's rim
+    to the head, 28 mm above tragion; the head is widest just above it, 37 mm above tragion.
+  - Not fitted: the arms' girths. ANSUR took them flexed, fist clenched, so they don't compare
+    with a relaxed model; the weight slider (G1) sets them.
+
+  ![The fitted body as MakeHuman stands it: front, side, back, three-quarter](upper/body.png)
+
+  ![The measuring pose, arms hung; red points and blue sections are what was measured](upper/measuring_pose.png)
+
+  ![The right hand hung, middle finger straight: the wrist's section and the knuckles' (II to V), from the back, the thumb side and the palm](upper/hand.png)
+
+  ![The head: tragion, top, glabella, the back; the girth above the brow and the widest section above the ears](upper/head.png)
+
+**U2, first step: the arm bent and the hand gripping (2026-11-13).** Jon: "i use ccm/bauer
+senior sticks". Neither maker publishes a shaft's section; an older IIHF rule caps it at 3 cm
+wide and 2.5 cm thick (RESEARCH.md 27). So the grip is built and checked first on ANSUR's own
+1¼" dowel, a known result, and the stick's section goes in once measured. In the `upper` run
+(`elbow_checks`, `close_on` in `src/upper.rs`):
+- **The arm as ANSUR measured it:** upper arm hung, elbow bent 90° forward, palm in (the forearm
+  turned on its twist bone), the hand in line with the forearm.
+
+  | | body | ANSUR |
+  |---|---|---|
+  | shoulder-elbow length (shoulder tip to the elbow's bottom) | 365.4 | 362 |
+  | forearm-hand length (the elbow's back to the middle fingertip) | 496.8 | 478 |
+  | the elbow's back behind the elbow joint / radiale | 37.7 | 19 (per man, median; 9-29 p5-p95) |
+
+  The elbow's back sits 19 mm deeper than ANSUR's men's, which is the whole of the forearm-hand
+  excess. MakeHuman's elbow, bent by skin weights, has no olecranon bone to make its point; its
+  back is the skin's. (First taken as the rearmost point near the elbow, it
+  landed 60 mm up the back of the upper arm: ANSUR's is "the rearmost point of the elbow", so it
+  is now looked for within 10 mm of the joint's height.)
+- **The dowel where ANSUR's men held it.** Per man, forearm-center of grip minus forearm-hand
+  plus hand length puts the dowel's centre 62 mm from stylion (51-74 p5-p95; RESEARCH.md 26),
+  so it goes there along the hand (from the wrist joint, as hand length was fitted), resting on
+  the palm's middle. The run then reads the elbow's back to the dowel: 365.8 against ANSUR's 348,
+  the same +18 as the elbow's back, so this is not a separate check.
+- **The hand closes on it** as grasp planners close a hand (GraspIt's auto-grasp): the fingers
+  from straight, all three joints at one rate, a link touching the dowel stopping the joints from
+  the knuckle to it. The thumb first swings out of the palm, then bends toward the dowel. At 62 mm
+  every finger wraps it, tips on its far side, evenly: knuckle, middle and end joints 65° (index),
+  69 (middle), 63 (ring), 54 (little); no finger in the dowel and no finger joint at its guard.
+
+  ![The right hand closed on ANSUR's 1¼" dowel, 62 mm from the wrist: from above (the thumb's
+  side), the fingertips' end, below, and the palm's side](upper/grip.png)
+
+  ![The arm as ANSUR measures the grip: upper arm hung, elbow at 90°, the dowel upright in the
+  hand](upper/grip_arm.png)
+
+- **What's rough:**
+  - **The palm's pads and the thumb overlap the dowel by 13 mm** (13.2 and 12.8) at 62 mm, 5 mm
+    at 74 (ANSUR's p95 place). Skin here is rigid: a real palm's pads give round a held bar, and
+    the thumb's base turns across the palm (opposition), which this thumb doesn't. Resting the
+    bar on the pads instead held it ~45 mm off the hand's bones, where the fingers couldn't reach
+    round it. With "stylion" at MakeHuman's wrist joint (U1), the 62 mm may also sit a little
+    deep in this hand.
+  - **The thumb leans on its guards:** its base turns to the 60° guard without its phalanges
+    quite clearing the dowel, its end joint to the 80° guard. The guards are commonly quoted
+    normal ranges, and sources differ (RESEARCH.md 27).
+  - Equal rates at the three finger joints are GraspIt's default, not measured: measured grips
+    flex the knuckle and middle joints more as the bar gets smaller and leave the end joint about
+    the same (Lee and Rim 1991), and Irwin and Radwin's (2008) model hand, posed by contact as
+    here, puts a 25-38 mm handle at 40-43° knuckle, 75-95° middle, 37-40° end joint. So the hand's shape is a first one, good enough to start the glove round; Jon's
+    own hand on his stick would replace it.
+
+**U2 next:** the stick's section in place of the dowel: Bauer's VAPOR APX upper shaft, 19.3 ×
+29.8 mm with 5.5 mm corners, as published (RESEARCH.md 27), until Jon's own is measured. Jon
+shoots left, so the right hand (the one modelled so far) is the top hand at the knob, the left
+the bottom hand down the shaft. Then the glove's parts round the closed hands, and the elbow pad
+with the gap between them.
 
 ## Open questions for Jon
 

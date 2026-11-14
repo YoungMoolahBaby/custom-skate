@@ -702,8 +702,147 @@ machine washable (Jon's requirement, PLAN.md, Open questions).
   polyurethanes, the XRD impact foam among them, as "cellule calibrate semichiuse" (semi-closed
   cells), 240-480 kg/m³, sealing well against water; nothing on washing.
 
+## 26. The body above the waist: ANSUR II's arms, hands and head (2026-11-13)
+
+For the gloves, the elbow pads and the helmet (track D, U1). The same data as 18 and 21
+(`ANSUR_II_MALE_Public.csv`, men 1700-1800 mm tall, n = 2,222), percentiles by linear
+interpolation between ranked values, mm. **F** fitted on the stand-in body, **C** compared,
+**U2** kept for the gloves' grip pose:
+
+| Measure | | p5 | p25 | median | p75 | p95 |
+|---|---|---|---|---|---|---|
+| acromion-radiale length | F | 315 | 326 | 334 | 342 | 353 |
+| radiale-stylion length | F | 249 | 259 | 266 | 275 | 287 |
+| wrist circumference | F | 164 | 170 | 175 | 181 | 188 |
+| hand breadth | F | 82 | 85 | 88 | 91 | 95 |
+| hand length | F | 180 | 188 | 193 | 198 | 206 |
+| head length | F | 189 | 195 | 200 | 204 | 210 |
+| head breadth | F | 146 | 151 | 154 | 158 | 163 |
+| tragion-top of head | F | 121 | 127 | 131 | 135 | 141 |
+| hand circumference | C | 197 | 206 | 212 | 218 | 227 |
+| head circumference | C | 550 | 564 | 574.5 | 584 | 600 |
+| acromial height | C | 1388 | 1414 | 1435 | 1458 | 1483 |
+| biacromial breadth | C | 389 | 404 | 415 | 426 | 443 |
+| stature | C | 1706 | 1726 | 1750 | 1774 | 1795 |
+| palm length | | 108 | 113 | 116 | 120 | 125 |
+| shoulder-elbow length | U2 | 344 | 355 | 362 | 370 | 382 |
+| forearm-hand length | U2 | 453 | 468 | 478 | 489 | 506 |
+| forearm-center of grip length | U2 | 328 | 339 | 348 | 357 | 370 |
+| forearm circumference, flexed | | 277 | 296 | 309 | 323 | 344 |
+| biceps circumference, flexed | | 304 | 335 | 357 | 378 | 415 |
+
+**How ANSUR II took them.** Hotzman J, Gordon CC, Bradtmiller B, Corner BD, Mucher M,
+Kristensen S, Paquette S, Blackwell CL, *Measurer's Handbook: US Army and Marine Corps
+Anthropometric Surveys, 2010-2011*, NATICK/TR-11/017, US Army Natick Soldier RD&E Center, August
+2011 ([Open Design Lab copy](https://tools.openlab.psu.edu/publicData/ANSURII-TR11-017.pdf);
+fetched to `D:\custom-skate-data\ansur2\docs\`). Its definitions (sections 5.1-5.2 landmarks,
+6.4 measures), short:
+- **Hand length:** "between the stylion landmark on the wrist and the tip of the middle finger
+  (dactylion III)", palm on a table, fingers together, the thumb at ~45°, the middle finger in
+  line with the forearm. **Stylion:** "the inferior point of the bottom of the radius".
+- **Hand breadth:** between metacarpale II and V, "the most lateral point of the right
+  metacarpophalangeal joint II" (and the most medial of V), same hand position. **Hand
+  circumference:** the tape over those two landmarks.
+- **Palm length:** the crease at the base of the middle finger to ventral stylion.
+- **Wrist circumference:** "at the level of stylion and perpendicular to the long axis of the
+  forearm", the tape's upper edge just below stylion's bump.
+- **Acromion-radiale length:** standing, the beam caliper parallel to the arm. **Acromion:** "the
+  point of intersection of the lateral border of the acromial process and a line running down
+  the middle of the shoulder from the neck to the tip of the shoulder". **Radiale:** "the
+  superior point on the outside edge of the radius" (the hollow on the outside of the elbow).
+  **Radiale-stylion length:** arms relaxed at the sides, palm forward.
+- **Shoulder-elbow length:** acromion to the bottom of the elbow, upper arm hanging, elbow at 90°.
+  **Forearm-hand length:** the back of the elbow to the middle finger's tip, elbow at 90°, hand
+  straight. **Forearm-center of grip length:** the back of the elbow to the centre of "a 1-1/4"
+  diameter dowel gripped in the right hand", elbow at 90°.
+- **Forearm and biceps circumferences** are taken flexed (fist clenched; "making a muscle"), so
+  they don't compare with a relaxed body model.
+- **Head length:** glabella ("the most anterior point on the frontal bone midway between the bony
+  browridges") to opisthocranion, the maximum, in the midsagittal plane. **Head breadth:** "the
+  maximum horizontal breadth of the head above the ears". **Head circumference:** "the maximum
+  circumference of the head above the supraorbital ridges and ears", the tape just above the brow
+  ridges, "higher in front than it is in the back but [...] not tilted to either side", tight
+  enough to compress the hair.
+- **Tragion-top of head:** "the vertical distance between the right tragion landmark on the
+  cartilaginous flap in front of the earhole and the horizontal plane tangent to the top of the
+  head", the head in the Frankfurt plane. **Tragion:** "the superior point on the juncture of the
+  cartilaginous flap (tragus) of the ear with the head". **Frankfurt plane:** through right
+  tragion and "the lowest point of the right orbit".
+
+**MakeHuman's sliders for these** (same source and licence as 18, fetched to
+`D:\custom-skate-data\makehuman\targets\`, each `-decr`/`-incr`): `measure-upperarm-length`,
+`measure-lowerarm-length`, `measure-wrist-circ`, `measure-neck-circ`, `measure-upperarm-circ`;
+`armslegs/{r,l}-hand-scale`, `-hand-fingers-length`, `-hand-fingers-diameter`,
+`-hand-fingers-distance`, `{r,l}-lowerarm-scale-{horiz,depth}`; `head/head-scale-{depth,horiz,vert}`,
+`head-back-scale-depth`. MakeHuman's skeleton has three bones in each finger and in the thumb,
+metacarpals, wrists, a neck and a head (`default.mhskel`).
+
+**Per man, from the same file** (not differences of the medians above; same 2,222 men, mm, p5 /
+p25 / median / p75 / p95):
+- forearm-center of grip − forearm-hand + hand length, stylion to the gripped dowel's centre
+  along the hand: 51 / 57 / **62** / 67 / 74;
+- forearm-hand − hand length, the elbow's back (bent 90°) to stylion: 268 / 278 / 286 / 293 / 305;
+- that − radiale-stylion length, the elbow's back to radiale: 9 / 15 / **19** / 23 / 29.
+
+Each assumes the hand lies the same way in both measures (in line with the forearm, as the
+handbook asks).
+
+## 27. Sticks and grips (2026-11-13)
+
+For the gloves (U2). Jon: "i use ccm/bauer senior sticks".
+- **The shaft's section.** IIHF Official Rule Book, an older edition (rule numbers in the 200s;
+  `stats.iihf.com/hockey/rules/img/sec2.pdf`, edition not printed on the page): shaft "maximum
+  width - 3 cm, maximum thickness - 2.5 cm", length 163 cm from the heel. The current IIHF book
+  (2026-27, Rule 10.1) gives the length (1.63 m) but no width or thickness. Neither Bauer's nor
+  CCM's product pages found give a section in mm. Not verified: a retailer's guide said to give
+  senior shafts as 3 × 2 cm (its pages answered 429 Too Many Requests).
+- **A Bauer senior shaft, measured by its maker.** LeGault M, "Advanced hockey stick design
+  delivers optimal performance", CompositesWorld, 1 July 2012, on Bauer's VAPOR APX (2011): "The
+  cross-sectional dimensions of the upper portion of the VAPOR APX are 0.76 inch by 1.175 inches
+  (1.93 cm by 2.98 cm)", with "radiused corners (radii of 0.21 inch/5.5 mm) on each of the
+  shaft's four edges"; below its stiffest point, about 18 inches above the heel, "the rectangular
+  cross-section of the shaft begins to taper in two directions"
+  ([CompositesWorld](https://www.compositesworld.com/articles/advanced-hockey-stick-design-delivers-optimal-performance)).
+- **CCM's maker on shafts in general.** US 2005/0215364 A1 (filed 2005-03-25; now assigned to
+  Sport Maska Inc., CCM's company), background: shafts are usually made rectangular, "with a
+  height and a width yielding an ergonomic perimeter standardly comprised between 90 and 95 mm".
+  The APX's section above, corners and all, is ~89 mm round (ours: 2 × (19.3 + 29.8) − 8 × 5.5 +
+  2π × 5.5).
+- Older: US 6,241,633 B1 (Christian Brothers, filed 1998-02-20): "the shaft width of a standard
+  rectangular shaft is about 20 mm and the shaft height is about 30 mm".
+- Jon (2026-11-13): "i shoot left", so his right hand is the top hand (at the knob) and his left
+  the bottom hand.
+- **How fingers sit round a bar.** Lee JW, Rim K, "Measurement of finger joint angles and maximum
+  finger forces during cylinder grip activity", J Biomed Eng 1991;13(2):152-62 (PMID 2033951;
+  four subjects, five cylinder sizes, photogrammetry): "finger flexion angles at the
+  metacarpophalangeal and proximal interphalangeal joints gradually increase as cylinder diameter
+  decreases, but [...] at the distal interphalangeal joint the angle remains constant throughout
+  all cylinder sizes". The angles themselves are behind a paywall.
+- Shimawaki S et al., "Measurement of Flexion Angle of the Finger Joint during Cylinder Gripping
+  Using a Three-Dimensional Bone Model Built by X-Ray Computed Tomography", Appl Bionics Biomech
+  2019:2839648 (PMID 30723529, PMC6339738; 10 Japanese men, cylinders 10, 60 and 120 mm): smaller
+  cylinders flex every finger joint more; at 10 mm the middle joint flexes most.
+- Irwin CB, Radwin RG, "A new method for estimating hand internal loads from external force
+  measurements", Ergonomics 2008;51(2):156-67: 53 people, power grip on 2.54-7.62 cm handles. The
+  joint angles are not measured: a model hand (Buchholz and Armstrong 1991 segment sizes from hand
+  length and breadth) posed on each handle, "in proximal-to-distal step-wise order, the ovaloid
+  segments were rotated until they made contact with the handle surface". Their Table 4, mean
+  knuckle / middle / end joint: 2.54 cm 43 / 95 / 37°, 3.81 cm 40 / 75 / 40°, 5.08 cm 37 / 60 /
+  42°.
+- **The hand's ranges, as guards only.** Sources quoted in a search differ (finger end joints
+  65-90°, middle joints 90-100°; thumb knuckle 50°, end joint 80°; an AAOS-based table and
+  flashcard sets, not the original AAOS text). U2's grip uses fingers 90 / 100 / 80° and thumb
+  60 (its base) / 50 / 80° as limits and reports where one binds.
+
 ## Still to find
 
+- For the gloves (U2): a senior shaft's section (width, depth, corner radius) from a maker, or
+  Jon's own measured; measured finger joint angles on a ~30 mm bar (Lee and Rim 1991's table);
+  how gloves are built (finger rolls, back of the hand, thumb lock,
+  cuff, palm materials) and what they weigh; how far the wrist bends in stickhandling and
+  shooting.
+- For the helmet (U3): the current drop-test limits of ASTM F1045 and CSA Z262.1 (17: only CSA's
+  1990 275 g found), and Virginia Tech's Hockey STAR test speeds and locations.
 - How far gear shifts on the leg in play (G3's margin): a girdle's shorts riding down the thigh,
   a shin pad moving on its straps under a sock or pants.
 - The knee's flexion through a forward stride, as numbers (contact, glide, push-off): theses from

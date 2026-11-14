@@ -11,6 +11,8 @@
 //!   ANSUR II, joined to the foot scan.
 //! - `pad <scan> [out]`: the shin pad on the stand-in leg in the boot (track D2), fitted (tongue
 //!   under and over) against modelled stock and undersized pads on the same leg.
+//! - `upper <scan> [out]`: the stand-in body above the waist (track U1): arms, hands and head
+//!   fitted to ANSUR II.
 
 use custom_skate::check;
 use custom_skate::pitch::{FT, Rocker, fixed_alpha, passive_rocking_stiffness, roller_alpha};
@@ -170,8 +172,19 @@ fn main() {
                 std::process::exit(1);
             }
         }
+        "upper" => {
+            let Some(path) = std::env::args().nth(2) else {
+                eprintln!("usage: upper <scan> [out dir]");
+                std::process::exit(2);
+            };
+            let out = std::env::args().nth(3).unwrap_or_else(|| "out/upper".into());
+            if let Err(e) = custom_skate::upper::run(std::path::Path::new(&path), std::path::Path::new(&out)) {
+                eprintln!("{e}");
+                std::process::exit(1);
+            }
+        }
         other => {
-            eprintln!("unknown mode {other:?}; modes: check, pitch, scan, round1, chassis, boot, leg, pad, impact, body, girdle, poses, gap");
+            eprintln!("unknown mode {other:?}; modes: check, pitch, scan, round1, chassis, boot, leg, pad, impact, body, girdle, poses, cup, gap, upper");
             std::process::exit(2);
         }
     }

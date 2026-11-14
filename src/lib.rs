@@ -26,3 +26,4 @@ pub mod round2;
 pub mod scan;
 pub mod sizing;
 pub mod strength;
+pub mod upper;

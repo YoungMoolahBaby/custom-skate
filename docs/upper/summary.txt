@@ -1,0 +1,41 @@
+stand-in body above the waist (track U1), on G1's body (scans/stand-in/022_fBW_R.ply)
+  fitted to ANSUR II medians, men 1700-1800 mm (mm):
+    acromion-radiale        334.0  (ANSUR 334)
+    radiale-stylion         266.0  (ANSUR 266)
+    wrist girth             175.0  (ANSUR 175)
+    hand breadth             88.0  (ANSUR 88)
+    hand length             193.0  (ANSUR 193)
+    head length             200.0  (ANSUR 200)
+    head breadth            154.0  (ANSUR 154)
+    tragion-top of head     131.0  (ANSUR 131)
+  sliders: upperarm-length +0.48, lowerarm-length -0.02, wrist-circ +0.43, hand-scale -0.25, fingers-length -0.35, head-depth -0.14, head-width +0.32, head-height +0.07
+  not fitted, compared (mm):
+    hand circumference      199.8  (ANSUR 212)
+    head circumference      568.1  (ANSUR 574.5)
+    acromial height        1454.0  (ANSUR 1435)
+    biacromial breadth      422.2  (ANSUR 415)
+    stature                1757.3  (ANSUR 1750)
+  the hand's lowest point is 24.4 mm from the middle finger's end joint; the ear's top 28 mm above tragion, the head's widest section above it 37 mm above tragion
+  the body below the waist (G1's mesh, to 1250 mm) moved at most 0.0000 mm
+the arm bent 90 deg at the elbow, palm in (track U2; 0 s), against ANSUR (mm):
+    forearm-hand length     496.8  (ANSUR 478)
+    shoulder-elbow length   365.4  (ANSUR 362)
+    the elbow's back 37.7 mm behind the elbow joint (ANSUR's men: 19 behind radiale, median)
+  the hand closed on a 31.75 mm dowel 51 mm from the wrist joint: forearm-center of grip 354.8 (ANSUR 348); the middle finger doesn't wrap it to its tip; into the dowel by up to 5.3 mm (the palm's pads), 14.7 (the thumb), 0.0 (the fingers)
+    thumb  bent 60 / 0 / 70 deg (base to tip), stopped by limit / bar / bar
+    index  bent 90 / 100 / 80 deg (base to tip), stopped by limit / limit / limit
+    middle bent 90 / 100 / 80 deg (base to tip), stopped by limit / limit / limit
+    ring   bent 90 / 100 / 80 deg (base to tip), stopped by limit / limit / limit
+    little bent 90 / 100 / 80 deg (base to tip), stopped by limit / limit / limit
+  the hand closed on a 31.75 mm dowel 62 mm from the wrist joint: forearm-center of grip 365.8 (ANSUR 348); the middle finger wraps it to its tip; into the dowel by up to 13.2 mm (the palm's pads), 12.8 (the thumb), 0.0 (the fingers)
+    thumb  bent 60 / 0 / 80 deg (base to tip), stopped by limit / bar / limit
+    index  bent 65 / 65 / 65 deg (base to tip), stopped by bar / bar / bar
+    middle bent 69 / 69 / 69 deg (base to tip), stopped by bar / bar / bar
+    ring   bent 63 / 63 / 63 deg (base to tip), stopped by bar / bar / bar
+    little bent 54 / 54 / 54 deg (base to tip), stopped by bar / bar / bar
+  the hand closed on a 31.75 mm dowel 74 mm from the wrist joint: forearm-center of grip 377.8 (ANSUR 348); the middle finger wraps it to its tip; into the dowel by up to 5.2 mm (the palm's pads), 5.2 (the thumb), 0.0 (the fingers)
+    thumb  bent 60 / 0 / 80 deg (base to tip), stopped by limit / bar / limit
+    index  bent 55 / 55 / 55 deg (base to tip), stopped by bar / bar / bar
+    middle bent 62 / 62 / 62 deg (base to tip), stopped by bar / bar / bar
+    ring   bent 57 / 57 / 57 deg (base to tip), stopped by bar / bar / bar
+    little bent 44 / 44 / 44 deg (base to tip), stopped by bar / bar / bar

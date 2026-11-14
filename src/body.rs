@@ -79,13 +79,13 @@ pub struct Model {
     raw: Vec<Vector3<f64>>,
     raw_targets: Vec<(Vec<Vector3<f64>>, Vec<Vector3<f64>>)>,
     joints: HashMap<String, Vec<u32>>,
-    quads: Vec<[u32; 4]>,
+    pub(crate) quads: Vec<[u32; 4]>,
     /// The skeleton and skin weights, and the two smoothing passes (to smooth a posed control
     /// mesh).
-    rig: Rig,
-    s1: Subdivision,
-    s2: Subdivision,
-    n_body: usize,
+    pub(crate) rig: Rig,
+    pub(crate) s1: Subdivision,
+    pub(crate) s2: Subdivision,
+    pub(crate) n_body: usize,
 }
 
 impl Model {
@@ -313,7 +313,7 @@ fn lower_quads(m: &Model, skin: &[Vector3<f64>], floor: f64, z_top: f64) -> Vec<
 
 /// Triangles from some of the smoothed skin's quads, vertices numbered as they first appear (so
 /// the same quads give the same mesh in any pose).
-fn mesh_of_quads(skin: &[Vector3<f64>], floor: f64, shift: (f64, f64), keep: &[[u32; 4]]) -> IndexedMesh {
+pub(crate) fn mesh_of_quads(skin: &[Vector3<f64>], floor: f64, shift: (f64, f64), keep: &[[u32; 4]]) -> IndexedMesh {
     let mut map = vec![u32::MAX; skin.len()];
     let mut mesh = IndexedMesh::default();
     for q in keep {

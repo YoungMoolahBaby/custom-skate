@@ -194,6 +194,12 @@ type (bug, docs, API, perf, setup, works), date, file:line under
 - **note** (2026-11-10): `cf_scan_prep_core::clip_mesh_against_plane` (clip.rs:132) leaves the
   new cut vertices unshared between neighbouring triangles: the clipped leg stump had 147 open
   edges until `weld_vertices(1e-5)` merged 1,096 vertices, then 1 (the cut). Weld after clipping.
+- **works** (2026-11-13, the upper body): `cross_section` (through `scan::section`'s nudge) on
+  MakeHuman's subdivided skin, on planes at any angle: a slanted plane across a hand's knuckles,
+  the head's midline, tilted planes round the head. Each gave clean loops, and a `Contour`'s
+  `centroid`, `area` and `bounds` were all it took to pick the loop wanted and read a caliper
+  breadth. The head's girth from these loops came out
+  within 1.1% of ANSUR II's median without being fitted.
 - **works** (2026-11-12, the leg): `clip_mesh_against_plane` twice (top and bottom), then
   `weld_vertices(1e-6)`, then `auto_cap_open_boundaries` (cap.rs:63) turned MakeHuman's
   subdivided leg (an open tube from a whole body) into a closed mesh: 2 caps, 0 open edges,
