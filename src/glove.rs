@@ -1,19 +1,27 @@
-//! U2, glove round 1 (2026-11-14): the glove's hard pieces on the hand closed on the shaft.
+//! U2, the glove's hard pieces on the hand closed on the shaft. Round 1 (2026-11-14, commit
+//! 995b1b6): one piece over each finger bone and the back of the hand, one lap over each joint.
+//! Round 2 (2026-11-14, Jon's pick of extra scales): a short scale over each finger joint as well,
+//! so that each lap covers half the joint's bend. Jon picked them for the knuckles and middle
+//! joints; without one at the end joints too, the index's and little finger's middle joints came
+//! out higher than round 1's (their laps met the end joints' over the short middle bones, and
+//! had to nest over them).
 //!
 //! Jon's glove (PLAN.md, Gloves): tight, "almost like a lacrosse glove but safe for hockey", no
 //! empty space inside, a short cuff, the outside looking like a hockey glove (a later round). The
 //! hard pieces ride on a foam liner that lies on the skin (a liner glove, the way the knee's foam
-//! is in the suit): one piece over each finger bone and one over the back of the hand, 13 in
-//! all. The thumb waits for its own round: U2's grip turns its joints about axes set by the
-//! stick, not its own, and laps built on those came out absurd (a 40 mm radius at its knuckle).
+//! is in the suit). The thumb waits for its own round: U2's grip turns its joints about axes set
+//! by the stick, not its own, and laps built on those came out absurd (a 40 mm radius at its
+//! knuckle).
 //!
 //! Each piece is built on the hand as it holds the shaft (`upper::shaft_grip`): its inside is the
 //! liner's outside (the skin offset by the foam), its wall over that. Where two meet over a joint,
 //! the piece nearer the wrist laps over the other, and there both are cylinders about the joint's
 //! axis: a surface of revolution turns into itself as the joint turns, so the pieces slide one
 //! over the other and can't bind. Each lap reaches far enough either side of the joint to stay
-//! closed from the straight hand to the joint's full bend, plus a margin; its radius clears the
-//! liner under it at every step.
+//! closed from the straight hand to the bend it covers, plus a margin; its radius clears the
+//! liner under it at every step. A scale lies between the two bones' pieces, under the one nearer
+//! the wrist and over the other, and turns about the joint's axis halfway between them (what
+//! holds it there is for a later round).
 //!
 //! The run builds them, moves the hand from straight to the grip and on to a fist (each joint at
 //! its guard, `upper::FINGER_LIMIT`), and at each step checks:
@@ -73,11 +81,27 @@ pub struct GloveParams {
     /// (deg), or, if None, to its guard (a fist). A lap's height grows steeply with the bend it
     /// has to cover.
     pub grip_plus: Option<f64>,
+    /// Scales between the bones' pieces over each knuckle, middle joint and end joint. With `n`,
+    /// each of the joint's `n + 1` laps covers `1 / (n + 1)` of its bend.
+    pub scales: [usize; 3],
 }
 
 impl Default for GloveParams {
     fn default() -> Self {
-        GloveParams { foam: 6.0, wall: 2.0, clear: 1.0, margin: 10.0, down: 6.0, side_gap: 1.0, cuff: 15.0, side_out: 14.0, tip: 2.0, cell: 0.5, grip_plus: Some(15.0) }
+        GloveParams {
+            foam: 6.0,
+            wall: 2.0,
+            clear: 1.0,
+            margin: 10.0,
+            down: 6.0,
+            side_gap: 1.0,
+            cuff: 15.0,
+            side_out: 14.0,
+            tip: 2.0,
+            cell: 0.5,
+            grip_plus: Some(15.0),
+            scales: [1, 1, 1],
+        }
     }
 }
 
@@ -96,18 +120,38 @@ fn bone_name(k: usize, j: usize) -> String {
     format!("finger{}-{}.R", k + 1, j + 1)
 }
 
-/// The pieces: 0 the back plate, then the fingers' (index to little, base to tip).
-fn piece_of(k: usize, j: usize) -> usize {
-    1 + 3 * (k - 1) + j
-}
-
-/// A lap's place in the list of laps (fingers index to little, base to tip).
-fn laps_index(k: usize, j: usize) -> usize {
-    3 * (k - 1) + j
-}
-
 fn joint_name(k: usize, j: usize) -> String {
     format!("{} {}", DIGIT[k], JOINT[j])
+}
+
+/// What a piece moves with: a bone, or (a scale over a joint) the bone before the joint (`a`)
+/// turned `frac` of the way to the bone after it (`b`), about the joint's centre `c`.
+#[derive(Clone, Copy, Debug)]
+enum Mover {
+    Bone(usize),
+    Scale { a: usize, b: usize, c: Point3<f64>, frac: f64 },
+}
+
+/// A piece's motion from pose 0 to the hand `h`.
+fn motion_of(h: &HandAt, h0: &HandAt, m: &Mover) -> Motion {
+    let rel = |bone: usize| h.mm[bone].after(&h0.mm[bone].inverse());
+    match *m {
+        Mover::Bone(i) => rel(i),
+        Mover::Scale { a, b, c, frac } => {
+            let ra = rel(a);
+            let r = ra.inverse().after(&rel(b)).r.powf(frac);
+            ra.after(&Motion { r, t: c.coords - r * c.coords })
+        }
+    }
+}
+
+/// What a piece is: the back plate, the piece over a finger's bone (finger, bone), or a scale
+/// over a finger's joint (finger, joint, 1 from the wrist side).
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum Kind {
+    Plate,
+    Bone(usize, usize),
+    Scale(usize, usize, usize),
 }
 
 /// A cylinder about a joint's axis.
@@ -161,6 +205,9 @@ struct Zone {
     n: Vector3<f64>,
     side_p: Point3<f64>,
     side_n: Vector3<f64>,
+    /// Its edge below the knuckle's axis (`low_p`, `low_n`).
+    low_p: Point3<f64>,
+    low_n: Vector3<f64>,
     lap: usize,
 }
 
@@ -172,8 +219,6 @@ type Sdf = Arc<Signed<TriMeshDistance, ParitySign>>;
 #[derive(Clone)]
 struct Piece {
     name: String,
-    /// The bone it moves with.
-    bone: usize,
     /// The skin it is built on (its finger's, or the back of the hand's, in the build pose).
     skin: Sdf,
     /// Pose 0 to the build pose.
@@ -234,7 +279,7 @@ impl Piece {
             c = c.max(x0 - x).max(x - x1);
         }
         if let Some(z) = self.zone(q) {
-            c = c.max(-(q - z.p).dot(&z.n)).max(-(q - z.side_p).dot(&z.side_n));
+            c = c.max(-(q - z.p).dot(&z.n)).max(-(q - z.side_p).dot(&z.side_n)).max(-(q - z.low_p).dot(&z.low_n));
         } else if let Some(l) = self.lap(q) {
             c = c.max(-((q - l.rev.c).dot(&l.d) + self.down));
         }
@@ -263,13 +308,14 @@ impl Piece {
     }
 }
 
-/// A lap over a joint: piece `a` (nearer the wrist) over piece `b`. In the pose-0 frame: the
-/// joint's centre and axis, its back's direction `d` and `ap` (along the bone, out to the tip),
-/// square to the axis. The lap's surfaces reach `beta` back and `alpha` forward of `d` about the
-/// joint (rad), plus `EXT`.
+/// A lap over a joint: piece `a` (nearer the wrist) over piece `b`, one of the joint's `n` laps
+/// (one per scale, plus one). In the pose-0 frame: the joint's centre and axis, its back's direction
+/// `d` and `ap` (along the bone, out to the tip), square to the axis. The lap's surfaces reach
+/// `beta` back and `alpha` forward of `d` about the joint (rad), plus `EXT`.
 struct Lap {
     k: usize,
     j: usize,
+    n: usize,
     a: usize,
     b: usize,
     c: Point3<f64>,
@@ -280,6 +326,7 @@ struct Lap {
     beta: f64,
     /// The under piece's inside radius.
     rho: f64,
+    /// The joint's two bones (their skin lies under the lap).
     a_bone: usize,
     b_bone: usize,
     /// The back's skin above the joint's centre, straight.
@@ -391,15 +438,25 @@ struct Sit {
     press_at: Option<Point3<f64>>,
 }
 
-/// `cargo run --release -- glove <scan> [out]`: glove round 1 (docs/glove/).
-/// With `fist`, the laps stay closed to each joint's guard (a fist) and the results go to
-/// docs/glove/fist_laps/.
+/// `cargo run --release -- glove <scan> [out] [fist]`: the glove's hard pieces, round 2
+/// (docs/glove/). With `fist`, the laps stay closed to each joint's guard (a fist) and the
+/// results go to docs/glove/fist_laps/. To try other counts of scales, `GLOVE_SCALES=1,1,0` (over
+/// the knuckles, middle joints, end joints), with `GLOVE_DOCS=<dir>` to keep the results out of
+/// docs/glove/; `GLOVE_DEBUG` prints each ray the laps check finds open.
 pub fn run(scan: &Path, out: &Path, fist: bool) -> Result<(), String> {
     let t0 = Instant::now();
-    let p = GloveParams { grip_plus: if fist { None } else { GloveParams::default().grip_plus }, ..GloveParams::default() };
+    let mut p = GloveParams { grip_plus: if fist { None } else { GloveParams::default().grip_plus }, ..GloveParams::default() };
+    if let Ok(v) = std::env::var("GLOVE_SCALES") {
+        let n: Vec<usize> = v.split(',').filter_map(|x| x.trim().parse().ok()).collect();
+        if n.len() != 3 {
+            return Err(format!("GLOVE_SCALES={v:?}: three counts, knuckle,middle,end"));
+        }
+        p.scales = [n[0], n[1], n[2]];
+    }
     std::fs::create_dir_all(out).map_err(|e| e.to_string())?;
     let docs_dir = if fist { Path::new("docs/glove/fist_laps") } else { Path::new("docs/glove") };
-    let docs = docs_dir;
+    let docs_env = std::env::var("GLOVE_DOCS").ok().map(std::path::PathBuf::from);
+    let docs = docs_env.as_deref().unwrap_or(docs_dir);
     std::fs::create_dir_all(docs).map_err(|e| e.to_string())?;
     let threads = std::env::var("PAD_THREADS").ok().and_then(|v| v.parse::<usize>().ok()).unwrap_or(2).max(1);
     let b = body::build(scan, 1250.0)?;
@@ -529,18 +586,65 @@ pub fn run(scan: &Path, out: &Path, fist: bool) -> Result<(), String> {
         }
     }
 
-    // The laps: each finger joint's, the span split evenly either side.
+    // The pieces: the back plate, then per finger, base to tip, each joint's scales and the bone
+    // beyond it. Over each joint, its chain from the wrist side: the piece of the bone before (the
+    // back plate at a knuckle), the scales, the piece of the bone after.
+    let before = |k: usize, j: usize| if j == 0 { format!("metacarpal{k}.R") } else { bone_name(k, j - 1) };
+    let mut kinds: Vec<Kind> = vec![Kind::Plate];
+    let mut names: Vec<String> = vec!["back of the hand".into()];
+    let mut movers: Vec<Mover> = vec![Mover::Bone(bi("metacarpal2.R"))];
+    let mut bone_piece = [[0usize; 3]; 5];
+    let mut chains: Vec<Vec<Vec<usize>>> = vec![vec![Vec::new(); 3]; 5];
+    for k in 1..5 {
+        for j in 0..3 {
+            let mut chain = vec![if j == 0 { 0 } else { bone_piece[k][j - 1] }];
+            let n = p.scales[j];
+            for s in 1..=n {
+                chain.push(names.len());
+                kinds.push(Kind::Scale(k, j, s));
+                names.push(format!("{} {} scale{}", DIGIT[k], JOINT[j], if n > 1 { format!(" {s}") } else { String::new() }));
+                movers.push(Mover::Scale { a: bi(&before(k, j)), b: bi(&bone_name(k, j)), c: head0(&bone_name(k, j)), frac: s as f64 / (n + 1) as f64 });
+            }
+            bone_piece[k][j] = names.len();
+            chain.push(names.len());
+            kinds.push(Kind::Bone(k, j));
+            names.push(format!("{} {}", DIGIT[k], BONE[j]));
+            movers.push(Mover::Bone(bi(&bone_name(k, j))));
+            chains[k][j] = chain;
+        }
+    }
+    let n_p = names.len();
+    let mo = |h: &HandAt, i: usize| motion_of(h, h0, &movers[i]);
+    // A scale turns about its joint's centre: the bone after the joint must turn about that point
+    // relative to the bone before.
+    let pivot = (1..5)
+        .flat_map(|k| (0..3).map(move |j| (k, j)))
+        .map(|(k, j)| {
+            let hf = &hands[TS.len() - 1];
+            let c = head0(&bone_name(k, j));
+            let ab = rel(hf, bi(&before(k, j))).inverse().after(&rel(hf, bi(&bone_name(k, j))));
+            (Point3::from(ab.apply(c.coords)) - c).norm()
+        })
+        .fold(0.0, f64::max);
+    if pivot > 0.1 {
+        return Err(format!("a finger bone turns about a point {pivot:.2} mm off its joint's centre"));
+    }
+
+    // The laps: over each joint, one between each two pieces of its chain, each covering an equal
+    // share of the bend, its span split evenly either side.
     let mut laps: Vec<Lap> = Vec::new();
+    let mut first = [[0usize; 3]; 5];
     for k in 1..5 {
         for j in 0..3 {
             let bn = bone_name(k, j);
             let c = head0(&bn);
             let w = axis0(k, j);
-            let a_name = if j == 0 { format!("metacarpal{k}.R") } else { bone_name(k, j - 1) };
+            let a_name = before(k, j);
             let d = dir0(&a_name).cross(&w).normalize();
             let ap = w.cross(&d);
-            let half = 0.5 * (closed_to(k, j) + p.margin).to_radians();
-            let a = if j == 0 { 0 } else { piece_of(k, j - 1) };
+            let ch = &chains[k][j];
+            let n = ch.len() - 1;
+            let half = 0.5 * (closed_to(k, j) / n as f64 + p.margin).to_radians();
             // The back's skin above the joint, straight: the highest skin within 2 mm of the joint
             // along the bone and 4 mm across.
             let height = bone_verts(&finger_bones(k))
@@ -549,20 +653,23 @@ pub fn run(scan: &Path, out: &Path, fist: bool) -> Result<(), String> {
                 .filter(|q| q.dot(&ap).abs() < 2.0 && q.dot(&w).abs() < 4.0)
                 .map(|q| q.dot(&d))
                 .fold(f64::MIN, f64::max);
-            laps.push(Lap { k, j, a, b: piece_of(k, j), c, w, d, ap, alpha: half, beta: half, rho: 0.0, a_bone: bi(&a_name), b_bone: bi(&bn), height });
+            first[k][j] = laps.len();
+            for s in 0..n {
+                laps.push(Lap { k, j, n, a: ch[s], b: ch[s + 1], c, w, d, ap, alpha: half, beta: half, rho: 0.0, a_bone: bi(&a_name), b_bone: bi(&bn), height });
+            }
         }
     }
-    // Each lap's radius: clear of the liner over its two bones' skin under it, at every step: the
-    // liner's outside (the skin out along its normal by the foam), seen from each bone. Only the
-    // two bones' own skin: seen from a bone, skin two joints away swings round over its back as
-    // the finger bends.
+    // Each lap's radius: clear of the liner over its joint's two bones' skin under it, at every
+    // step: the liner's outside (the skin out along its normal by the foam), seen from each of its
+    // two pieces. Only the two bones' own skin: seen from a bone, skin two joints away swings
+    // round over its back as the finger bends.
     for lap in laps.iter_mut() {
         let own = bone_verts(&[rig.bones[lap.a_bone].name.clone(), rig.bones[lap.b_bone].name.clone()]);
         let (x0, x1) = lap_band(lap.k, lap.j);
         let mut rmax = 0.0f64;
         for (ti, h) in hands.iter().enumerate() {
-            for bone in [lap.a_bone, lap.b_bone] {
-                let back = rel(h, bone).inverse();
+            for piece in [lap.a, lap.b] {
+                let back = mo(h, piece).inverse();
                 for &i in &own {
                     let q = Point3::from(back.apply((h.skin[i] + nrms[ti][i] * p.foam).coords));
                     let dq = q - lap.c;
@@ -578,112 +685,180 @@ pub fn run(scan: &Path, out: &Path, fist: bool) -> Result<(), String> {
         }
         lap.rho = rmax;
     }
-    // Nest them like a telescope: each joint's lap at least a wall and the clearance (and 1 mm,
-    // at the knuckle 3) wider than the next joint's toward the tip. On a short bone the lap behind and the lap in
-    // front of it overlap over it (round 1: the index's and the little finger's middle bones,
-    // with the hand straight), and three pieces stacked there only fit nested.
-    let mut raised: Vec<(usize, f64)> = Vec::new();
+    // Nest them. Over a joint, each lap's over piece a wall and the clearance outside the piece
+    // under it, about the one axis. Between two joints, only where their laps meet over the bone
+    // between them: there like a telescope, the inside of the joint nearer the wrist a wall, the
+    // clearance and 1 mm (3 at the knuckle) out from the next joint's outermost lap. Round 1
+    // nested every joint so: its laps, each covering a whole joint's bend, met over the short
+    // middle bones.
+    let over = p.wall + p.clear;
+    let nest_in = |laps: &mut [Lap], f: usize| {
+        for s in (0..laps[f].n - 1).rev() {
+            laps[f + s].rho = laps[f + s].rho.max(laps[f + s + 1].rho + over);
+        }
+    };
+    // Whether the laps over joint j (first lap `fa`) and joint j + 1 (`fb`) meet over the bone
+    // between them, in its frame: any point within joint j's reach forward and between its
+    // innermost inside and outermost outside, and likewise within joint j + 1's reach back.
+    let meets = |laps: &[Lap], fa: usize, fb: usize| {
+        let (la, lb) = (&laps[fa], &laps[fb]);
+        let (a_in, a_out) = (laps[fa + la.n - 1].rho, la.rho + over + p.wall);
+        let (b_in, b_out) = (laps[fb + lb.n - 1].rho, lb.rho + over + p.wall);
+        let (hi, lo) = (la.alpha + EXT.to_radians(), -lb.beta - EXT.to_radians());
+        let len = (lb.c - la.c).norm();
+        (0..=((len + 20.0) / 0.25) as usize).any(|ix| {
+            (0..=200usize).any(|iy| {
+                let q = la.c + la.ap * (-10.0 + ix as f64 * 0.25) + la.d * (iy as f64 * 0.25);
+                let (qa, qb) = (q - la.c, q - lb.c);
+                let (ra, rb) = (Rev::radius(&la.c, &la.w, &q), Rev::radius(&lb.c, &lb.w, &q));
+                qa.dot(&la.ap).atan2(qa.dot(&la.d)) <= hi && (a_in..=a_out).contains(&ra) && qb.dot(&lb.ap).atan2(qb.dot(&lb.d)) >= lo && (b_in..=b_out).contains(&rb)
+            })
+        })
+    };
+    // Where they meet, how far along the bone each joint's pieces reach with the hand straight:
+    // forward of joint j, its outer pieces' front edges (their outermost corner); back of joint
+    // j + 1, the bone's piece's inside over the back edges of the pieces under it. A trial
+    // splitting the bone's piece between the two (each joint's lap shaping its own side) bound
+    // with the hand straight on the little finger's middle bone and left a slot at the step.
+    let reach = |laps: &[Lap], fa: usize, fb: usize| {
+        let (la, lb) = (&laps[fa], &laps[fb]);
+        let u = (lb.c - la.c).normalize();
+        let corner_a = la.c + (la.d * la.alpha.cos() + la.ap * la.alpha.sin()) * (la.rho + over + p.wall);
+        let corner_b = lb.c + (lb.d * lb.beta.cos() - lb.ap * lb.beta.sin()) * (lb.rho + over);
+        ((corner_a - la.c).dot(&u), (lb.c - corner_b).dot(&u), (lb.c - la.c).norm())
+    };
+    let mut raised: Vec<(usize, usize, f64, (f64, f64, f64))> = Vec::new();
+    let mut apart: Vec<(usize, usize)> = Vec::new();
     for k in 1..5 {
-        for j in (0..2).rev() {
-            let next = laps.iter().find(|l| l.k == k && l.j == j + 1).map(|l| l.rho).unwrap_or(0.0);
-            let l = laps.iter_mut().find(|l| l.k == k && l.j == j).unwrap();
-            // The knuckle by 3 mm: with the hand straight, the back plate's front edge met the next lap's
-            // back end on the index's first piece at 1 mm (round 1, run 11).
-            let need = next + p.wall + p.clear + if j == 0 { 3.0 } else { 1.0 };
-            if l.rho < need {
-                raised.push((laps_index(k, j), need - l.rho));
-                l.rho = need;
+        for j in (0..3).rev() {
+            let f = first[k][j];
+            nest_in(&mut laps, f);
+            if j == 2 {
+                continue;
+            }
+            let fb = first[k][j + 1];
+            if !meets(&laps, f, fb) {
+                apart.push((k, j));
+                continue;
+            }
+            let r = reach(&laps, f, fb);
+            let last = f + laps[f].n - 1;
+            let need = laps[fb].rho + over + if j == 0 { 3.0 } else { 1.0 };
+            if laps[last].rho < need {
+                raised.push((k, j, need - laps[last].rho, r));
+                laps[last].rho = need;
+                nest_in(&mut laps, f);
             }
         }
     }
 
     // The pieces.
-    let over = p.wall + p.clear;
     let front = |l: &Lap| (l.c, l.d * l.alpha.sin() - l.ap * l.alpha.cos());
     let back = |l: &Lap| (l.c, l.d * l.beta.sin() + l.ap * l.beta.cos());
-    let lap_at = |k: usize, j: usize| laps.iter().find(|l| l.k == k && l.j == j).unwrap();
+    // Below a joint's axis the pieces of the bones either side come down its sides (a scale has
+    // none), and there they turn toward each other by the joint's whole bend: their edges there
+    // reach to `low` either side of straight down, half the guard and EXT. A plane through the
+    // axis at an edge's angle also cuts below it, so with the shorter laps of round 2 their sides
+    // met below the axis at the grip (round 2, run 1).
+    let low = |l: &Lap| 0.5 * (lim(l.k, l.j) + EXT).to_radians();
+    let front_low = |l: &Lap| {
+        let a = low(l).max(l.alpha);
+        (l.c, l.d * a.sin() - l.ap * a.cos())
+    };
+    let back_low = |l: &Lap| {
+        let a = low(l).max(l.beta);
+        (l.c, l.d * a.sin() + l.ap * a.cos())
+    };
+    let lap_first = |k: usize, j: usize| &laps[first[k][j]];
+    let lap_last = |k: usize, j: usize| &laps[first[k][j] + laps[first[k][j]].n - 1];
     let zone_of = |l: &Lap, r: f64| {
         let (x0, x1) = lap_band(l.k, l.j);
         LapZone { rev: Rev { c: l.c, w: l.w, r }, d: l.d, ap: l.ap, lo: -l.beta - EXT.to_radians(), hi: l.alpha + EXT.to_radians(), x0, x1 }
     };
     let mut pieces: Vec<Piece> = Vec::new();
-    {
-        // The back plate: per finger, its edge that finger's knuckle lap and its sides down to
-        // `down` below that finger's metacarpal; at the wrist, short of the cuff.
-        let h = upper::hand_frame(&b, raw, &h0.mo);
-        let halves = vec![
-            (h.wr + h.axis * p.cuff, h.axis),
-            (Point3::from(e * (s * (yr(1, 0).0 - p.side_out))), e * s),
-            (Point3::from(e * (s * (yr(4, 0).1 + p.side_out))), -e * s),
-        ];
-        let mut zones = Vec::new();
-        let mut lz = Vec::new();
-        for k in 1..5 {
-            let l = lap_at(k, 0);
-            let lo = if k > 1 { bnd(k - 1) } else { s * (yr(1, 0).0 - 1e4) };
-            let hi = if k < 4 { bnd(k) } else { s * (yr(4, 0).1 + 1e4) };
-            let (pp, n) = front(l);
-            zones.push(Zone { x0: lo.min(hi), x1: lo.max(hi), p: pp, n, side_p: l.c - l.d * p.down, side_n: l.d, lap: k - 1 });
-            lz.push(zone_of(l, l.rho + over));
-        }
-        zones.sort_by(|a, b| a.x0.partial_cmp(&b.x0).unwrap());
-        let bone = bi("metacarpal2.R");
-        let (lo, hi) = bbox(&bone_verts(&plate_bones).iter().map(|&i| h0.skin[i]).collect::<Vec<_>>());
+    for (i, kind) in kinds.iter().enumerate() {
         let mg = Vector3::repeat(30.0);
-        pieces.push(Piece { name: "back of the hand".into(), bone, skin: sdfs[0].clone(), to_build: rel(hb, bone), halves, band: None, zones, e, laps: lz, down: p.down, lo: lo - mg, hi: hi + mg, foam: p.foam, wall: p.wall });
+        let base_piece = |skin: &Sdf, halves, band, zones, laps, lo: Point3<f64>, hi: Point3<f64>| Piece {
+            name: names[i].clone(),
+            skin: skin.clone(),
+            to_build: mo(hb, i),
+            halves,
+            band,
+            zones,
+            e,
+            laps,
+            down: p.down,
+            lo: lo - mg,
+            hi: hi + mg,
+            foam: p.foam,
+            wall: p.wall,
+        };
+        pieces.push(match *kind {
+            // The back plate: per finger, its edge that finger's knuckle lap and its sides down to
+            // `down` below that finger's metacarpal; at the wrist, short of the cuff.
+            Kind::Plate => {
+                let h = upper::hand_frame(&b, raw, &h0.mo);
+                let halves = vec![
+                    (h.wr + h.axis * p.cuff, h.axis),
+                    (Point3::from(e * (s * (yr(1, 0).0 - p.side_out))), e * s),
+                    (Point3::from(e * (s * (yr(4, 0).1 + p.side_out))), -e * s),
+                ];
+                let mut zones = Vec::new();
+                let mut lz = Vec::new();
+                for k in 1..5 {
+                    let l = lap_first(k, 0);
+                    let lo = if k > 1 { bnd(k - 1) } else { s * (yr(1, 0).0 - 1e4) };
+                    let hi = if k < 4 { bnd(k) } else { s * (yr(4, 0).1 + 1e4) };
+                    let (pp, n) = front(l);
+                    let (low_p, low_n) = front_low(l);
+                    zones.push(Zone { x0: lo.min(hi), x1: lo.max(hi), p: pp, n, side_p: l.c - l.d * p.down, side_n: l.d, low_p, low_n, lap: k - 1 });
+                    lz.push(zone_of(l, l.rho + over));
+                }
+                zones.sort_by(|a, b| a.x0.partial_cmp(&b.x0).unwrap());
+                let (lo, hi) = bbox(&bone_verts(&plate_bones).iter().map(|&i| h0.skin[i]).collect::<Vec<_>>());
+                base_piece(&sdfs[0], halves, None, zones, lz, lo, hi)
+            }
+            // A bone's: under its joint nearer the wrist, over the one nearer the tip.
+            Kind::Bone(k, j) => {
+                let bn = bone_name(k, j);
+                let (h, t) = (head0(&bn), tail0(&bn));
+                let l = lap_last(k, j);
+                let mut halves = vec![back(l), back_low(l)];
+                let mut lz = vec![zone_of(l, l.rho)];
+                if j < 2 {
+                    let l = lap_first(k, j + 1);
+                    halves.push(front(l));
+                    halves.push(front_low(l));
+                    lz.push(zone_of(l, l.rho + over));
+                } else {
+                    halves.push((t + (t - h).normalize() * p.tip, -(t - h).normalize()));
+                }
+                let (lo, hi) = bbox(&[h, t]);
+                base_piece(&sdfs[k], halves, Some(band_at(k, j)), Vec::new(), lz, lo, hi)
+            }
+            // A scale: under the lap behind it, over the one in front, across its joint's lap
+            // strip.
+            Kind::Scale(k, j, s) => {
+                let (lb, la) = (&laps[first[k][j] + s - 1], &laps[first[k][j] + s]);
+                let c = lb.c;
+                base_piece(&sdfs[k], vec![back(lb), front(la)], Some(lap_band(k, j)), Vec::new(), vec![zone_of(lb, lb.rho), zone_of(la, la.rho + over)], c - Vector3::repeat(5.0), c + Vector3::repeat(5.0))
+            }
+        });
     }
-    for k in 1..5 {
-        for j in 0..3 {
-            let bn = bone_name(k, j);
-            let bone = bi(&bn);
-            let (h, t) = (head0(&bn), tail0(&bn));
-            let a = (t - h).normalize();
-            let (lo_x, hi_x) = band_at(k, j);
-            let mut halves = Vec::new();
-            // Under at the joint nearer the wrist, over at the one nearer the tip.
-            let l = lap_at(k, j);
-            halves.push(back(l));
-            let mut lz = vec![zone_of(l, l.rho)];
-            if j < 2 {
-                let l = lap_at(k, j + 1);
-                halves.push(front(l));
-                lz.push(zone_of(l, l.rho + over));
-            } else {
-                halves.push((t + a * p.tip, -a));
+    // The skin each piece sits over: its own bone's and, where it laps, its neighbours'; a
+    // scale's, its joint's two bones'.
+    let piece_verts: Vec<Vec<usize>> = kinds
+        .iter()
+        .map(|kind| match *kind {
+            Kind::Plate => bone_verts(&plate_bones),
+            Kind::Bone(k, j) => {
+                let mut v = vec![bone_name(k, j), before(k, j)];
+                if j < 2 {
+                    v.push(bone_name(k, j + 1));
+                }
+                bone_verts(&v)
             }
-            let mg = Vector3::repeat(30.0);
-            let (lo, hi) = bbox(&[h, t]);
-            pieces.push(Piece {
-                name: format!("{} {}", DIGIT[k], BONE[j]),
-                bone,
-                skin: sdfs[k].clone(),
-                to_build: rel(hb, bone),
-                halves,
-                band: Some((lo_x, hi_x)),
-                zones: Vec::new(),
-                e,
-                laps: lz,
-                down: p.down,
-                lo: lo - mg,
-                hi: hi + mg,
-                foam: p.foam,
-                wall: p.wall,
-            });
-        }
-    }
-    let n_p = pieces.len();
-    // The skin each piece sits over: its own bone's and, where it laps, its neighbours'.
-    let piece_verts: Vec<Vec<usize>> = (0..n_p)
-        .map(|i| {
-            if i == 0 {
-                return bone_verts(&plate_bones);
-            }
-            let (k, j) = (1 + (i - 1) / 3, (i - 1) % 3);
-            let mut v = vec![bone_name(k, j), if j > 0 { bone_name(k, j - 1) } else { format!("metacarpal{k}.R") }];
-            if j < 2 {
-                v.push(bone_name(k, j + 1));
-            }
-            bone_verts(&v)
+            Kind::Scale(k, j, _) => bone_verts(&[before(k, j), bone_name(k, j)]),
         })
         .collect();
 
@@ -704,7 +879,7 @@ pub fn run(scan: &Path, out: &Path, fist: bool) -> Result<(), String> {
     }
 
     // Each piece's motion at each step, and its mesh there.
-    let rels: Vec<Vec<Motion>> = hands.iter().map(|h| pieces.iter().map(|pc| rel(h, pc.bone)).collect()).collect();
+    let rels: Vec<Vec<Motion>> = hands.iter().map(|h| (0..n_p).map(|i| mo(h, i)).collect()).collect();
     let posed: Vec<Vec<IndexedMesh>> = rels.iter().map(|rs| meshes.iter().zip(rs).map(|(mm, r)| moved(mm, r)).collect()).collect();
     let boxes: Vec<Vec<(Point3<f64>, Point3<f64>)>> = posed.iter().map(|ms| ms.iter().map(|mm| bbox(&mm.vertices)).collect()).collect();
     // Where a point is at a step: the nearest joint centre.
@@ -714,38 +889,36 @@ pub fn run(scan: &Path, out: &Path, fist: bool) -> Result<(), String> {
     };
 
     // Check 1: the laps stay closed. From each joint's centre (and 5 mm either side along its
-    // axis), rays over its back, from where the under piece's edge is with the hand straight to
-    // where the over piece's edge is at this step; each must meet a piece within 40 mm.
+    // axis), rays over its back, from where the first under piece's edge is with the hand
+    // straight to where the last over piece's edge is at this step; each must meet one of the
+    // joint's pieces within 40 mm.
     let t2 = Instant::now();
     let debug = std::env::var("GLOVE_DEBUG").is_ok();
-    let gaps: Vec<Vec<f64>> = par_map(&laps, threads, |l| {
+    let joints: Vec<(usize, usize)> = (1..5).flat_map(|k| (0..3).map(move |j| (k, j))).collect();
+    let gaps: Vec<Vec<f64>> = par_map(&joints, threads, |&(k, j)| {
+        let (l0, ll) = (lap_first(k, j), lap_last(k, j));
+        let ch = &chains[k][j];
         hands
             .iter()
             .enumerate()
             .map(|(ti, h)| {
-                let theta = h.th[l.k][l.j].to_radians();
-                let a2b = rels[ti][l.b].inverse().after(&rels[ti][l.a]);
-                let (pa, pb) = (&pieces[l.a], &pieces[l.b]);
+                let theta = h.th[k][j].to_radians();
+                let to: Vec<Motion> = ch.iter().map(|&i| rels[ti][i].inverse().after(&rels[ti][ch[0]])).collect();
                 let step = 2.0f64.to_radians();
-                let n = ((l.alpha + l.beta + theta) / step).ceil() as usize;
+                let n = ((l0.beta + ll.alpha + theta) / step).ceil() as usize;
                 let mut worst = 0.0f64;
                 for dx in [-5.0, 0.0, 5.0] {
-                    let o = l.c + l.w * dx;
+                    let o = l0.c + l0.w * dx;
                     let (mut run, mut best) = (0usize, 0usize);
                     for i in 0..=n {
-                        let psi = -l.beta + i as f64 * step;
-                        let dir = l.d * psi.cos() + l.ap * psi.sin();
+                        let psi = -l0.beta + i as f64 * step;
+                        let dir = l0.d * psi.cos() + l0.ap * psi.sin();
                         let hit = (0..=80).any(|r| {
                             let q = o + dir * (0.5 * r as f64);
-                            pa.eval(q) < 0.0 || pb.eval(Point3::from(a2b.apply(q.coords))) < 0.0
+                            ch.iter().zip(&to).any(|(&pi, t)| pieces[pi].eval(Point3::from(t.apply(q.coords))) < 0.0)
                         });
-                        if !hit && debug && ti == 2 {
-                            let probe = |r: f64| {
-                                let q = o + dir * r;
-                                let qb = Point3::from(a2b.apply(q.coords));
-                                format!("r {r:.1}: A cut {:.2} env {:.2} | B cut {:.2} env {:.2}", pa.cut(&q), pa.envelope(&q), pb.cut(&qb), pb.envelope(&qb))
-                            };
-                            println!("  gap {} step {:.2} dx {dx:+.0} psi {:.0}: {} ; {}", joint_name(l.k, l.j), TS[ti], psi.to_degrees(), probe(l.rho + 0.5 * p.wall), probe(l.rho + over + 0.5 * p.wall));
+                        if !hit && debug {
+                            println!("  gap {} step {:.2} dx {dx:+.0} psi {:.0}", joint_name(k, j), TS[ti], psi.to_degrees());
                         }
                         if hit {
                             best = best.max(run);
@@ -857,7 +1030,18 @@ pub fn run(scan: &Path, out: &Path, fist: bool) -> Result<(), String> {
         println!("{s}");
         lines.push(s);
     };
-    say(format!("glove round 1 (track U2): the hard pieces on the right hand closed on the shaft ({})", scan.display()));
+    let n_scales = |j: usize| match p.scales[j] {
+        0 => "none".to_string(),
+        1 => "one".to_string(),
+        n => format!("{n}"),
+    };
+    say(format!(
+        "glove round 2 (track U2): the hard pieces on the right hand closed on the shaft, scales over each knuckle / middle joint / end joint: {} / {} / {} ({})",
+        n_scales(0),
+        n_scales(1),
+        n_scales(2),
+        scan.display()
+    ));
     say(format!(
         "  liner foam {:.0} mm, wall {:.0} mm (PA 12), {:.0} mm between sliding pieces, laps {:.0} deg past the bend each covers ({}), down the sides {:.0} mm below the joints' line (placeholders)",
         p.foam,
@@ -865,7 +1049,7 @@ pub fn run(scan: &Path, out: &Path, fist: bool) -> Result<(), String> {
         p.clear,
         p.margin,
         match p.grip_plus {
-            Some(g) => format!("each joint's bend on the shaft + {g:.0} deg: beyond, in a fist, the laps open over the liner"),
+            Some(g) => format!("each joint's bend on the shaft + {g:.0} deg; past that, toward a fist, a lap may open over the liner"),
             None => "each joint's full bend, to a fist".into(),
         },
         p.down
@@ -875,34 +1059,54 @@ pub fn run(scan: &Path, out: &Path, fist: bool) -> Result<(), String> {
         p.side_gap,
         (1..5).map(|k| format!("{} {:+.1} mm", DIGIT[k], fan[k - 1])).collect::<Vec<_>>().join(", ")
     ));
+    say(format!(
+        "  the fingers' bones, joint to joint (the distal to the rig's bone end), proximal / middle / distal: {} mm",
+        (1..5)
+            .map(|k| format!("{} {}", DIGIT[k], (0..3).map(|j| format!("{:.1}", (tail0(&bone_name(k, j)) - head0(&bone_name(k, j))).norm())).collect::<Vec<_>>().join(" / ")))
+            .collect::<Vec<_>>()
+            .join(", ")
+    ));
     say("  the sweep: straight (0), the grip (1, where the pieces are built), a fist (2: every joint at its guard)".into());
     say(format!("  {n_p} hard pieces, {:.1} g together (PA 12, {:.2} g/cm3):", grams.iter().sum::<f64>(), PA12_MJF.density / 1000.0));
     for (i, pc) in pieces.iter().enumerate() {
-        say(format!("    {:<22} {:>5.1} g", pc.name, grams[i]));
+        say(format!("    {:<26} {:>5.1} g", pc.name, grams[i]));
     }
-    say("  the laps (over piece / under piece, cylinders about each joint's axis): the under piece's inside radius (clear of the liner), the back's skin over the joint's centre, how far the lap stands proud of the pieces either side, its reach either side of the joint and the bend it stays closed to:".into());
-    for l in &laps {
-        let body_top = l.height + p.foam + p.wall;
-        let lap_top = l.rho + 2.0 * p.wall + p.clear;
+    say("  over each joint, its pieces from the wrist side, each lapping over the next (cylinders about the joint's axis): each under piece's inside radius (clear of the liner), the back's skin over the joint's centre, how far the stack stands proud of the pieces either side, each lap's reach either side of the joint and the bend the joint stays closed to:".into());
+    for &(k, j) in &joints {
+        let (f, n) = (first[k][j], lap_first(k, j).n);
+        let l0 = &laps[f];
+        let body_top = l0.height + p.foam + p.wall;
+        let top = l0.rho + over + p.wall;
         say(format!(
-            "    {:<20} {:<17} over {:<17}: radius {:>4.1} mm, skin {:.1} mm over the centre; proud by {:>4.1} mm; {:.0} deg either side of the joint, closed to {:.0} deg (on the shaft {:.0}, guard {:.0}){}",
-            joint_name(l.k, l.j),
-            pieces[l.a].name,
-            pieces[l.b].name,
-            l.rho,
-            l.height,
-            lap_top - body_top,
-            l.alpha.to_degrees(),
-            (l.alpha + l.beta).to_degrees() - p.margin,
-            grip.angles[l.k][l.j],
-            lim(l.k, l.j),
-            raised.iter().find(|r| r.0 == laps_index(l.k, l.j)).map_or(String::new(), |r| format!("; radius raised {:.1} mm to nest over the next lap", r.1))
+            "    {:<20} {}: radii {} mm, skin {:.1} mm over the centre; proud by {:>4.1} mm; each lap {:.0} deg either side, closed to {:.0} deg (on the shaft {:.0}, guard {:.0}){}",
+            joint_name(k, j),
+            chains[k][j].iter().map(|&i| pieces[i].name.as_str()).collect::<Vec<_>>().join(" over "),
+            laps[f..f + n].iter().map(|l| format!("{:.1}", l.rho)).collect::<Vec<_>>().join(" / "),
+            l0.height,
+            top - body_top,
+            l0.alpha.to_degrees(),
+            closed_to(k, j),
+            grip.angles[k][j],
+            lim(k, j),
+            raised.iter().find(|r| (r.0, r.1) == (k, j)).map_or(String::new(), |r| format!(
+                "; raised {:.1} mm to nest over the next joint's laps, which meet them over the {} bone: straight, this joint's pieces reach {:.1} mm along it and the next joint's {:.1} mm back, of {:.1} mm",
+                r.2,
+                BONE[j],
+                r.3.0,
+                r.3.1,
+                r.3.2
+            ))
         ));
     }
+    let apart_s: Vec<String> = apart.iter().map(|&(k, j)| format!("{} {}", DIGIT[k], BONE[j])).collect();
+    say(format!(
+        "  the laps over the joints either side of a bone stay apart over it (so need no nesting between them) on: {}",
+        if apart_s.is_empty() { "none".to_string() } else { apart_s.join(", ") }
+    ));
     say("  check 1, laps closed: the widest gap seen over each joint's back (deg), at each step of the sweep:".into());
     say(format!("    {:<20} {}", "", TS.iter().map(|t| format!("{t:>5.2}")).collect::<Vec<_>>().join("")));
-    for (l, g) in laps.iter().zip(&gaps) {
-        say(format!("    {:<20} {}", joint_name(l.k, l.j), g.iter().map(|x| format!("{x:>5.0}")).collect::<Vec<_>>().join("")));
+    for (&(k, j), g) in joints.iter().zip(&gaps) {
+        say(format!("    {:<20} {}", joint_name(k, j), g.iter().map(|x| format!("{x:>5.0}")).collect::<Vec<_>>().join("")));
     }
     say("  check 2, binding: at each step, the deepest any piece runs into another (mm), or how close the closest two come".into());
     let mut worst_all = (f64::MAX, 0usize, 0usize, 0usize);
@@ -935,16 +1139,16 @@ pub fn run(scan: &Path, out: &Path, fist: bool) -> Result<(), String> {
         s.sort_by(|a, b| a.partial_cmp(b).unwrap());
         (s.iter().sum::<f64>() / s.len() as f64, s[(0.9 * (s.len() - 1) as f64) as usize])
     };
-    say(format!("    {:<22} {:>5} {}", "", "points", TS.iter().map(|t| format!("{:>14}", format!("{t:.2}"))).collect::<Vec<_>>().join("")));
+    say(format!("    {:<26} {:>5} {}", "", "points", TS.iter().map(|t| format!("{:>15}", format!("{t:.2}"))).collect::<Vec<_>>().join("")));
     for (i, pc) in pieces.iter().enumerate() {
         let cells: Vec<String> = sits
             .iter()
             .map(|s| {
                 let (mean, p90) = stats(&s[i].stands);
-                format!("{:>14}", format!("{mean:.1}/{p90:.1} +{:.1}", s[i].press_max))
+                format!("{:>15}", format!("{mean:.1}/{p90:.1} +{:.1}", s[i].press_max))
             })
             .collect();
-        say(format!("    {:<22} {:>5} {}", pc.name, sits[BUILD][i].stands.len(), cells.join("")));
+        say(format!("    {:<26} {:>5} {}", pc.name, sits[BUILD][i].stands.len(), cells.join("")));
     }
     say("    (each step: mean / 90th percentile standing off, + the most pressing in)".into());
     for (i, pc) in pieces.iter().enumerate() {
@@ -965,7 +1169,18 @@ pub fn run(scan: &Path, out: &Path, fist: bool) -> Result<(), String> {
     let navy = [0.16, 0.20, 0.40];
     let blue = [0.32, 0.42, 0.68];
     let grey = [0.55, 0.55, 0.6];
-    let colour = |i: usize| if i == 0 || (i - 1) % 2 == 1 { navy } else { blue };
+    let light = [0.58, 0.70, 0.92];
+    let colour = |i: usize| match kinds[i] {
+        Kind::Plate => navy,
+        Kind::Bone(_, j) => {
+            if j % 2 == 0 {
+                blue
+            } else {
+                navy
+            }
+        }
+        Kind::Scale(..) => light,
+    };
     let h = upper::hand_frame(&b, raw, &h0.mo);
     let wrist_cut = |mm: &IndexedMesh| clip_mesh_against_plane(mm, h.wr - h.axis * 40.0, h.axis);
     let views = [View::looking(h.palm, h.axis), View::looking(-h.across, h.axis), View::looking(h.across, h.axis)];
@@ -990,7 +1205,7 @@ pub fn run(scan: &Path, out: &Path, fist: bool) -> Result<(), String> {
             let shift = Motion { r: nalgebra::Rotation3::identity(), t: h.axis * (230.0 * slot as f64) };
             keep.push(moved(&section_lines(&wrist_cut(&quad_mesh(&hands[ti].skin, &quads)), cut_p, e, 0.8), &shift));
             cols.push([0.6, 0.4, 0.3]);
-            for i in [0usize, piece_of(2, 0), piece_of(2, 1), piece_of(2, 2)] {
+            for i in (0..n_p).filter(|&i| matches!(kinds[i], Kind::Plate | Kind::Bone(2, _) | Kind::Scale(2, _, _))) {
                 keep.push(moved(&section_lines(&posed[ti][i], cut_p, e, 0.8), &shift));
                 cols.push(colour(i));
             }

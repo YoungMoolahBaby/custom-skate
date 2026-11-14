@@ -2159,8 +2159,11 @@ in a fist, they open over the liner), and laps closed to the full fist.
 | laps stand proud of the pieces either side: knuckles / middle joints / end joints | 17.0-18.2 / 11.1-12.7 / 7.3-8.6 mm | 17.8-19.8 / 11.1-12.7 / 7.7-8.6 mm |
 | laps closed | every lap, straight to the grip and on to step 1.5; in the fist the middle joints open 2-18° and the little knuckle 8° (as designed) | all but the index's and ring's middle joints, which leave a 4-6° sliver from the first step |
 | binding | none from step 0.25 to 1.25 (no point over 0.3 mm in); straight: the back plate 1.0 mm into the ring's first piece; from 1.5 on, toward the fist: the back plate and the index tip piece, 1.0 mm | the fist as the grip design (the plate and the index and little tip pieces); straight: the little's first and end pieces 1.0 mm, over its short middle bone; at 0.25 the index's first and middle pieces 1.0 mm |
-| empty space under each piece at the grip, mean / 90th percentile | 0.3-6.5 / 0.4-10.6 mm | 0.1-7.3 / 0.4-11.1 mm |
-| pressing into the liner | 0.8 mm at the grip (the back plate 2.0), up to 3.0 in the fist | the same |
+| empty space under each piece at the grip, mean / 90th percentile | 0.4-6.8 / 0.0-11.1 mm | 0.4-7.7 / 0.0-11.4 mm |
+| pressing into the liner | 0.2 mm at the grip, up to 3.0 in the fist | the same |
+
+(Corrected 2026-11-14 from the committed summaries: the empty space and pressing rows first
+carried an earlier run's numbers.)
 
 **What it says.**
 - **The scales work in principle**: laps over the joints that slide and stay closed from straight
@@ -2189,8 +2192,79 @@ about 21 pieces instead of 13. The other ways:
   and simplest, but the joints' backs only padded;
 - accept round 1's heights.
 
+Jon picked the extra pieces (2026-11-14): round 2, below.
+
+### Glove, round 2: a scale over every joint (2026-11-14)
+
+`cargo run --release -- glove <scan>` (`docs/glove/summary.txt`; with `fist`,
+`docs/glove/fist_laps/`; round 1's code and results are at commit 995b1b6). Over each finger
+joint a short scale lies between the two bones' pieces, under the one nearer the wrist and over
+the other, a cylinder about the joint's axis like them. It turns about the axis halfway between
+them, so each of the joint's two laps covers half its bend. What holds a scale at halfway (a pin
+on the axis at each side, or rivets sliding in slots as on armour's finger scales) is for a
+later round; each lap's 10° margin is how far a scale may drift before it opens. 25 hard pieces:
+the back plate, one over each finger bone, and 12 scales of 0.4-1.0 g.
+
+What it took:
+- **Scales at the end joints too.** Jon picked them for the knuckles and middle joints (21
+  pieces). Run that way, the index's and little finger's middle joints came out higher than in
+  round 1, 15.7 and 14.1 mm proud. Their middle bones are short (22.3 and 15.3 mm in the model),
+  and the end joints' laps, still each covering the whole bend, met theirs over them, so the
+  middle joints' had to nest over them. With a scale at the end joints too, the index's stay
+  apart (`GLOVE_SCALES=1,1,0` runs the 21-piece version).
+- **Nesting only where the laps meet.** Round 1 nested every joint over the next toward the tip.
+  Now only where two joints' laps meet over the bone between them: just the little finger's
+  middle bone. There the run reports how far each joint's pieces reach along it, straight:
+  6.8 mm from the middle joint and 5.8 mm back from the end joint, of 15.3 mm.
+- **The sides below each joint's axis.** With shorter laps, the bone pieces' sides either side of
+  a joint crossed below its axis at the grip (1 mm): each piece's edge was one plane through the
+  axis, at the lap's angle above it and so also below it. Now each piece's edge below the axis
+  is set by the joint's full bend.
+
+| | round 1 | round 2, laps closed to the grip + 15° | round 2, laps closed to a fist |
+|---|---|---|---|
+| hard pieces, PA 12 | 13, 68.4 g | 25, 62.0 g | 25, 66.6 g |
+| laps stand proud of the pieces either side: knuckles / middle joints / end joints | 17.0-18.2 / 11.1-12.7 / 7.3-8.6 mm | 7.5-8.4 / 7.2-7.9 (little 13.7) / 6.9-8.2 mm | 7.6-8.9 (little 22.8) / 7.4-8.5 (little 13.9) / 7.1-8.2 mm |
+| laps closed | to step 1.5; in the fist the middle joints open 2-18°, the little knuckle 8° | every lap at every step, but the little finger's middle joint in the fist (4°) | every lap at every step |
+| binding | straight, 1.0 mm (the back plate into the ring's first piece); none from 0.25 to 1.25 | none from straight to 1.25 | none over 0.3 mm from straight to 1.25 |
+| from step 1.5 toward the fist | the back plate and the index's and little finger's tip pieces, 1.0 mm (the model's fingers stay fanned) | the same | the same |
+| empty space under the bones' pieces at the grip, mean / 90th percentile | 0.4-6.8 / 0.0-11.1 mm | 0.3-2.4 / 0.1-8.8 mm | 0.1-3.1 / 0.0-9.4 mm |
+| under the scales at the grip | | 5.1-7.2 mm mean (the little middle joint's 11.3) | |
+| pressing into the liner | 0.2 mm at the grip, up to 3.0 in the fist | the same | the same |
+
+**What it says.**
+- **The joints come down to 7-8.5 mm proud, about the same over every joint**, half round 1's at
+  the knuckles. The glove is 6.4 g lighter, with 12 more parts.
+- **The laps stay closed even in a fist**, all but the little finger's middle joint (4°): each
+  lap covers half of the bend on the shaft plus 15°, then its 10° margin, which together reach
+  nearly to each joint's guard.
+  So the fist version buys almost nothing, and costs the little finger's knuckle (22.8 mm): with
+  each lap covering more, its laps meet over its short first bone (20.9 mm in the model) too.
+  **Keep the grip + 15° design.**
+- **Empty space:** under the bones' pieces at the grip, 0.3-2.4 mm on average (round 1, 0.4-6.8).
+  Under a scale, 5-7 mm when the joint is bent: the scale is the middle layer of three, a wall
+  and the clearance out from the piece under it.
+- **Open:**
+  - the little finger's middle joint (13.7 mm), nested over its end joint across a 15.3 mm
+    middle bone. The reaches above leave 2.7 mm between the two joints' pieces, so a piece split
+    between them could work. A trial (each joint's lap shaping its own side of the middle piece)
+    brought the joint to 7.3 mm, but left a slot at the step in the middle piece and a 0.7 mm
+    touch with the hand straight. To try again with a wall closing the step, and on Jon's own
+    hand, whose little finger won't be MakeHuman's;
+  - the joints' sides are open: a scale is a strip over the back, with no sides, so between the
+    pieces' sides each joint shows from the side. That matters on the index's and the little
+    finger's outer sides: for the outside's round;
+  - what holds each scale at halfway;
+  - the fanned fingers' tips into the back plate toward the fist, as in round 1.
+- **Model limits:** as round 1's.
+
+**U2 next:** the thumb's round (its joints turn about axes set by the stick in U2, not its own),
+then the elbow pad and the slash guard, then the outside's look.
+
 ## Open questions for Jon
 
+- Answered 2026-11-14, the glove's joints (U2, round 1): "extra pieces", a short scale over each
+  joint between the bones' pieces (round 2).
 - Answered 2026-11-14, the glove's cuff (U2): "yeah shorter glove then like a built in slash
   guard between that and the elbow pad. we should still keep a hockey glove style look though",
   on a retailer's photo of a TRUE Catalyst 5X3 glove (not kept). So a short cuff, a slash guard

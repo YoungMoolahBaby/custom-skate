@@ -1,73 +1,99 @@
-glove round 1 (track U2): the hard pieces on the right hand closed on the shaft (scans/stand-in/022_fBW_R.ply)
+glove round 2 (track U2): the hard pieces on the right hand closed on the shaft, scales over each knuckle / middle joint / end joint: one / one / one (scans/stand-in/022_fBW_R.ply)
   liner foam 6 mm, wall 2 mm (PA 12), 1 mm between sliding pieces, laps 10 deg past the bend each covers (each joint's full bend, to a fist), down the sides 6 mm below the joints' line (placeholders)
   the fingers' joints all turn about one direction across the hand (within 0.0 deg), so pieces on neighbouring fingers, kept 1 mm apart across it, never meet; the fingers fan out along it (knuckle to tip, toward the little finger) index -22.5 mm, middle +4.1 mm, ring +2.1 mm, little +20.8 mm
+  the fingers' bones, joint to joint (the distal to the rig's bone end), proximal / middle / distal: index 24.8 / 22.3 / 26.5, middle 34.1 / 26.9 / 26.4, ring 29.2 / 26.0 / 26.7, little 20.9 / 15.3 / 19.9 mm
   the sweep: straight (0), the grip (1, where the pieces are built), a fist (2: every joint at its guard)
-  13 hard pieces, 71.1 g together (PA 12, 1.01 g/cm3):
-    back of the hand        29.7 g
-    index proximal           5.4 g
-    index middle             4.6 g
-    index distal             4.8 g
-    middle proximal          4.4 g
-    middle middle            3.1 g
-    middle distal            2.5 g
-    ring proximal            2.7 g
-    ring middle              2.1 g
-    ring distal              1.5 g
-    little proximal          4.1 g
-    little middle            3.2 g
-    little distal            2.9 g
-  the laps (over piece / under piece, cylinders about each joint's axis): the under piece's inside radius (clear of the liner), the back's skin over the joint's centre, how far the lap stands proud of the pieces either side, its reach either side of the joint and the bend it stays closed to:
-    index knuckle        back of the hand  over index proximal   : radius 26.7 mm, skin 3.9 mm over the centre; proud by 19.8 mm; 50 deg either side of the joint, closed to 90 deg (on the shaft 67, guard 90)
-    index middle joint   index proximal    over index middle     : radius 19.1 mm, skin 3.4 mm over the centre; proud by 12.7 mm; 55 deg either side of the joint, closed to 100 deg (on the shaft 67, guard 100); radius raised 0.7 mm to nest over the next lap
-    index end joint      index middle      over index distal     : radius 15.1 mm, skin 3.7 mm over the centre; proud by  8.4 mm; 45 deg either side of the joint, closed to 80 deg (on the shaft 67, guard 80)
-    middle knuckle       back of the hand  over middle proximal  : radius 25.4 mm, skin 3.3 mm over the centre; proud by 19.0 mm; 50 deg either side of the joint, closed to 90 deg (on the shaft 71, guard 90)
-    middle middle joint  middle proximal   over middle middle    : radius 17.4 mm, skin 3.4 mm over the centre; proud by 11.1 mm; 55 deg either side of the joint, closed to 100 deg (on the shaft 71, guard 100); radius raised 0.3 mm to nest over the next lap
-    middle end joint     middle middle     over middle distal    : radius 13.4 mm, skin 2.7 mm over the centre; proud by  7.7 mm; 45 deg either side of the joint, closed to 80 deg (on the shaft 71, guard 80)
-    ring knuckle         back of the hand  over ring proximal    : radius 24.2 mm, skin 3.4 mm over the centre; proud by 17.8 mm; 50 deg either side of the joint, closed to 90 deg (on the shaft 65, guard 90)
-    ring middle joint    ring proximal     over ring middle      : radius 17.9 mm, skin 3.0 mm over the centre; proud by 11.9 mm; 55 deg either side of the joint, closed to 100 deg (on the shaft 65, guard 100); radius raised 1.7 mm to nest over the next lap
-    ring end joint       ring middle       over ring distal      : radius 13.9 mm, skin 2.3 mm over the centre; proud by  8.6 mm; 45 deg either side of the joint, closed to 80 deg (on the shaft 65, guard 80)
-    little knuckle       back of the hand  over little proximal  : radius 25.3 mm, skin 3.9 mm over the centre; proud by 18.4 mm; 50 deg either side of the joint, closed to 90 deg (on the shaft 55, guard 90); radius raised 2.6 mm to nest over the next lap
-    little middle joint  little proximal   over little middle    : radius 19.3 mm, skin 3.8 mm over the centre; proud by 12.6 mm; 55 deg either side of the joint, closed to 100 deg (on the shaft 55, guard 100)
-    little end joint     little middle     over little distal    : radius 15.0 mm, skin 3.6 mm over the centre; proud by  8.4 mm; 45 deg either side of the joint, closed to 80 deg (on the shaft 55, guard 80)
+  25 hard pieces, 66.6 g together (PA 12, 1.01 g/cm3):
+    back of the hand            25.6 g
+    index knuckle scale          1.1 g
+    index proximal               3.6 g
+    index middle joint scale     1.0 g
+    index middle                 3.4 g
+    index end joint scale        0.9 g
+    index distal                 4.1 g
+    middle knuckle scale         0.7 g
+    middle proximal              2.8 g
+    middle middle joint scale    0.7 g
+    middle middle                2.2 g
+    middle end joint scale       0.6 g
+    middle distal                2.2 g
+    ring knuckle scale           0.5 g
+    ring proximal                1.7 g
+    ring middle joint scale      0.5 g
+    ring middle                  1.5 g
+    ring end joint scale         0.4 g
+    ring distal                  1.2 g
+    little knuckle scale         1.8 g
+    little proximal              3.4 g
+    little middle joint scale    1.2 g
+    little middle                2.3 g
+    little end joint scale       0.7 g
+    little distal                2.4 g
+  over each joint, its pieces from the wrist side, each lapping over the next (cylinders about the joint's axis): each under piece's inside radius (clear of the liner), the back's skin over the joint's centre, how far the stack stands proud of the pieces either side, each lap's reach either side of the joint and the bend the joint stays closed to:
+    index knuckle        back of the hand over index knuckle scale over index proximal: radii 15.8 / 12.8 mm, skin 3.9 mm over the centre; proud by  8.9 mm; each lap 28 deg either side, closed to 90 deg (on the shaft 67, guard 90)
+    index middle joint   index proximal over index middle joint scale over index middle: radii 14.9 / 11.9 mm, skin 3.4 mm over the centre; proud by  8.5 mm; each lap 30 deg either side, closed to 100 deg (on the shaft 67, guard 100)
+    index end joint      index middle over index end joint scale over index distal: radii 14.4 / 11.4 mm, skin 3.7 mm over the centre; proud by  7.7 mm; each lap 25 deg either side, closed to 80 deg (on the shaft 67, guard 80)
+    middle knuckle       back of the hand over middle knuckle scale over middle proximal: radii 14.8 / 11.8 mm, skin 3.3 mm over the centre; proud by  8.5 mm; each lap 28 deg either side, closed to 90 deg (on the shaft 71, guard 90)
+    middle middle joint  middle proximal over middle middle joint scale over middle middle: radii 14.1 / 11.1 mm, skin 3.4 mm over the centre; proud by  7.7 mm; each lap 30 deg either side, closed to 100 deg (on the shaft 71, guard 100)
+    middle end joint     middle middle over middle end joint scale over middle distal: radii 13.7 / 10.7 mm, skin 2.7 mm over the centre; proud by  8.0 mm; each lap 25 deg either side, closed to 80 deg (on the shaft 71, guard 80)
+    ring knuckle         back of the hand over ring knuckle scale over ring proximal: radii 14.0 / 10.9 mm, skin 3.4 mm over the centre; proud by  7.6 mm; each lap 28 deg either side, closed to 90 deg (on the shaft 65, guard 90)
+    ring middle joint    ring proximal over ring middle joint scale over ring middle: radii 13.4 / 10.4 mm, skin 3.0 mm over the centre; proud by  7.4 mm; each lap 30 deg either side, closed to 100 deg (on the shaft 65, guard 100)
+    ring end joint       ring middle over ring end joint scale over ring distal: radii 13.6 / 10.6 mm, skin 2.3 mm over the centre; proud by  8.2 mm; each lap 25 deg either side, closed to 80 deg (on the shaft 65, guard 80)
+    little knuckle       back of the hand over little knuckle scale over little proximal: radii 29.7 / 26.7 mm, skin 3.9 mm over the centre; proud by 22.8 mm; each lap 28 deg either side, closed to 90 deg (on the shaft 55, guard 90); raised 14.2 mm to nest over the next joint's laps, which meet them over the proximal bone: straight, this joint's pieces reach 8.8 mm along it and the next joint's 11.0 mm back, of 20.9 mm
+    little middle joint  little proximal over little middle joint scale over little middle: radii 20.7 / 17.7 mm, skin 3.8 mm over the centre; proud by 13.9 mm; each lap 30 deg either side, closed to 100 deg (on the shaft 55, guard 100); raised 5.7 mm to nest over the next joint's laps, which meet them over the middle bone: straight, this joint's pieces reach 9.3 mm along it and the next joint's 6.6 mm back, of 15.3 mm
+    little end joint     little middle over little end joint scale over little distal: radii 13.7 / 10.7 mm, skin 3.6 mm over the centre; proud by  7.1 mm; each lap 25 deg either side, closed to 80 deg (on the shaft 55, guard 80)
+  the laps over the joints either side of a bone stay apart over it (so need no nesting between them) on: index middle, index proximal, middle middle, middle proximal, ring middle, ring proximal
   check 1, laps closed: the widest gap seen over each joint's back (deg), at each step of the sweep:
                           0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00
     index knuckle            0    0    0    0    0    0    0    0    0
-    index middle joint       0    6    6    6    6    6    6    6    6
+    index middle joint       0    0    0    0    0    0    0    0    0
     index end joint          0    0    0    0    0    0    0    0    0
     middle knuckle           0    0    0    0    0    0    0    0    0
     middle middle joint      0    0    0    0    0    0    0    0    0
     middle end joint         0    0    0    0    0    0    0    0    0
     ring knuckle             0    0    0    0    0    0    0    0    0
-    ring middle joint        0    4    4    4    4    4    4    4    4
+    ring middle joint        0    0    0    0    0    0    0    0    0
     ring end joint           0    0    0    0    0    0    0    0    0
     little knuckle           0    0    0    0    0    0    0    0    0
     little middle joint      0    0    0    0    0    0    0    0    0
     little end joint         0    0    0    0    0    0    0    0    0
   check 2, binding: at each step, the deepest any piece runs into another (mm), or how close the closest two come
-    step 0.00: 1.0 mm (356 of its surface points over 0.3 mm in), little proximal into little distal, 18 mm from the little end joint's centre
-    step 0.25: 1.0 mm (250 of its surface points over 0.3 mm in), index proximal into index middle, 20 mm from the index end joint's centre
-    step 0.50: 0.0 mm (0 of its surface points over 0.3 mm in), middle middle into middle distal, 14 mm from the middle end joint's centre
-    step 0.75: 0.0 mm (0 of its surface points over 0.3 mm in), middle middle into middle distal, 14 mm from the middle end joint's centre
-    step 1.00: 0.0 mm (0 of its surface points over 0.3 mm in), middle middle into middle distal, 14 mm from the middle end joint's centre
-    step 1.25: 0.0 mm (0 of its surface points over 0.3 mm in), little proximal into back of the hand, 15 mm from the little knuckle's centre
-    step 1.50: 1.0 mm (70 of its surface points over 0.3 mm in), index distal into back of the hand, 28 mm from the index end joint's centre
-    step 1.75: 1.0 mm (163 of its surface points over 0.3 mm in), back of the hand into index distal, 25 mm from the index end joint's centre
-    step 2.00: 1.0 mm (203 of its surface points over 0.3 mm in), back of the hand into little distal, 21 mm from the little end joint's centre
+    step 0.00: 0.2 mm (0 of its surface points over 0.3 mm in), little middle into little middle joint scale, 20 mm from the ring middle joint's centre
+    step 0.25: 0.0 mm (0 of its surface points over 0.3 mm in), index distal into index middle, 16 mm from the index end joint's centre
+    step 0.50: 0.0 mm (0 of its surface points over 0.3 mm in), index middle into index proximal, 17 mm from the index middle joint's centre
+    step 0.75: 0.0 mm (0 of its surface points over 0.3 mm in), index middle into index proximal, 16 mm from the index middle joint's centre
+    step 1.00: 0.0 mm (0 of its surface points over 0.3 mm in), little proximal into back of the hand, 15 mm from the little knuckle's centre
+    step 1.25: 0.0 mm (0 of its surface points over 0.3 mm in), index middle into index proximal, 16 mm from the index middle joint's centre
+    step 1.50: 1.0 mm (64 of its surface points over 0.3 mm in), index distal into back of the hand, 28 mm from the index end joint's centre
+    step 1.75: 1.0 mm (218 of its surface points over 0.3 mm in), index distal into back of the hand, 27 mm from the index knuckle's centre
+    step 2.00: 1.0 mm (390 of its surface points over 0.3 mm in), back of the hand into index distal, 25 mm from the index knuckle's centre
   check 3, the fit on the liner: how far each piece stands off the liner (empty space) at each step, mean / 90th percentile over the skin points under it, and the most it presses into it (mm):
-                           points           0.00          0.25          0.50          0.75          1.00          1.25          1.50          1.75          2.00
-    back of the hand        1326   0.4/0.9 +2.2  0.4/0.6 +2.0  0.3/0.4 +2.2  0.3/0.2 +2.0  0.4/0.0 +0.2  0.4/0.0 +0.5  0.4/0.0 +1.0  0.6/0.2 +1.8  0.7/0.8 +2.2
-    index proximal           306   1.2/4.4 +1.5  0.6/0.8 +1.0  0.2/0.4 +0.8  0.3/0.3 +0.5  0.5/0.0 +0.2  0.7/0.9 +0.8  0.8/2.6 +1.5  0.7/2.4 +1.8  0.9/2.9 +2.2
-    index middle             506  5.1/10.5 +0.2 5.3/10.8 +0.2 4.9/10.9 +0.2 4.8/10.8 +0.2 4.3/10.7 +0.2 3.9/10.6 +0.8 3.9/10.7 +1.8 4.0/10.7 +2.8 4.1/10.9 +3.0
-    index distal            1297   1.8/6.4 +0.8  1.8/6.5 +0.8  1.6/6.2 +0.8  1.5/6.0 +0.5  1.5/6.1 +0.2  1.5/6.1 +0.5  1.5/6.1 +1.0  1.5/6.1 +1.5  1.5/6.1 +2.0
-    middle proximal          187   1.3/2.1 +0.2  1.7/8.3 +0.2  1.8/8.6 +0.2  2.2/9.7 +0.2 2.4/10.5 +0.2 2.3/10.5 +0.2 2.9/10.9 +0.2 3.3/10.7 +0.5 3.2/10.3 +0.8
-    middle middle            291   4.7/9.2 +0.0  4.6/9.1 +0.0  4.8/9.3 +0.0  4.9/9.6 +0.0  5.1/9.6 +0.2  5.0/9.8 +0.2  5.0/9.9 +0.2 5.2/10.0 +0.5 5.3/10.2 +0.2
-    middle distal           1129   1.4/5.2 +0.5  1.3/5.1 +0.5  1.2/5.0 +0.2  1.1/5.0 +0.2  1.2/5.2 +0.2  1.2/5.3 +0.2  1.2/5.3 +0.5  1.3/5.4 +0.8  1.3/5.4 +0.8
-    ring proximal            114   2.1/8.6 +0.0 2.7/10.6 +0.0 2.9/10.7 +0.2 3.8/11.2 +0.2 3.9/11.4 +0.2 3.5/11.2 +0.2 3.7/11.3 +0.2 3.8/11.3 +0.2 4.3/11.4 +0.2
-    ring middle              162   7.3/9.8 +0.0  7.2/9.8 +0.0  7.3/9.8 +0.2 7.6/10.0 +0.2 7.7/10.1 +0.0 7.7/10.5 +0.2 7.6/10.3 +0.2 7.7/10.5 +0.2 7.8/10.6 +0.2
-    ring distal              662   1.5/5.9 +0.2  1.5/5.8 +0.2  1.4/5.7 +0.2  1.2/5.3 +0.2  1.2/5.0 +0.2  1.2/5.1 +0.2  1.2/5.0 +0.2  1.3/5.2 +0.2  1.4/5.5 +0.2
-    little proximal          177   1.6/8.2 +0.8  0.8/0.6 +0.8  0.1/0.4 +0.5  0.3/0.2 +0.5  0.6/0.4 +0.2  0.4/0.9 +0.5  1.1/3.5 +1.2  0.9/3.2 +2.0  0.7/2.5 +2.2
-    little middle            453  5.0/10.4 +0.2 5.7/10.9 +0.2 5.8/11.1 +0.2 5.7/11.1 +0.2 5.5/11.0 +0.2 5.1/11.0 +0.8 5.0/11.0 +1.5 4.9/11.1 +2.8 5.0/11.1 +2.8
-    little distal           1330   2.0/6.7 +0.2  1.8/6.7 +0.2  1.6/6.5 +0.2  1.4/6.2 +0.2  1.4/6.3 +0.2  1.4/6.4 +0.5  1.5/6.6 +1.0  1.6/6.8 +1.2  1.6/6.9 +1.8
+                               points            0.00           0.25           0.50           0.75           1.00           1.25           1.50           1.75           2.00
+    back of the hand            1609    0.6/1.4 +2.2   0.5/1.1 +2.0   0.5/0.7 +2.2   0.4/0.3 +2.0   0.4/0.0 +0.2   0.4/0.0 +0.5   0.5/0.0 +1.0   0.6/0.2 +1.8   0.8/3.3 +2.2
+    index knuckle scale           38    5.0/8.7 +0.0   6.2/9.0 +0.0   6.5/8.7 +0.0   7.1/8.8 +0.0   7.5/9.1 +0.0   7.6/9.1 +0.0   7.9/9.5 +0.0   8.0/9.5 +0.0   8.2/9.9 +0.0
+    index proximal               647    1.2/3.7 +1.5   1.2/4.0 +1.2   1.2/4.6 +1.0   1.3/5.6 +0.5   1.5/7.1 +0.2   1.6/7.5 +0.8   1.9/8.5 +1.5   2.3/9.6 +1.8   2.8/9.7 +2.2
+    index middle joint scale      44    0.0/0.0 +0.0   6.5/8.6 +0.0   7.0/9.2 +0.0   7.1/9.4 +0.0   7.3/9.3 +0.0   7.3/9.2 +0.0   7.5/9.3 +0.0   7.6/9.5 +0.0   7.9/9.5 +0.0
+    index middle                 570    1.6/4.4 +0.2   1.5/4.5 +0.2   1.5/4.9 +0.2   1.5/6.0 +0.2   1.5/7.1 +0.2   1.5/6.8 +0.8   1.7/7.4 +1.8   2.1/8.5 +2.8  2.8/10.0 +3.0
+    index end joint scale         67    0.0/0.0 +0.0   5.9/7.6 +0.0   6.5/8.3 +0.0   7.1/9.5 +0.0   7.2/9.5 +0.0   7.2/9.4 +0.0   7.2/9.3 +0.0   7.2/9.4 +0.0   7.2/9.5 +0.0
+    index distal                1325    0.8/2.5 +0.8   0.7/2.2 +0.8   0.6/1.7 +0.8   0.5/1.5 +0.5   0.7/2.1 +0.2   0.7/2.2 +0.5   0.7/2.2 +1.0   0.7/2.2 +1.5   0.7/2.3 +2.0
+    middle knuckle scale          31    3.5/3.6 +0.0   5.1/6.3 +0.0   6.1/7.3 +0.0   6.6/8.8 +0.0   7.1/8.9 +0.0   7.3/8.9 +0.0   7.4/8.9 +0.0   7.6/8.9 +0.0   7.7/8.9 +0.0
+    middle proximal              295    1.1/3.1 +0.5   1.2/3.7 +0.5   1.2/4.6 +0.2   1.2/4.4 +0.2   1.3/6.0 +0.2   1.4/7.1 +0.2   2.3/9.6 +0.2   2.8/9.6 +0.5   2.9/8.8 +0.8
+    middle middle joint scale     26    3.7/3.5 +0.0   5.0/6.2 +0.0   5.6/6.7 +0.0   5.9/7.0 +0.0   6.4/7.5 +0.0   6.6/7.6 +0.0   6.6/7.6 +0.0   6.7/7.6 +0.0   6.9/7.7 +0.0
+    middle middle                326    1.2/2.6 +0.0   1.1/2.8 +0.0   1.1/3.1 +0.0   1.3/4.0 +0.0   1.6/7.6 +0.2   1.7/7.9 +0.2   2.5/9.8 +0.2  2.8/10.0 +0.5   3.1/9.6 +0.5
+    middle end joint scale        45    0.0/0.0 +0.0   5.8/6.7 +0.0   6.1/7.7 +0.0   6.5/8.1 +0.0   6.7/8.7 +0.0   6.6/7.9 +0.0   6.6/7.9 +0.0   6.7/7.9 +0.0   6.7/7.9 +0.0
+    middle distal               1168    0.6/2.2 +0.5   0.5/2.1 +0.5   0.4/1.7 +0.2   0.4/1.6 +0.2   0.6/2.2 +0.2   0.6/2.2 +0.2   0.6/2.4 +0.5   0.7/2.4 +0.8   0.7/2.5 +0.8
+    ring knuckle scale            22    3.4/3.6 +0.0   4.4/5.0 +0.0   4.9/5.9 +0.0   5.1/5.7 +0.0   5.7/6.4 +0.0   6.0/6.7 +0.0   6.1/6.8 +0.0   6.3/7.1 +0.0   6.5/7.3 +0.0
+    ring proximal                233    1.0/2.4 +0.2   1.1/3.1 +0.2   1.3/4.8 +0.2   1.3/6.2 +0.2   1.5/6.7 +0.2   1.6/7.1 +0.2   2.0/7.6 +0.2   2.3/8.0 +0.2   2.6/8.4 +0.2
+    ring middle joint scale       28    3.4/3.3 +0.0   4.5/5.3 +0.0   4.7/5.5 +0.0   5.0/5.5 +0.0   5.2/5.7 +0.0   5.3/5.8 +0.0   5.4/5.9 +0.0   5.8/6.4 +0.0   6.0/6.7 +0.0
+    ring middle                  190    1.2/2.5 +0.0   1.0/2.4 +0.2   1.2/2.7 +0.2   1.7/3.7 +0.2   1.8/8.1 +0.2  3.4/10.9 +0.2   3.7/9.6 +0.2   3.7/9.1 +0.2   3.7/9.0 +0.2
+    ring end joint scale          32    0.0/0.0 +0.0   5.9/6.3 +0.0   6.1/7.1 +0.0   6.2/7.1 +0.0   6.4/7.1 +0.0   6.4/7.1 +0.0   6.5/7.1 +0.0   6.6/7.2 +0.0   6.6/7.3 +0.0
+    ring distal                  678    0.6/2.5 +0.2   0.5/2.2 +0.2   0.4/1.5 +0.2   0.3/1.3 +0.2   0.3/1.2 +0.2   0.3/1.2 +0.2   0.3/1.2 +0.2   0.4/1.4 +0.2   0.6/1.7 +0.2
+    little knuckle scale           0    0.0/0.0 +0.0   0.0/0.0 +0.0   0.0/0.0 +0.0   0.0/0.0 +0.0   0.0/0.0 +0.0   0.0/0.0 +0.0   0.0/0.0 +0.0   0.0/0.0 +0.0   0.0/0.0 +0.0
+    little proximal              396    0.4/0.6 +0.8   0.3/0.4 +0.8   0.2/0.3 +0.5   0.1/0.2 +0.5   0.1/0.1 +0.2   0.2/0.4 +0.5   0.5/1.5 +1.5   1.1/3.7 +2.2   1.7/8.2 +2.2
+    little middle joint scale     26    0.0/0.0 +0.0 10.4/10.9 +0.0 10.9/11.8 +0.0 11.2/11.8 +0.0 11.4/11.8 +0.0 11.6/11.8 +0.0 11.7/11.9 +0.0 11.8/11.9 +0.0 11.9/11.9 +0.0
+    little middle                558    3.5/9.3 +0.2   3.4/9.5 +0.2   3.3/9.4 +0.2   3.2/9.4 +0.2   3.1/9.4 +0.2   2.8/9.4 +0.8   2.9/9.4 +2.0   2.9/9.3 +2.8   3.0/9.4 +2.8
+    little end joint scale        65    5.6/8.2 +0.0   5.1/7.0 +0.0   5.5/7.9 +0.0   5.7/8.1 +0.0   5.9/8.2 +0.0   6.1/8.3 +0.0   6.2/8.4 +0.0   6.4/8.5 +0.0   6.5/8.5 +0.0
+    little distal               1337    0.5/1.8 +0.2   0.5/1.6 +0.2   0.4/1.4 +0.2   0.4/1.4 +0.2   0.5/1.8 +0.2   0.5/1.9 +0.5   0.7/2.2 +1.0   0.7/2.6 +1.2   0.8/2.9 +1.8
     (each step: mean / 90th percentile standing off, + the most pressing in)
     back of the hand presses in most (2.2 mm) at step 2.00, 16 mm from the index knuckle's centre
     index proximal presses in most (2.2 mm) at step 2.00, 16 mm from the index end joint's centre

@@ -13,8 +13,8 @@
 //!   under and over) against modelled stock and undersized pads on the same leg.
 //! - `upper <scan> [out]`: the stand-in body above the waist (track U1): arms, hands and head
 //!   fitted to ANSUR II.
-//! - `glove <scan> [out] [fist]`: glove round 1 (track U2): the hard pieces on the hand closed on the
-//!   shaft, checked from a straight hand to a fist.
+//! - `glove <scan> [out] [fist]`: the glove's hard pieces (track U2, round 2: a scale over every
+//!   finger joint) on the hand closed on the shaft, checked from a straight hand to a fist.
 
 use custom_skate::check;
 use custom_skate::pitch::{FT, Rocker, fixed_alpha, passive_rocking_stiffness, roller_alpha};

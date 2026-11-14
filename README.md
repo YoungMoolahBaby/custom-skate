@@ -96,7 +96,7 @@ cargo run --release -- poses <scan>  # the body posed: standing, skating stance,
 cargo run --release -- cup <scan>    # the shin pad's knee as a cup on the bent knee (run `pad` first)
 cargo run --release -- gap <scan>    # the girdle-to-shin-pad gap through the knee's and hip's bend (run `pad`, `cup` first)
 cargo run --release -- upper <scan>  # the stand-in body above the waist: arms, hands, head
-cargo run --release -- glove <scan>  # glove round 1: the hard pieces on the hand gripping the stick
+cargo run --release -- glove <scan>  # the glove's hard pieces (round 2) on the hand gripping the stick
 ```
 
 The pad, girdle and gap runs take 8-30 minutes; `PAD_THREADS=2` keeps their memory down.
@@ -312,18 +312,20 @@ and a helmet come next, on the same body.
 
 ![The stand-in body above the waist, arms hung for measuring: what was measured in red and blue](docs/upper/measuring_pose.png)
 
-- **The glove, round 1**: 13 hard pieces (the back of the hand and one over each finger bone)
-  over a foam liner, built on the hand gripping the shaft. Where two meet over a joint the one
-  nearer the wrist laps over the other, both shaped as cylinders about the joint, so they slide
-  instead of catching. From a straight hand through the grip the laps stay closed and nothing
-  binds (one 1 mm touch with the hand straight). The cost is height: the laps stand 7-18 mm
-  proud, with ~10 mm of empty space under them (90th percentile), because one lap per joint has to cover
-  70-86° of bend. Next is Jon's call on the joints (an extra short scale over each, or soft
-  joints as a stock glove has). The thumb waits for its own round.
+- **The glove, rounds 1 and 2**: hard pieces over a foam liner, built on the hand gripping the
+  shaft. Round 1 had 13: the back of the hand and one over each finger bone. Where two meet over
+  a joint the one nearer the wrist laps over the other, both shaped as cylinders about the joint,
+  so they slide instead of catching. The cost was height, laps 7-18 mm proud, because one lap
+  per joint had to cover 70-86° of bend. Round 2, Jon's pick: a short scale over every joint
+  between the bones' pieces, turning halfway between them, so each lap covers half the bend.
+  25 pieces, 62.0 g (6.4 g lighter). The joints stand 7-8.5 mm proud, all but the little
+  finger's middle joint (13.7 mm, its middle bone too short in the model). From a straight hand
+  through the grip nothing binds, and the laps stay closed even in a fist (all but the little
+  finger's middle joint, by 4°). The thumb waits for its own round.
 
-![Glove round 1: the middle finger cut down its middle, straight, gripping the shaft and in a fist; the pieces' laps slide over each joint](docs/glove/glove_section.png)
+![Glove round 2: the middle finger cut down its middle, straight, gripping the shaft and in a fist; over each joint a scale between the bones' pieces](docs/glove/glove_section.png)
 
-Next: the glove's joints (Jon's call) and its thumb, then elbow pads and the slash guard between
+Next: the glove's thumb, then elbow pads and the slash guard between
 them and the glove; the helmet as a design study; the suit (a washable foam, a slick face for the shells to
 slide on); lighter knee shells; how far a girdle and a shin pad shift in play, which sets the
 gap; the roller pad. Pictures and numbers: `docs/pad/`, `docs/girdle/`, `docs/body/`,
@@ -335,7 +337,7 @@ Phase 0 (the science, the pitch model, the mass tool checked), round 1 (the whol
 example foot), round 2's first step (the chassis to weight), the like-for-like FEM sizing of
 step 2 and round 2 of the boot (a hockey boot from the scan) are done. On the gear: the shin
 pad's third round with its impact model, the girdle's first round, posing the body, and the
-knee as two sliding shells on the bent knee (with a kneecap added to the body) and the girdle-to-shin-pad gap round it, the body above the waist for the gloves and the helmet, and the glove's first round of hard pieces. See `docs/PLAN.md` for what comes next and `docs/CORTENFORGE.md` for
+knee as two sliding shells on the bent knee (with a kneecap added to the body) and the girdle-to-shin-pad gap round it, the body above the waist for the gloves and the helmet, and two rounds of the glove's hard pieces. See `docs/PLAN.md` for what comes next and `docs/CORTENFORGE.md` for
 what CortenForge did well and where it fell short.
 
 ## Patents
