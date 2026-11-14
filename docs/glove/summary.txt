@@ -1,10 +1,16 @@
-glove round 2 (track U2): the hard pieces on the right hand closed on the shaft, scales over each knuckle / middle joint / end joint: one / one / one (scans/stand-in/022_fBW_R.ply)
-  liner foam 6 mm, wall 2 mm (PA 12), 1 mm between sliding pieces, laps 10 deg past the bend each covers (each joint's bend on the shaft + 15 deg; past that, toward a fist, a lap may open over the liner), down the sides 6 mm below the joints' line (placeholders)
+glove round 3 (track U2): the hard pieces on the right hand closed on the shaft, the thumb's with them; scales over each knuckle / middle joint / end joint: one / one / one (scans/stand-in/022_fBW_R.ply)
+  liner foam 6 mm, wall 2 mm (PA 12), 1 mm between sliding pieces, laps 10 deg past the bend each covers (each finger joint's bend on the shaft + 15 deg, past that, toward a fist, a lap may open over the liner; the thumb's to its guard), down the sides 6 mm below the joints' line (placeholders)
   the fingers' joints all turn about one direction across the hand (within 0.0 deg), so pieces on neighbouring fingers, kept 1 mm apart across it, never meet; the fingers fan out along it (knuckle to tip, toward the little finger) index -22.5 mm, middle +4.1 mm, ring +2.1 mm, little +20.8 mm
-  the fingers' bones, joint to joint (the distal to the rig's bone end), proximal / middle / distal: index 24.8 / 22.3 / 26.5, middle 34.1 / 26.9 / 26.4, ring 29.2 / 26.0 / 26.7, little 20.9 / 15.3 / 19.9 mm
-  the sweep: straight (0), the grip (1, where the pieces are built), a fist (2: every joint at its guard)
-  25 hard pieces, 62.0 g together (PA 12, 1.01 g/cm3):
+  the thumb's knuckle and end joint turn about one direction (within 0.0 deg), its own (MakeHuman's plane for the thumb, U2), 80 deg off the fingers'; its pieces' strips run along it, from its skin out by the foam and the wall either side. Its base turns two ways at once and has no lap: its metacarpal's piece starts 10 mm from it, the gap to the back plate soft
+  the bones, joint to joint (the distal to the rig's bone end), base to tip: thumb 32.5 / 36.1 / 26.9, index 24.8 / 22.3 / 26.5, middle 34.1 / 26.9 / 26.4, ring 29.2 / 26.0 / 26.7, little 20.9 / 15.3 / 19.9 mm (the thumb's: metacarpal / proximal / distal; the fingers': proximal / middle / distal)
+  the sweep: straight (0), the grip (1, where the pieces are built), a fist (2: every joint at its guard; the thumb's base stays as on the shaft)
+  30 hard pieces, 77.1 g together (PA 12, 1.01 g/cm3):
     back of the hand            24.4 g
+    thumb metacarpal             4.2 g
+    thumb knuckle scale          1.2 g
+    thumb proximal               5.5 g
+    thumb end joint scale        1.0 g
+    thumb distal                 3.3 g
     index knuckle scale          1.0 g
     index proximal               3.4 g
     index middle joint scale     0.8 g
@@ -30,6 +36,8 @@ glove round 2 (track U2): the hard pieces on the right hand closed on the shaft,
     little end joint scale       0.7 g
     little distal                2.3 g
   over each joint, its pieces from the wrist side, each lapping over the next (cylinders about the joint's axis): each under piece's inside radius (clear of the liner), the back's skin over the joint's centre, how far the stack stands proud of the pieces either side, each lap's reach either side of the joint and the bend the joint stays closed to:
+    thumb knuckle        thumb metacarpal over thumb knuckle scale over thumb proximal: radii 24.2 / 21.2 mm, skin 10.4 mm over the centre; proud by 10.8 mm; each lap 18 deg either side, closed to 50 deg (on the shaft 0, guard 50)
+    thumb end joint      thumb proximal over thumb end joint scale over thumb distal: radii 14.8 / 11.8 mm, skin 3.6 mm over the centre; proud by  8.2 mm; each lap 25 deg either side, closed to 80 deg (on the shaft 80, guard 80)
     index knuckle        back of the hand over index knuckle scale over index proximal: radii 15.2 / 12.2 mm, skin 3.9 mm over the centre; proud by  8.3 mm; each lap 26 deg either side, closed to 82 deg (on the shaft 67, guard 90)
     index middle joint   index proximal over index middle joint scale over index middle: radii 14.3 / 11.3 mm, skin 3.4 mm over the centre; proud by  7.9 mm; each lap 26 deg either side, closed to 82 deg (on the shaft 67, guard 100)
     index end joint      index middle over index end joint scale over index distal: radii 14.4 / 11.4 mm, skin 3.7 mm over the centre; proud by  7.7 mm; each lap 25 deg either side, closed to 80 deg (on the shaft 67, guard 80)
@@ -42,9 +50,11 @@ glove round 2 (track U2): the hard pieces on the right hand closed on the shaft,
     little knuckle       back of the hand over little knuckle scale over little proximal: radii 14.6 / 11.6 mm, skin 3.9 mm over the centre; proud by  7.7 mm; each lap 22 deg either side, closed to 70 deg (on the shaft 55, guard 90)
     little middle joint  little proximal over little middle joint scale over little middle: radii 20.4 / 17.4 mm, skin 3.8 mm over the centre; proud by 13.7 mm; each lap 22 deg either side, closed to 70 deg (on the shaft 55, guard 100); raised 6.4 mm to nest over the next joint's laps, which meet them over the middle bone: straight, this joint's pieces reach 6.8 mm along it and the next joint's 5.8 mm back, of 15.3 mm
     little end joint     little middle over little end joint scale over little distal: radii 13.4 / 10.4 mm, skin 3.6 mm over the centre; proud by  6.9 mm; each lap 22 deg either side, closed to 70 deg (on the shaft 55, guard 80)
-  the laps over the joints either side of a bone stay apart over it (so need no nesting between them) on: index middle, index proximal, middle middle, middle proximal, ring middle, ring proximal, little proximal
+  the laps over the joints either side of a bone stay apart over it (so need no nesting between them) on: thumb proximal, index middle, index proximal, middle middle, middle proximal, ring middle, ring proximal, little proximal
   check 1, laps closed: the widest gap seen over each joint's back (deg), at each step of the sweep:
                           0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00
+    thumb knuckle            0    0    0    0    0    0    0    0    0
+    thumb end joint          0    0    0    0    0    0    0    0    0
     index knuckle            0    0    0    0    0    0    0    0    0
     index middle joint       0    0    0    0    0    0    0    0    0
     index end joint          0    0    0    0    0    0    0    0    0
@@ -57,7 +67,7 @@ glove round 2 (track U2): the hard pieces on the right hand closed on the shaft,
     little knuckle           0    0    0    0    0    0    0    0    0
     little middle joint      0    0    0    0    0    0    0    0    4
     little end joint         0    0    0    0    0    0    0    0    0
-  check 2, binding: at each step, the deepest any piece runs into another (mm), or how close the closest two come
+  check 2, binding: at each step, the deepest any piece runs into another (mm), or how close the closest two come (the thumb against the fingers apart, below)
     step 0.00: 0.0 mm (0 of its surface points over 0.3 mm in), index distal into index middle, 16 mm from the index end joint's centre
     step 0.25: 0.0 mm (0 of its surface points over 0.3 mm in), index distal into index middle, 16 mm from the index end joint's centre
     step 0.50: 0.0 mm (0 of its surface points over 0.3 mm in), index distal into index middle, 16 mm from the index end joint's centre
@@ -67,9 +77,26 @@ glove round 2 (track U2): the hard pieces on the right hand closed on the shaft,
     step 1.50: 1.0 mm (64 of its surface points over 0.3 mm in), index distal into back of the hand, 28 mm from the index end joint's centre
     step 1.75: 1.0 mm (218 of its surface points over 0.3 mm in), index distal into back of the hand, 27 mm from the index knuckle's centre
     step 2.00: 1.0 mm (183 of its surface points over 0.3 mm in), back of the hand into little distal, 21 mm from the little end joint's centre
+    the thumb's metacarpal piece and the back plate, the soft gap at the thumb's base, closest at each step: 0.9 / 1.2 / 1.6 / >1 / 4.5 / 4.5 / 4.5 / 4.5 / 4.5 mm
+    the thumb's pieces against each other, the deepest at each step (mm in; 0 none): 0.0 / 0.0 / 0.0 / 0.0 / 0.0 / 0.0 / 0.0 / 0.0 / 0.0
+  the thumb against the fingers: at each step, the deepest a thumb piece and a finger's run into each other, or how close they come
+    step 0.00: none near
+    step 0.25: none near
+    step 0.50: none near
+    step 0.75: none near
+    step 1.00: 1.0 mm (62 of its surface points over 0.3 mm in), index distal into thumb proximal, 31 mm from the thumb knuckle's centre
+    step 1.25: none; closest 3.0 mm (index distal by thumb proximal)
+    step 1.50: none; closest 3.0 mm (thumb distal by ring distal)
+    step 1.75: none; closest 2.0 mm (thumb distal by ring end joint scale)
+    step 2.00: 1.0 mm (48 of its surface points over 0.3 mm in), ring end joint scale into thumb distal, 17 mm from the ring end joint's centre
   check 3, the fit on the liner: how far each piece stands off the liner (empty space) at each step, mean / 90th percentile over the skin points under it, and the most it presses into it (mm):
                                points            0.00           0.25           0.50           0.75           1.00           1.25           1.50           1.75           2.00
-    back of the hand            1689    0.9/1.8 +2.2   0.8/1.3 +2.0   0.7/0.9 +2.2   0.7/0.4 +2.0   0.6/0.1 +0.2   0.7/0.6 +0.5   0.7/2.1 +1.0   0.8/4.7 +1.8   1.0/5.9 +2.2
+    back of the hand            1689    0.9/1.8 +2.2   0.8/1.3 +2.0   0.7/0.9 +2.2   0.7/0.4 +2.0   0.6/0.1 +0.2   0.7/0.8 +0.5   0.7/2.1 +1.0   0.8/4.8 +1.8   1.0/5.9 +2.2
+    thumb metacarpal             100    0.5/1.4 +2.2   0.2/0.8 +2.0   0.1/0.4 +1.8   0.0/0.1 +1.0   0.3/0.3 +0.2   0.4/0.4 +0.8   0.7/0.5 +1.2   0.9/1.1 +1.8   0.9/1.0 +2.0
+    thumb knuckle scale            1    0.0/0.0 +0.0   0.0/0.0 +0.0   0.0/0.0 +0.0   0.0/0.0 +0.0   3.6/3.6 +0.0   6.6/7.6 +0.0   7.7/8.9 +0.0  8.8/10.2 +0.0  9.4/10.6 +0.0
+    thumb proximal               696    0.9/2.0 +1.2   0.8/1.2 +1.0   0.7/0.8 +1.5   0.8/3.9 +1.2   1.4/6.9 +0.2   1.5/7.0 +0.2   1.5/7.5 +0.2   1.5/7.6 +0.2   1.7/8.0 +0.2
+    thumb end joint scale         42    0.0/0.0 +0.0   6.4/8.8 +0.0  7.5/10.1 +0.0  7.8/10.2 +0.0   8.0/9.9 +0.0   8.0/9.9 +0.0   8.0/9.9 +0.0   8.0/9.9 +0.0   8.0/9.9 +0.0
+    thumb distal                1003    1.0/1.4 +0.2   0.8/1.0 +0.2   0.7/0.7 +0.2   0.5/0.6 +0.2   0.9/3.8 +0.2   0.9/3.8 +0.2   0.9/3.8 +0.2   0.9/3.8 +0.2   0.9/3.8 +0.2
     index knuckle scale           41    4.6/6.9 +0.0   5.6/8.2 +0.0   6.3/9.4 +0.0   6.6/8.3 +0.0   7.0/8.6 +0.0   7.1/8.8 +0.0   7.3/8.9 +0.0   7.5/9.2 +0.0   7.6/9.3 +0.0
     index proximal               656    1.1/3.1 +1.5   1.0/3.3 +1.2   1.1/4.2 +1.0   1.2/4.8 +0.5   1.3/5.7 +0.2   1.4/6.7 +0.8   1.7/8.1 +1.5   2.2/9.2 +1.8   2.6/9.6 +2.2
     index middle joint scale      44    4.0/4.0 +0.0   6.4/8.3 +0.0   6.4/9.0 +0.0   6.6/8.7 +0.0   6.7/8.6 +0.0   6.8/8.7 +0.0   7.0/8.6 +0.0   7.1/8.8 +0.0   7.3/9.0 +0.0
@@ -96,6 +123,8 @@ glove round 2 (track U2): the hard pieces on the right hand closed on the shaft,
     little distal               1332    0.5/1.5 +0.2   0.4/1.2 +0.2   0.4/1.1 +0.2   0.3/0.9 +0.2   0.4/1.4 +0.2   0.5/1.6 +0.5   0.6/1.9 +1.0   0.7/2.2 +1.2   0.7/2.5 +1.8
     (each step: mean / 90th percentile standing off, + the most pressing in)
     back of the hand presses in most (2.2 mm) at step 2.00, 16 mm from the index knuckle's centre
+    thumb metacarpal presses in most (2.2 mm) at step 0.00, 23 mm from the thumb knuckle's centre
+    thumb proximal presses in most (1.5 mm) at step 0.50, 29 mm from the thumb knuckle's centre
     index proximal presses in most (2.2 mm) at step 2.00, 16 mm from the index end joint's centre
     index middle presses in most (3.0 mm) at step 2.00, 17 mm from the index middle joint's centre
     index distal presses in most (2.0 mm) at step 2.00, 15 mm from the index end joint's centre

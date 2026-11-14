@@ -2045,6 +2045,15 @@ wide and 2.5 cm thick (RESEARCH.md 27). So the grip is built and checked first o
   - **The thumb leans on its guards:** its base turns to the 60° guard without its phalanges
     quite clearing the dowel, its end joint to the 80° guard. The guards are commonly quoted
     normal ranges, and sources differ (RESEARCH.md 27).
+  - **The thumb's own axis (2026-11-14, for the glove's round 3).** Its middle and end joints
+    first bent about axes aimed at the bar, each its own, not the thumb's. They now bend about
+    the thumb's own axis: the normal of MakeHuman's plane for the thumb (through its tip, its end
+    joint and the wrist), from which its rig sets the thumb bones' roll. It lies 69° off the
+    bar's once the base has swung. The grip barely moves: on the shaft the thumb is still
+    60 / 0 / 80°, 7.9 mm inside it, and on the dowel at 51 mm its end joint bends 71° (was 70).
+    Turning the base further, to lay that axis along the bar as a hammer grip wraps a handle,
+    took 80° on top of the swing and left the thumb deeper in the shaft (8.9 mm): this rest thumb
+    is too far from that grip. A thumb that wraps the shaft wants Jon's own hand.
   - Equal rates at the three finger joints are GraspIt's default, not measured: measured grips
     flex the knuckle and middle joints more as the bar gets smaller and leave the end joint about
     the same (Lee and Rim 1991), and Irwin and Radwin's (2008) model hand, posed by contact as
@@ -2260,6 +2269,49 @@ What it took:
 
 **U2 next:** the thumb's round (its joints turn about axes set by the stick in U2, not its own),
 then the elbow pad and the slash guard, then the outside's look.
+
+### Glove, round 3: the thumb (2026-11-14)
+
+Jon: "commit round 2 then proceed". `cargo run --release -- glove <scan>`
+(`docs/glove/summary.txt`, `docs/glove/glove_thumb_section.png`). First U2's thumb: its middle
+and end joints now bend about its own axis (U2, above), the grip barely changed. Then three
+pieces over its bones (MakeHuman's first thumb bone is its metacarpal), with a scale over its
+knuckle and its end joint, as the fingers'. The strips run along its own axis (80° off the
+fingers'), from its skin out by the foam and the wall either side; its two joints turn about
+that one direction (within 0.0°).
+- **Its laps cover its whole bend**, to its guards (50° knuckle, 80° end joint), not the grip
+  + 15° as the fingers': its grip is the hand model's roughest part (its knuckle 0° on the shaft,
+  the thumb 7.9 mm inside it), so its laps don't count on it.
+- **Its base has no lap.** It turns two ways at once (U2 swings the thumb 60° out of the palm),
+  so the metacarpal's piece starts 10 mm from the base joint, and between it and the back plate
+  the glove is soft, as a stock glove's web of the thumb. That gap is 0.9 mm with the hand
+  straight and 4.5 mm on the shaft and on to the fist: never closed.
+
+| over the thumb's | pieces, from the wrist side | radii | skin over the joint's centre | proud |
+|---|---|---|---|---|
+| knuckle | metacarpal, scale, proximal | 24.2 / 21.2 mm | 10.4 mm | 10.8 mm |
+| end joint | proximal, scale, distal | 14.8 / 11.8 mm | 3.6 mm | 8.2 mm |
+
+- **30 hard pieces, 77.1 g** (the thumb's five 15.2 g); closing the fingers' laps to a fist,
+  81.7 g.
+- **Its laps stay closed at every step, straight to a fist; nothing on the thumb binds.**
+- **Empty space** under its bones' pieces on the shaft: 0.3-1.4 mm on average (90th percentile
+  0.3-6.9); under the end joint's scale, 8 mm.
+- **The thumb meets the fingers**, as a glove's thumb lies on the fingers round the shaft: on the
+  shaft its proximal piece over the index finger's tip piece, 1.0 mm into it; in a fist its
+  distal piece over the ring finger's end joint scale, 1.0 mm. Contacts between digits, not
+  joints binding; the pieces there will bear on each other through the glove's outside.
+
+**What it says.**
+- **The thumb's knuckle stands 10.8 mm proud**, more than the fingers' 7-8.5 mm. MakeHuman puts
+  its centre 10.4 mm under the back's skin (the fingers' 2.3-3.9), so its laps sit on a bigger
+  radius. Jon's own hand will set this.
+- **Open:**
+  - the thumb's stop against bending back (Gloves, above), not modelled;
+  - what joins the thumb's metacarpal piece to the glove across the soft base;
+  - the thumb's grip itself (U2): it lies along the shaft, not round it.
+
+**U2 next:** the elbow pad and the slash guard between it and the glove, then the outside's look.
 
 ## Open questions for Jon
 

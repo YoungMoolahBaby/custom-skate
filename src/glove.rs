@@ -9,9 +9,10 @@
 //! Jon's glove (PLAN.md, Gloves): tight, "almost like a lacrosse glove but safe for hockey", no
 //! empty space inside, a short cuff, the outside looking like a hockey glove (a later round). The
 //! hard pieces ride on a foam liner that lies on the skin (a liner glove, the way the knee's foam
-//! is in the suit). The thumb waits for its own round: U2's grip turns its joints about axes set
-//! by the stick, not its own, and laps built on those came out absurd (a 40 mm radius at its
-//! knuckle).
+//! is in the suit). Round 3 (2026-11-14): the thumb's pieces too, once U2 bent its joints about
+//! its own axis (rounds 1 and 2 left it out: U2 turned its joints about axes aimed at the stick,
+//! and laps built on those came out absurd, a 40 mm radius at its knuckle). Its base, which
+//! turns two ways at once, has no lap and stays soft.
 //!
 //! Each piece is built on the hand as it holds the shaft (`upper::shaft_grip`): its inside is the
 //! liner's outside (the skin offset by the foam), its wall over that. Where two meet over a joint,
@@ -77,6 +78,9 @@ pub struct GloveParams {
     pub tip: f64,
     /// Mesh cell.
     pub cell: f64,
+    /// The thumb's metacarpal piece starts this far from the thumb's base joint toward its
+    /// knuckle (the base turns two ways at once and stays soft).
+    pub thumb_base: f64,
     /// How far each lap stays closed: from straight to the joint's bend on the shaft plus this
     /// (deg), or, if None, to its guard (a fist). A lap's height grows steeply with the bend it
     /// has to cover.
@@ -99,6 +103,7 @@ impl Default for GloveParams {
             side_out: 14.0,
             tip: 2.0,
             cell: 0.5,
+            thumb_base: 10.0,
             grip_plus: Some(15.0),
             scales: [1, 1, 1],
         }
@@ -113,15 +118,28 @@ const BUILD: usize = 4;
 const EXT: f64 = 4.0;
 
 const DIGIT: [&str; 5] = ["thumb", "index", "middle", "ring", "little"];
+/// The fingers' bones and joints; the thumb's (MakeHuman's finger1-1 is its metacarpal, and its
+/// base, where that meets the wrist, has no lap).
 const BONE: [&str; 3] = ["proximal", "middle", "distal"];
 const JOINT: [&str; 3] = ["knuckle", "middle joint", "end joint"];
+const THUMB_BONE: [&str; 3] = ["metacarpal", "proximal", "distal"];
+const THUMB_JOINT: [&str; 3] = ["base", "knuckle", "end joint"];
 
 fn bone_name(k: usize, j: usize) -> String {
     format!("finger{}-{}.R", k + 1, j + 1)
 }
 
+fn bone_label(k: usize, j: usize) -> &'static str {
+    if k == 0 { THUMB_BONE[j] } else { BONE[j] }
+}
+
 fn joint_name(k: usize, j: usize) -> String {
-    format!("{} {}", DIGIT[k], JOINT[j])
+    format!("{} {}", DIGIT[k], if k == 0 { THUMB_JOINT[j] } else { JOINT[j] })
+}
+
+/// Whether a digit's joint has laps: all but the thumb's base.
+fn has_lap(k: usize, j: usize) -> bool {
+    k > 0 || j > 0
 }
 
 /// What a piece moves with: a bone, or (a scale over a joint) the bone before the joint (`a`)
@@ -438,7 +456,7 @@ struct Sit {
     press_at: Option<Point3<f64>>,
 }
 
-/// `cargo run --release -- glove <scan> [out] [fist]`: the glove's hard pieces, round 2
+/// `cargo run --release -- glove <scan> [out] [fist]`: the glove's hard pieces, round 3
 /// (docs/glove/). With `fist`, the laps stay closed to each joint's guard (a fist) and the
 /// results go to docs/glove/fist_laps/. To try other counts of scales, `GLOVE_SCALES=1,1,0` (over
 /// the knuckles, middle joints, end joints), with `GLOVE_DOCS=<dir>` to keep the results out of
@@ -468,23 +486,30 @@ pub fn run(scan: &Path, out: &Path, fist: bool) -> Result<(), String> {
     let quads = upper::hand_quads(&b, raw);
     println!("  body fitted, hand on the shaft ({:.0} s)", t0.elapsed().as_secs_f64());
 
-    // The sweep: every joint from straight to the grip, then on to its guard (the thumb too, as
-    // U2 moves it, though it carries no pieces).
+    // The sweep: every joint from straight to the grip, then on to its guard; the thumb's base,
+    // which swings the thumb out of the palm rather than closing it, stays as on the shaft.
     let lim = |k: usize, j: usize| if k == 0 { upper::THUMB_LIMIT[j] } else { FINGER_LIMIT[j] };
     let th_at = |t: f64| {
         let mut th = [[0.0f64; 3]; 5];
         for k in 0..5 {
             for j in 0..3 {
                 let g = grip.angles[k][j];
-                th[k][j] = if t <= 1.0 { t * g } else { g + (t - 1.0) * (lim(k, j) - g) };
+                th[k][j] = if t <= 1.0 {
+                    t * g
+                } else if !has_lap(k, j) {
+                    g
+                } else {
+                    g + (t - 1.0) * (lim(k, j) - g)
+                };
             }
         }
         th
     };
-    // How far each lap stays closed (deg).
+    // How far each lap stays closed (deg). The thumb's, to its guard: its grip is the hand model's
+    // roughest part (U2), so its laps don't count on it.
     let closed_to = |k: usize, j: usize| match p.grip_plus {
-        Some(g) => (grip.angles[k][j] + g).min(lim(k, j)),
-        None => lim(k, j),
+        Some(g) if k > 0 => (grip.angles[k][j] + g).min(lim(k, j)),
+        _ => lim(k, j),
     };
     let hands: Vec<HandAt> = TS.iter().map(|&t| hand_at(&b, raw, &base, &grip.axes, th_at(t))).collect();
     let h0 = &hands[0];
@@ -505,6 +530,12 @@ pub fn run(scan: &Path, out: &Path, fist: bool) -> Result<(), String> {
     };
     let e = axis0(2, 0);
     let skew = (1..5).flat_map(|k| (0..3).map(move |j| (k, j))).map(|(k, j)| axis0(k, j).dot(&e).abs().min(1.0).acos().to_degrees()).fold(0.0, f64::max);
+    // The thumb's knuckle and end joint turn about its own axis (U2), which its pieces' strips
+    // run along as the fingers' run along e.
+    let et = axis0(0, 1);
+    let thumb_skew = axis0(0, 2).dot(&et).abs().min(1.0).acos().to_degrees();
+    let thumb_off = et.dot(&e).abs().min(1.0).acos().to_degrees();
+    let dir_of = |k: usize| if k == 0 { et } else { e };
     // Each piece's strip across the hand (along e, which every finger joint turns about, so a
     // point's place along it never changes): its bone's line (it runs across a little, the
     // fingers fan out) widened toward each neighbour finger to halfway to the nearest of that
@@ -527,16 +558,10 @@ pub fn run(scan: &Path, out: &Path, fist: bool) -> Result<(), String> {
     };
     // The back plate's strips: split halfway between neighbouring fingers.
     let bnd = |k: usize| s * 0.5 * (ymax(k) + ymin(k + 1));
-    // A lap's: where both its pieces' strips are (at the knuckle, the proximal piece's, which lies
-    // within the back plate's).
-    let lap_band = |k: usize, j: usize| {
-        let (a, b) = (band_at(k, j.saturating_sub(1)), band_at(k, j));
-        (a.0.max(b.0), a.1.min(b.1))
-    };
     let fan: Vec<f64> = (1..5).map(|k| s * (tail0(&bone_name(k, 2)) - head0(&bone_name(k, 0))).dot(&e)).collect();
 
-    // The skin: the back of the hand's (with the fingers' first bones) and each finger's (with its
-    // metacarpal), each a patch of the smoothed skin's quads owned by those bones.
+    // The skin: the back of the hand's (with the fingers' first bones), each finger's (with its
+    // metacarpal) and the thumb's, each a patch of the smoothed skin's quads owned by those bones.
     let dom = upper::dominant(&b);
     let owned = |bones: &[String]| -> Vec<f64> {
         let ids: Vec<usize> = bones.iter().map(|n| bi(n)).collect();
@@ -559,10 +584,28 @@ pub fn run(scan: &Path, out: &Path, fist: bool) -> Result<(), String> {
         let sm = owned(bones);
         hand_verts.iter().copied().filter(|&i| sm[i] > 0.5).collect()
     };
+    // The thumb's strips, along its axis: each bone's skin, straight, out by the foam and the
+    // wall either side (it has no neighbour to stop halfway to).
+    let thumb_band = |j: usize| {
+        let xs: Vec<f64> = bone_verts(&[bone_name(0, j)]).iter().map(|&i| h0.skin[i].coords.dot(&et)).collect();
+        let pad = p.foam + p.wall;
+        (xs.iter().copied().fold(f64::MAX, f64::min) - pad, xs.iter().copied().fold(f64::MIN, f64::max) + pad)
+    };
+    let band_of = |k: usize, j: usize| if k == 0 { thumb_band(j) } else { band_at(k, j) };
+    // A lap's: where both its pieces' strips are (at a finger's knuckle, the proximal piece's,
+    // which lies within the back plate's).
+    let lap_band = |k: usize, j: usize| {
+        let (a, b) = (band_of(k, if k == 0 { j - 1 } else { j.saturating_sub(1) }), band_of(k, j));
+        (a.0.max(b.0), a.1.min(b.1))
+    };
     let plate_bones: Vec<String> = (1..=4).map(|i| format!("metacarpal{i}.R")).chain(["wrist.R".to_string()]).chain((1..5).map(|k| bone_name(k, 0))).collect();
-    let finger_bones = |k: usize| -> Vec<String> { (0..3).map(|j| bone_name(k, j)).chain([format!("metacarpal{k}.R")]).collect() };
+    // A digit's bones (a finger's with its metacarpal; MakeHuman's thumb has its own).
+    let finger_bones = |k: usize| -> Vec<String> { (0..3).map(|j| bone_name(k, j)).chain((k > 0).then(|| format!("metacarpal{k}.R"))).collect() };
+    // The skins: the back plate's, the fingers' (1 to 4) and the thumb's (5).
     let mut patches = vec![patch(&plate_bones)];
     patches.extend((1..5).map(|k| patch(&finger_bones(k))));
+    patches.push(patch(&finger_bones(0)));
+    let sdf_of = |k: usize| if k == 0 { 5 } else { k };
     let mut closed_hand = quad_mesh(&hb.skin, &quads);
     auto_cap_open_boundaries(&mut closed_hand);
     let sdfs: Vec<Sdf> = patches
@@ -586,40 +629,46 @@ pub fn run(scan: &Path, out: &Path, fist: bool) -> Result<(), String> {
         }
     }
 
-    // The pieces: the back plate, then per finger, base to tip, each joint's scales and the bone
-    // beyond it. Over each joint, its chain from the wrist side: the piece of the bone before (the
-    // back plate at a knuckle), the scales, the piece of the bone after.
+    // The pieces: the back plate, then per digit (the thumb first), base to tip, each joint's
+    // scales and the bone beyond it. Over each joint, its chain from the wrist side: the piece of
+    // the bone before (the back plate at a finger's knuckle), the scales, the piece of the bone
+    // after. The thumb's base has none: its metacarpal's piece starts clear of it.
     let before = |k: usize, j: usize| if j == 0 { format!("metacarpal{k}.R") } else { bone_name(k, j - 1) };
     let mut kinds: Vec<Kind> = vec![Kind::Plate];
     let mut names: Vec<String> = vec!["back of the hand".into()];
     let mut movers: Vec<Mover> = vec![Mover::Bone(bi("metacarpal2.R"))];
     let mut bone_piece = [[0usize; 3]; 5];
     let mut chains: Vec<Vec<Vec<usize>>> = vec![vec![Vec::new(); 3]; 5];
-    for k in 1..5 {
+    for k in 0..5 {
         for j in 0..3 {
-            let mut chain = vec![if j == 0 { 0 } else { bone_piece[k][j - 1] }];
-            let n = p.scales[j];
-            for s in 1..=n {
-                chain.push(names.len());
-                kinds.push(Kind::Scale(k, j, s));
-                names.push(format!("{} {} scale{}", DIGIT[k], JOINT[j], if n > 1 { format!(" {s}") } else { String::new() }));
-                movers.push(Mover::Scale { a: bi(&before(k, j)), b: bi(&bone_name(k, j)), c: head0(&bone_name(k, j)), frac: s as f64 / (n + 1) as f64 });
+            let mut chain = Vec::new();
+            if has_lap(k, j) {
+                chain.push(if j == 0 { 0 } else { bone_piece[k][j - 1] });
+                let n = p.scales[j];
+                for s in 1..=n {
+                    chain.push(names.len());
+                    kinds.push(Kind::Scale(k, j, s));
+                    names.push(format!("{} scale{}", joint_name(k, j), if n > 1 { format!(" {s}") } else { String::new() }));
+                    movers.push(Mover::Scale { a: bi(&before(k, j)), b: bi(&bone_name(k, j)), c: head0(&bone_name(k, j)), frac: s as f64 / (n + 1) as f64 });
+                }
             }
             bone_piece[k][j] = names.len();
             chain.push(names.len());
             kinds.push(Kind::Bone(k, j));
-            names.push(format!("{} {}", DIGIT[k], BONE[j]));
+            names.push(format!("{} {}", DIGIT[k], bone_label(k, j)));
             movers.push(Mover::Bone(bi(&bone_name(k, j))));
-            chains[k][j] = chain;
+            chains[k][j] = if has_lap(k, j) { chain } else { Vec::new() };
         }
     }
     let n_p = names.len();
     let mo = |h: &HandAt, i: usize| motion_of(h, h0, &movers[i]);
+    // Every joint with laps, the thumb's first.
+    let joints: Vec<(usize, usize)> = (0..5).flat_map(|k| (0..3).map(move |j| (k, j))).filter(|&(k, j)| has_lap(k, j)).collect();
     // A scale turns about its joint's centre: the bone after the joint must turn about that point
     // relative to the bone before.
-    let pivot = (1..5)
-        .flat_map(|k| (0..3).map(move |j| (k, j)))
-        .map(|(k, j)| {
+    let pivot = joints
+        .iter()
+        .map(|&(k, j)| {
             let hf = &hands[TS.len() - 1];
             let c = head0(&bone_name(k, j));
             let ab = rel(hf, bi(&before(k, j))).inverse().after(&rel(hf, bi(&bone_name(k, j))));
@@ -627,15 +676,15 @@ pub fn run(scan: &Path, out: &Path, fist: bool) -> Result<(), String> {
         })
         .fold(0.0, f64::max);
     if pivot > 0.1 {
-        return Err(format!("a finger bone turns about a point {pivot:.2} mm off its joint's centre"));
+        return Err(format!("a digit's bone turns about a point {pivot:.2} mm off its joint's centre"));
     }
 
     // The laps: over each joint, one between each two pieces of its chain, each covering an equal
     // share of the bend, its span split evenly either side.
     let mut laps: Vec<Lap> = Vec::new();
     let mut first = [[0usize; 3]; 5];
-    for k in 1..5 {
-        for j in 0..3 {
+    for &(k, j) in &joints {
+        {
             let bn = bone_name(k, j);
             let c = head0(&bn);
             let w = axis0(k, j);
@@ -675,7 +724,7 @@ pub fn run(scan: &Path, out: &Path, fist: bool) -> Result<(), String> {
                     let dq = q - lap.c;
                     let (dv, du) = (dq.dot(&lap.d), dq.dot(&lap.ap));
                     let psi = du.atan2(dv);
-                    let x = q.coords.dot(&e);
+                    let x = q.coords.dot(&dir_of(lap.k));
                     if psi < -lap.beta - EXT.to_radians() || psi > lap.alpha + EXT.to_radians() || dv < -p.down || x < x0 || x > x1 {
                         continue;
                     }
@@ -729,8 +778,8 @@ pub fn run(scan: &Path, out: &Path, fist: bool) -> Result<(), String> {
     };
     let mut raised: Vec<(usize, usize, f64, (f64, f64, f64))> = Vec::new();
     let mut apart: Vec<(usize, usize)> = Vec::new();
-    for k in 1..5 {
-        for j in (0..3).rev() {
+    for k in 0..5 {
+        for j in (0..3).rev().filter(|&j| has_lap(k, j)) {
             let f = first[k][j];
             nest_in(&mut laps, f);
             if j == 2 {
@@ -778,6 +827,10 @@ pub fn run(scan: &Path, out: &Path, fist: bool) -> Result<(), String> {
     let mut pieces: Vec<Piece> = Vec::new();
     for (i, kind) in kinds.iter().enumerate() {
         let mg = Vector3::repeat(30.0);
+        let pe = match *kind {
+            Kind::Plate => e,
+            Kind::Bone(k, _) | Kind::Scale(k, _, _) => dir_of(k),
+        };
         let base_piece = |skin: &Sdf, halves, band, zones, laps, lo: Point3<f64>, hi: Point3<f64>| Piece {
             name: names[i].clone(),
             skin: skin.clone(),
@@ -785,7 +838,7 @@ pub fn run(scan: &Path, out: &Path, fist: bool) -> Result<(), String> {
             halves,
             band,
             zones,
-            e,
+            e: pe,
             laps,
             down: p.down,
             lo: lo - mg,
@@ -818,13 +871,18 @@ pub fn run(scan: &Path, out: &Path, fist: bool) -> Result<(), String> {
                 let (lo, hi) = bbox(&bone_verts(&plate_bones).iter().map(|&i| h0.skin[i]).collect::<Vec<_>>());
                 base_piece(&sdfs[0], halves, None, zones, lz, lo, hi)
             }
-            // A bone's: under its joint nearer the wrist, over the one nearer the tip.
+            // A bone's: under its joint nearer the wrist, over the one nearer the tip. The thumb's
+            // metacarpal's starts `thumb_base` from the thumb's base joint instead.
             Kind::Bone(k, j) => {
                 let bn = bone_name(k, j);
                 let (h, t) = (head0(&bn), tail0(&bn));
-                let l = lap_last(k, j);
-                let mut halves = vec![back(l), back_low(l)];
-                let mut lz = vec![zone_of(l, l.rho)];
+                let (mut halves, mut lz) = if has_lap(k, j) {
+                    let l = lap_last(k, j);
+                    (vec![back(l), back_low(l)], vec![zone_of(l, l.rho)])
+                } else {
+                    let a = (t - h).normalize();
+                    (vec![(h + a * p.thumb_base, a)], Vec::new())
+                };
                 if j < 2 {
                     let l = lap_first(k, j + 1);
                     halves.push(front(l));
@@ -834,14 +892,14 @@ pub fn run(scan: &Path, out: &Path, fist: bool) -> Result<(), String> {
                     halves.push((t + (t - h).normalize() * p.tip, -(t - h).normalize()));
                 }
                 let (lo, hi) = bbox(&[h, t]);
-                base_piece(&sdfs[k], halves, Some(band_at(k, j)), Vec::new(), lz, lo, hi)
+                base_piece(&sdfs[sdf_of(k)], halves, Some(band_of(k, j)), Vec::new(), lz, lo, hi)
             }
             // A scale: under the lap behind it, over the one in front, across its joint's lap
             // strip.
             Kind::Scale(k, j, s) => {
                 let (lb, la) = (&laps[first[k][j] + s - 1], &laps[first[k][j] + s]);
                 let c = lb.c;
-                base_piece(&sdfs[k], vec![back(lb), front(la)], Some(lap_band(k, j)), Vec::new(), vec![zone_of(lb, lb.rho), zone_of(la, la.rho + over)], c - Vector3::repeat(5.0), c + Vector3::repeat(5.0))
+                base_piece(&sdfs[sdf_of(k)], vec![back(lb), front(la)], Some(lap_band(k, j)), Vec::new(), vec![zone_of(lb, lb.rho), zone_of(la, la.rho + over)], c - Vector3::repeat(5.0), c + Vector3::repeat(5.0))
             }
         });
     }
@@ -852,7 +910,10 @@ pub fn run(scan: &Path, out: &Path, fist: bool) -> Result<(), String> {
         .map(|kind| match *kind {
             Kind::Plate => bone_verts(&plate_bones),
             Kind::Bone(k, j) => {
-                let mut v = vec![bone_name(k, j), before(k, j)];
+                let mut v = vec![bone_name(k, j)];
+                if has_lap(k, j) {
+                    v.push(before(k, j));
+                }
                 if j < 2 {
                     v.push(bone_name(k, j + 1));
                 }
@@ -894,7 +955,6 @@ pub fn run(scan: &Path, out: &Path, fist: bool) -> Result<(), String> {
     // joint's pieces within 40 mm.
     let t2 = Instant::now();
     let debug = std::env::var("GLOVE_DEBUG").is_ok();
-    let joints: Vec<(usize, usize)> = (1..5).flat_map(|k| (0..3).map(move |j| (k, j))).collect();
     let gaps: Vec<Vec<f64>> = par_map(&joints, threads, |&(k, j)| {
         let (l0, ll) = (lap_first(k, j), lap_last(k, j));
         let ch = &chains[k][j];
@@ -1036,7 +1096,7 @@ pub fn run(scan: &Path, out: &Path, fist: bool) -> Result<(), String> {
         n => format!("{n}"),
     };
     say(format!(
-        "glove round 2 (track U2): the hard pieces on the right hand closed on the shaft, scales over each knuckle / middle joint / end joint: {} / {} / {} ({})",
+        "glove round 3 (track U2): the hard pieces on the right hand closed on the shaft, the thumb's with them; scales over each knuckle / middle joint / end joint: {} / {} / {} ({})",
         n_scales(0),
         n_scales(1),
         n_scales(2),
@@ -1049,7 +1109,7 @@ pub fn run(scan: &Path, out: &Path, fist: bool) -> Result<(), String> {
         p.clear,
         p.margin,
         match p.grip_plus {
-            Some(g) => format!("each joint's bend on the shaft + {g:.0} deg; past that, toward a fist, a lap may open over the liner"),
+            Some(g) => format!("each finger joint's bend on the shaft + {g:.0} deg, past that, toward a fist, a lap may open over the liner; the thumb's to its guard"),
             None => "each joint's full bend, to a fist".into(),
         },
         p.down
@@ -1060,13 +1120,17 @@ pub fn run(scan: &Path, out: &Path, fist: bool) -> Result<(), String> {
         (1..5).map(|k| format!("{} {:+.1} mm", DIGIT[k], fan[k - 1])).collect::<Vec<_>>().join(", ")
     ));
     say(format!(
-        "  the fingers' bones, joint to joint (the distal to the rig's bone end), proximal / middle / distal: {} mm",
-        (1..5)
+        "  the thumb's knuckle and end joint turn about one direction (within {thumb_skew:.1} deg), its own (MakeHuman's plane for the thumb, U2), {thumb_off:.0} deg off the fingers'; its pieces' strips run along it, from its skin out by the foam and the wall either side. Its base turns two ways at once and has no lap: its metacarpal's piece starts {:.0} mm from it, the gap to the back plate soft",
+        p.thumb_base
+    ));
+    say(format!(
+        "  the bones, joint to joint (the distal to the rig's bone end), base to tip: {} mm (the thumb's: metacarpal / proximal / distal; the fingers': proximal / middle / distal)",
+        (0..5)
             .map(|k| format!("{} {}", DIGIT[k], (0..3).map(|j| format!("{:.1}", (tail0(&bone_name(k, j)) - head0(&bone_name(k, j))).norm())).collect::<Vec<_>>().join(" / ")))
             .collect::<Vec<_>>()
             .join(", ")
     ));
-    say("  the sweep: straight (0), the grip (1, where the pieces are built), a fist (2: every joint at its guard)".into());
+    say("  the sweep: straight (0), the grip (1, where the pieces are built), a fist (2: every joint at its guard; the thumb's base stays as on the shaft)".into());
     say(format!("  {n_p} hard pieces, {:.1} g together (PA 12, {:.2} g/cm3):", grams.iter().sum::<f64>(), PA12_MJF.density / 1000.0));
     for (i, pc) in pieces.iter().enumerate() {
         say(format!("    {:<26} {:>5.1} g", pc.name, grams[i]));
@@ -1091,14 +1155,14 @@ pub fn run(scan: &Path, out: &Path, fist: bool) -> Result<(), String> {
             raised.iter().find(|r| (r.0, r.1) == (k, j)).map_or(String::new(), |r| format!(
                 "; raised {:.1} mm to nest over the next joint's laps, which meet them over the {} bone: straight, this joint's pieces reach {:.1} mm along it and the next joint's {:.1} mm back, of {:.1} mm",
                 r.2,
-                BONE[j],
+                bone_label(k, j),
                 r.3.0,
                 r.3.1,
                 r.3.2
             ))
         ));
     }
-    let apart_s: Vec<String> = apart.iter().map(|&(k, j)| format!("{} {}", DIGIT[k], BONE[j])).collect();
+    let apart_s: Vec<String> = apart.iter().map(|&(k, j)| format!("{} {}", DIGIT[k], bone_label(k, j))).collect();
     say(format!(
         "  the laps over the joints either side of a bone stay apart over it (so need no nesting between them) on: {}",
         if apart_s.is_empty() { "none".to_string() } else { apart_s.join(", ") }
@@ -1108,27 +1172,64 @@ pub fn run(scan: &Path, out: &Path, fist: bool) -> Result<(), String> {
     for (&(k, j), g) in joints.iter().zip(&gaps) {
         say(format!("    {:<20} {}", joint_name(k, j), g.iter().map(|x| format!("{x:>5.0}")).collect::<Vec<_>>().join("")));
     }
-    say("  check 2, binding: at each step, the deepest any piece runs into another (mm), or how close the closest two come".into());
-    let mut worst_all = (f64::MAX, 0usize, 0usize, 0usize);
-    for ti in 0..hands.len() {
+    // The thumb's pieces against a finger's are a contact between digits (the thumb lying on the
+    // fingers round the shaft, as a glove's does), not a joint binding: told apart.
+    let digit_of = |i: usize| match kinds[i] {
+        Kind::Plate => None,
+        Kind::Bone(k, _) | Kind::Scale(k, _, _) => Some(k),
+    };
+    let thumb_finger = |i: usize, j: usize| matches!((digit_of(i), digit_of(j)), (Some(0), Some(1..)) | (Some(1..), Some(0)));
+    let worst_at = |ti: usize, want: &dyn Fn(usize, usize) -> bool| {
         let (mut wv, mut wi, mut wj, mut wq, mut wn) = (f64::MAX, 0, 0, Point3::origin(), 0usize);
         for (jb, &(t, i, j)) in jobs.iter().enumerate() {
-            if t == ti && closest[jb].0 < wv {
+            if t == ti && want(i, j) && closest[jb].0 < wv {
                 (wv, wi, wj, wq, wn) = (closest[jb].0, i, j, Point3::from(rels[ti][j].apply(closest[jb].1.coords)), closest[jb].2);
             }
         }
-        if wv < worst_all.0 {
-            worst_all = (wv, ti, wi, wj);
+        (wv, wi, wj, wq, wn)
+    };
+    let tell = |ti: usize, (wv, wi, wj, wq, wn): (f64, usize, usize, Point3<f64>, usize)| {
+        if wv == f64::MAX {
+            "none near".to_string()
+        } else if wv < 0.0 {
+            format!("{:.1} mm ({wn} of its surface points over 0.3 mm in), {} into {}, {}", -wv, pieces[wi].name, pieces[wj].name, where_at(ti, &wq))
+        } else {
+            format!("none; closest {:.1} mm ({} by {})", wv, pieces[wi].name, pieces[wj].name)
         }
-        say(format!(
-            "    step {:.2}: {}",
-            TS[ti],
-            if wv < 0.0 {
-                format!("{:.1} mm ({wn} of its surface points over 0.3 mm in), {} into {}, {}", -wv, pieces[wi].name, pieces[wj].name, where_at(ti, &wq))
-            } else {
-                format!("none; closest {:.1} mm ({} by {})", wv, pieces[wi].name, pieces[wj].name)
-            }
-        ));
+    };
+    say("  check 2, binding: at each step, the deepest any piece runs into another (mm), or how close the closest two come (the thumb against the fingers apart, below)".into());
+    let mut worst_all = (f64::MAX, 0usize, 0usize, 0usize);
+    for ti in 0..hands.len() {
+        let w = worst_at(ti, &|i, j| !thumb_finger(i, j));
+        if w.0 < worst_all.0 {
+            worst_all = (w.0, ti, w.1, w.2);
+        }
+        say(format!("    step {:.2}: {}", TS[ti], tell(ti, w)));
+    }
+    let tm = bone_piece[0][0];
+    say(format!(
+        "    the thumb's metacarpal piece and the back plate, the soft gap at the thumb's base, closest at each step: {} mm",
+        (0..hands.len())
+            .map(|ti| {
+                let w = worst_at(ti, &|i, j| (i, j) == (0, tm) || (i, j) == (tm, 0));
+                if w.0 == f64::MAX { ">1".to_string() } else { format!("{:.1}", w.0) }
+            })
+            .collect::<Vec<_>>()
+            .join(" / ")
+    ));
+    say(format!(
+        "    the thumb's pieces against each other, the deepest at each step (mm in; 0 none): {}",
+        (0..hands.len())
+            .map(|ti| {
+                let w = worst_at(ti, &|i, j| digit_of(i) == Some(0) && digit_of(j) == Some(0));
+                format!("{:.1}", (-w.0).max(0.0))
+            })
+            .collect::<Vec<_>>()
+            .join(" / ")
+    ));
+    say("  the thumb against the fingers: at each step, the deepest a thumb piece and a finger's run into each other, or how close they come".into());
+    for ti in 0..hands.len() {
+        say(format!("    step {:.2}: {}", TS[ti], tell(ti, worst_at(ti, &thumb_finger))));
     }
     say("  check 3, the fit on the liner: how far each piece stands off the liner (empty space) at each step, mean / 90th percentile over the skin points under it, and the most it presses into it (mm):".into());
     let stats = |v: &[f64]| {
@@ -1213,9 +1314,31 @@ pub fn run(scan: &Path, out: &Path, fist: bool) -> Result<(), String> {
         let layers: Vec<Layer> = keep.iter().zip(&cols).map(|(mm, c)| Layer::solid(mm, *c)).collect();
         draw(&layers, &[View::looking(e, -h.palm)], 2.5, &docs.join("glove_section.png"), Style::pretty())?;
     }
+    // The thumb cut down its proximal bone's line, along its own axis: straight, gripping, a fist,
+    // each seen from its metacarpal (the base swings the thumb out of the plane it bends in), with
+    // the back plate where the cut crosses it.
+    {
+        let mid = 0.5 * (head0(&bone_name(0, 1)).coords + tail0(&bone_name(0, 1)).coords);
+        let cut_p = Point3::from(et * mid.dot(&et));
+        let lt = lap_first(0, 1);
+        let along = lt.ap;
+        let mut keep: Vec<IndexedMesh> = Vec::new();
+        let mut cols: Vec<[f64; 3]> = Vec::new();
+        for (slot, ti) in [0usize, BUILD, TS.len() - 1].into_iter().enumerate() {
+            let to_thumb = Motion { r: nalgebra::Rotation3::identity(), t: along * (150.0 * slot as f64) }.after(&rels[ti][tm].inverse());
+            keep.push(section_lines(&moved(&wrist_cut(&quad_mesh(&hands[ti].skin, &quads)), &to_thumb), cut_p + along * (150.0 * slot as f64), et, 0.8));
+            cols.push([0.6, 0.4, 0.3]);
+            for i in (0..n_p).filter(|&i| matches!(kinds[i], Kind::Plate | Kind::Bone(0, _) | Kind::Scale(0, _, _))) {
+                keep.push(section_lines(&moved(&posed[ti][i], &to_thumb), cut_p + along * (150.0 * slot as f64), et, 0.8));
+                cols.push(colour(i));
+            }
+        }
+        let layers: Vec<Layer> = keep.iter().zip(&cols).map(|(mm, c)| Layer::solid(mm, *c)).collect();
+        draw(&layers, &[View::looking(et, lt.d)], 2.5, &docs.join("glove_thumb_section.png"), Style::pretty())?;
+    }
     if worst_all.0 < -0.3 {
         println!("  NOTE: pieces bind: {:.1} mm, {} into {} at step {:.2}", -worst_all.0, pieces[worst_all.2].name, pieces[worst_all.3].name, TS[worst_all.1]);
     }
-    println!("drew {}/glove.png, glove_straight.png, glove_fist.png, glove_section.png; pieces in {} ({:.0} s)", docs.display(), out.display(), t0.elapsed().as_secs_f64());
+    println!("drew {}/glove.png, glove_straight.png, glove_fist.png, glove_section.png, glove_thumb_section.png; pieces in {} ({:.0} s)", docs.display(), out.display(), t0.elapsed().as_secs_f64());
     Ok(())
 }

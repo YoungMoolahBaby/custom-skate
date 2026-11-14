@@ -96,7 +96,7 @@ cargo run --release -- poses <scan>  # the body posed: standing, skating stance,
 cargo run --release -- cup <scan>    # the shin pad's knee as a cup on the bent knee (run `pad` first)
 cargo run --release -- gap <scan>    # the girdle-to-shin-pad gap through the knee's and hip's bend (run `pad`, `cup` first)
 cargo run --release -- upper <scan>  # the stand-in body above the waist: arms, hands, head
-cargo run --release -- glove <scan>  # the glove's hard pieces (round 2) on the hand gripping the stick
+cargo run --release -- glove <scan>  # the glove's hard pieces (round 3, with the thumb) on the hand gripping the stick
 ```
 
 The pad, girdle and gap runs take 8-30 minutes; `PAD_THREADS=2` keeps their memory down.
@@ -321,11 +321,14 @@ and a helmet come next, on the same body.
   25 pieces, 62.0 g (6.4 g lighter). The joints stand 7-8.5 mm proud, all but the little
   finger's middle joint (13.7 mm, its middle bone too short in the model). From a straight hand
   through the grip nothing binds, and the laps stay closed even in a fist (all but the little
-  finger's middle joint, by 4°). The thumb waits for its own round.
+  finger's middle joint, by 4°). Round 3, the thumb: three pieces and two scales, its joints
+  bending about the thumb's own axis (U2 had them aimed at the stick), its laps covering its
+  whole bend, its base soft. Its knuckle stands 10.8 mm proud, its end joint 8.2. The whole
+  glove's hard pieces: 30, 77.1 g.
 
 ![Glove round 2: the middle finger cut down its middle, straight, gripping the shaft and in a fist; over each joint a scale between the bones' pieces](docs/glove/glove_section.png)
 
-Next: the glove's thumb, then elbow pads and the slash guard between
+Next: elbow pads and the slash guard between
 them and the glove; the helmet as a design study; the suit (a washable foam, a slick face for the shells to
 slide on); lighter knee shells; how far a girdle and a shin pad shift in play, which sets the
 gap; the roller pad. Pictures and numbers: `docs/pad/`, `docs/girdle/`, `docs/body/`,
@@ -337,7 +340,7 @@ Phase 0 (the science, the pitch model, the mass tool checked), round 1 (the whol
 example foot), round 2's first step (the chassis to weight), the like-for-like FEM sizing of
 step 2 and round 2 of the boot (a hockey boot from the scan) are done. On the gear: the shin
 pad's third round with its impact model, the girdle's first round, posing the body, and the
-knee as two sliding shells on the bent knee (with a kneecap added to the body) and the girdle-to-shin-pad gap round it, the body above the waist for the gloves and the helmet, and two rounds of the glove's hard pieces. See `docs/PLAN.md` for what comes next and `docs/CORTENFORGE.md` for
+knee as two sliding shells on the bent knee (with a kneecap added to the body) and the girdle-to-shin-pad gap round it, the body above the waist for the gloves and the helmet, and three rounds of the glove's hard pieces. See `docs/PLAN.md` for what comes next and `docs/CORTENFORGE.md` for
 what CortenForge did well and where it fell short.
 
 ## Patents

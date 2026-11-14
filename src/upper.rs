@@ -623,6 +623,8 @@ pub struct Grip {
     /// Each joint's axis, in its parent bone's frame as posed in the base pose (MakeHuman's
     /// frame): turning it `angles` about these from the base gives `pose` (`hand_pose`).
     pub axes: [[Vector3<f64>; 3]; 5],
+    /// How far the thumb's own bending axis lies off the bar's, deg, once its base has swung.
+    pub thumb_off: f64,
 }
 
 /// The hand of `base` with each digit's joints turned `th` deg about `axes` (as `close_on`
@@ -713,16 +715,7 @@ fn close_on(b: &Body, raw: &[Vector3<f64>], base: &Pose, dom: &[usize], section:
         }
         let parent = |j: usize| rig.bones[bones[k][j]].parent.unwrap_or(0);
         let (_, tip) = ends(&mo0, bones[k][2]);
-        if k == 0 {
-            // The thumb's base: square to its bone and the palm, the way that lifts its tip out of
-            // the palm.
-            let (head, tail) = ends(&mo0, bones[0][0]);
-            let mut w = (tail - head).cross(&to_mh(h.palm)).normalize();
-            if w.cross(&(tip - head)).dot(&to_mh(h.palm)) < 0.0 {
-                w = -w;
-            }
-            axes[0][0] = mo0[parent(0)].r.inverse() * w;
-        } else {
+        if k > 0 {
             for j in 0..3 {
                 let (head, _) = ends(&mo0, bones[k][j]);
                 let w = if e.cross(&(tip - head)).dot(&to_mh(h.palm)) >= 0.0 { e } else { -e };
@@ -730,6 +723,29 @@ fn close_on(b: &Body, raw: &[Vector3<f64>], base: &Pose, dom: &[usize], section:
             }
         }
     }
+    // The thumb: its base swings it out of the palm (about an axis square to its bone and the
+    // palm, the way that lifts its tip out of the palm) until its phalanges clear the bar; then
+    // its middle and end joints bend toward the bar about the thumb's own axis: the normal of
+    // MakeHuman's plane for it, through its tip, its end joint and the wrist
+    // (`finger1-2.R____plane`), from which the rig sets the thumb bones' roll. U2's first grip
+    // bent them about axes aimed at the bar, each its own, and the glove's laps over joints
+    // turning so came out absurd (glove round 1). Turning the base further, to lay the thumb's
+    // own axis along the bar as a hammer grip wraps a handle, took 80 deg on top of the swing and
+    // left the thumb deeper in the shaft (8.9 mm, from 7.9): this rest thumb is too far from that.
+    {
+        let (head, tail) = ends(&mo0, bones[0][0]);
+        let (_, tip) = ends(&mo0, bones[0][2]);
+        let mut w = (tail - head).cross(&to_mh(h.palm)).normalize();
+        if w.cross(&(tip - head)).dot(&to_mh(h.palm)) < 0.0 {
+            w = -w;
+        }
+        axes[0][0] = mo0[rig.bones[bones[0][0]].parent.unwrap_or(0)].r.inverse() * w;
+    }
+    let wrist_bi = rig.index["wrist.R"];
+    let wrist_head = mo0[wrist_bi].apply(rig.joint(raw, &rig.bones[wrist_bi].head).unwrap_or_default());
+    let (_, ip) = ends(&mo0, bones[0][1]);
+    let (_, thumb_tip) = ends(&mo0, bones[0][2]);
+    let n0 = (ip - wrist_head).cross(&(thumb_tip - wrist_head)).normalize();
     let limit = |k: usize, j: usize| if k == 0 { THUMB_LIMIT[j] } else { FINGER_LIMIT[j] };
     let pose_of = |th: &[[f64; 3]; 5], axes: &[[Vector3<f64>; 3]; 5]| hand_pose(base, axes, th);
     let mut th = [[0.0f64; 3]; 5];
@@ -757,17 +773,20 @@ fn close_on(b: &Body, raw: &[Vector3<f64>], base: &Pose, dom: &[usize], section:
         }
         th[0][0] += 1.0;
     }
-    // Its middle and end joints toward the bar, square to the bone, from where it now is.
-    {
+    // Its middle and end joints about its own axis, as the base left it, the way that curls them
+    // toward the bar.
+    let thumb_off = {
         let (mo, _) = skin_of(&th, &axes);
+        let n = mo[bones[0][0]].r * mo0[bones[0][0]].r.inverse() * n0;
         for j in 1..3 {
             let bi = bones[0][j];
             let (head, tail) = ends(&mo, bi);
             let near = c_mh + e * (head - c_mh).dot(&e);
-            let w = (tail - head).cross(&(near - head)).normalize();
+            let w = if n.cross(&(tail - head)).dot(&(near - head)) >= 0.0 { n } else { -n };
             axes[0][j] = mo[rig.bones[bi].parent.unwrap_or(0)].r.inverse() * w;
         }
-    }
+        n.dot(&e).abs().min(1.0).acos().to_degrees()
+    };
     // A link touching: the bar, or (a finger's middle or end link) the palm behind the bar.
     let touches = |k: usize, p: &Point3<f64>, jj: usize| {
         if bar.sd(p) < 0.0 {
@@ -831,7 +850,7 @@ fn close_on(b: &Body, raw: &[Vector3<f64>], base: &Pose, dom: &[usize], section:
         }
     }
     let wrapped = stops[2][2] == "bar" || stops[2][2] == "palm";
-    Ok(Grip { pose: pose_of(&th, &axes), bar, angles: th, stops, wrapped, axes })
+    Ok(Grip { pose: pose_of(&th, &axes), bar, angles: th, stops, wrapped, axes, thumb_off })
 }
 
 /// A grip, read: the hand closed on a bar, the elbow's back to the bar's centre (mm), how far the
@@ -1071,6 +1090,7 @@ pub fn run(scan: &Path, out: &Path) -> Result<(), String> {
                 r.grip.stops[k].join(" / ")
             ));
         }
+        say(format!("    the thumb's middle and end joints bend about its own axis, {:.0} deg off the bar's", r.grip.thumb_off));
     };
     for r in &ec.dowel {
         tell(format!("ANSUR's {DOWEL_DIAMETER} mm dowel"), r);
