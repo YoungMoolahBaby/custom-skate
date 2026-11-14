@@ -21,21 +21,46 @@ the arm bent 90 deg at the elbow, palm in (track U2; 0 s), against ANSUR (mm):
     forearm-hand length     496.8  (ANSUR 478)
     shoulder-elbow length   365.4  (ANSUR 362)
     the elbow's back 37.7 mm behind the elbow joint (ANSUR's men: 19 behind radiale, median)
-  the hand closed on a 31.75 mm dowel 51 mm from the wrist joint: forearm-center of grip 354.8 (ANSUR 348); the middle finger doesn't wrap it to its tip; into the dowel by up to 5.3 mm (the palm's pads), 14.7 (the thumb), 0.0 (the fingers)
+  the hand closed on ANSUR's 31.75 mm dowel 51 mm from the wrist joint: the elbow's back to its centre 354.8 (ANSUR's forearm-center of grip 348); the middle finger doesn't wrap it to its tip; skin inside it by up to 5.3 mm (the palm's pads), 14.7 (the thumb), 0.0 (the fingers)
     thumb  bent 60 / 0 / 70 deg (base to tip), stopped by limit / bar / bar
     index  bent 90 / 100 / 80 deg (base to tip), stopped by limit / limit / limit
     middle bent 90 / 100 / 80 deg (base to tip), stopped by limit / limit / limit
     ring   bent 90 / 100 / 80 deg (base to tip), stopped by limit / limit / limit
     little bent 90 / 100 / 80 deg (base to tip), stopped by limit / limit / limit
-  the hand closed on a 31.75 mm dowel 62 mm from the wrist joint: forearm-center of grip 365.8 (ANSUR 348); the middle finger wraps it to its tip; into the dowel by up to 13.2 mm (the palm's pads), 12.8 (the thumb), 0.0 (the fingers)
+  the hand closed on ANSUR's 31.75 mm dowel 62 mm from the wrist joint: the elbow's back to its centre 365.8 (ANSUR's forearm-center of grip 348); the middle finger wraps it to its tip; skin inside it by up to 13.2 mm (the palm's pads), 12.8 (the thumb), 0.0 (the fingers)
     thumb  bent 60 / 0 / 80 deg (base to tip), stopped by limit / bar / limit
     index  bent 65 / 65 / 65 deg (base to tip), stopped by bar / bar / bar
     middle bent 69 / 69 / 69 deg (base to tip), stopped by bar / bar / bar
     ring   bent 63 / 63 / 63 deg (base to tip), stopped by bar / bar / bar
     little bent 54 / 54 / 54 deg (base to tip), stopped by bar / bar / bar
-  the hand closed on a 31.75 mm dowel 74 mm from the wrist joint: forearm-center of grip 377.8 (ANSUR 348); the middle finger wraps it to its tip; into the dowel by up to 5.2 mm (the palm's pads), 5.2 (the thumb), 0.0 (the fingers)
+  the hand closed on ANSUR's 31.75 mm dowel 74 mm from the wrist joint: the elbow's back to its centre 377.8 (ANSUR's forearm-center of grip 348); the middle finger wraps it to its tip; skin inside it by up to 5.2 mm (the palm's pads), 5.2 (the thumb), 0.0 (the fingers)
     thumb  bent 60 / 0 / 80 deg (base to tip), stopped by limit / bar / limit
     index  bent 55 / 55 / 55 deg (base to tip), stopped by bar / bar / bar
     middle bent 62 / 62 / 62 deg (base to tip), stopped by bar / bar / bar
     ring   bent 57 / 57 / 57 deg (base to tip), stopped by bar / bar / bar
     little bent 44 / 44 / 44 deg (base to tip), stopped by bar / bar / bar
+  the hand closed on the shaft (29.8 x 19.3 mm, corners 5.5; 29.8 along the hand, 19.3 out of the palm) 62 mm from the wrist joint: the elbow's back to its centre 365.8 (ANSUR's forearm-center of grip 348); the middle finger wraps it to its tip; skin inside it by up to 8.5 mm (the palm's pads), 7.9 (the thumb), 0.0 (the fingers)
+    thumb  bent 60 / 0 / 80 deg (base to tip), stopped by limit / bar / limit
+    index  bent 67 / 67 / 67 deg (base to tip), stopped by bar / bar / bar
+    middle bent 71 / 71 / 71 deg (base to tip), stopped by bar / bar / bar
+    ring   bent 65 / 65 / 65 deg (base to tip), stopped by bar / bar / bar
+    little bent 55 / 55 / 55 deg (base to tip), stopped by bar / bar / bar
+  the hand closed on the shaft (29.8 x 19.3 mm, corners 5.5; 19.3 along the hand, 29.8 out of the palm) 62 mm from the wrist joint: the elbow's back to its centre 365.8 (ANSUR's forearm-center of grip 348); the middle finger doesn't wrap it to its tip; skin inside it by up to 8.4 mm (the palm's pads), 7.3 (the thumb), 0.0 (the fingers)
+    thumb  bent 60 / 0 / 80 deg (base to tip), stopped by limit / bar / limit
+    index  bent 90 / 100 / 80 deg (base to tip), stopped by limit / limit / limit
+    middle bent 90 / 100 / 80 deg (base to tip), stopped by limit / limit / limit
+    ring   bent 66 / 66 / 66 deg (base to tip), stopped by bar / bar / bar
+    little bent 63 / 63 / 63 deg (base to tip), stopped by bar / bar / bar
+  over each finger joint, the hand from straight to closed on the shaft: the back's skin above the joint's centre (straight), the joint's bend, and how much the back opens over it, at the skin and per mm above it:
+    index  knuckle      skin  3.8 mm above (17.2 below), bends  67 deg: opens  4.4 mm at the skin, +1.17 mm per mm above
+    index  middle joint skin  3.4 mm above (14.4 below), bends  67 deg: opens  4.0 mm at the skin, +1.17 mm per mm above
+    index  end joint    skin  3.6 mm above (12.1 below), bends  67 deg: opens  4.2 mm at the skin, +1.17 mm per mm above
+    middle knuckle      skin  3.3 mm above (24.6 below), bends  71 deg: opens  4.1 mm at the skin, +1.24 mm per mm above
+    middle middle joint skin  3.3 mm above (14.7 below), bends  71 deg: opens  4.1 mm at the skin, +1.24 mm per mm above
+    middle end joint    skin  2.7 mm above (11.6 below), bends  71 deg: opens  3.4 mm at the skin, +1.24 mm per mm above
+    ring   knuckle      skin  3.3 mm above (22.4 below), bends  65 deg: opens  3.8 mm at the skin, +1.13 mm per mm above
+    ring   middle joint skin  2.9 mm above (13.7 below), bends  65 deg: opens  3.3 mm at the skin, +1.13 mm per mm above
+    ring   end joint    skin  2.4 mm above (11.6 below), bends  65 deg: opens  2.8 mm at the skin, +1.13 mm per mm above
+    little knuckle      skin  3.8 mm above (16.5 below), bends  55 deg: opens  3.6 mm at the skin, +0.96 mm per mm above
+    little middle joint skin  3.8 mm above (10.6 below), bends  55 deg: opens  3.7 mm at the skin, +0.96 mm per mm above
+    little end joint    skin  3.6 mm above ( 8.2 below), bends  55 deg: opens  3.4 mm at the skin, +0.96 mm per mm above

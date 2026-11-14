@@ -809,7 +809,12 @@ For the gloves (U2). Jon: "i use ccm/bauer senior sticks".
   The APX's section above, corners and all, is ~89 mm round (ours: 2 × (19.3 + 29.8) − 8 × 5.5 +
   2π × 5.5).
 - Older: US 6,241,633 B1 (Christian Brothers, filed 1998-02-20): "the shaft width of a standard
-  rectangular shaft is about 20 mm and the shaft height is about 30 mm".
+  rectangular shaft is about 20 mm and the shaft height is about 30 mm". Its own shaft has
+  "generally parallel flat side surfaces 18, 18 which are spaced from one another by the shaft
+  width dimension SW", between curved top and bottom edges, "the flat part of the sides 18 [...]
+  approximately equal to the shaft height SH minus the shaft width SW", and "both of the
+  player's hands are always on this portion of the stick". So the ~30 mm faces are the shaft's
+  sides. That they lie parallel to the blade's faces is our reading (the patent doesn't say).
 - Jon (2026-11-13): "i shoot left", so his right hand is the top hand (at the knob) and his left
   the bottom hand.
 - **How fingers sit round a bar.** Lee JW, Rim K, "Measurement of finger joint angles and maximum
@@ -833,6 +838,40 @@ For the gloves (U2). Jon: "i use ccm/bauer senior sticks".
   65-90°, middle joints 90-100°; thumb knuckle 50°, end joint 80°; an AAOS-based table and
   flashcard sets, not the original AAOS text). U2's grip uses fingers 90 / 100 / 80° and thumb
   60 (its base) / 50 / 80° as limits and reports where one binds.
+
+## 28. Hockey gloves: what they protect and how they're built (2026-11-13)
+
+A first pass for U2. **M** measured or clinical, **R** a patent, **C** a maker's or retailer's
+claim.
+- **What gets hurt (M).** Tedesco LJ, Swindell HW, Anderson FL, Jang E, Wong TT, Kazam JK,
+  Kadiyala RK, Popkin CA, "Evaluation and Management of Hand, Wrist and Elbow Injuries in Ice
+  Hockey", Open Access J Sports Med 2020;11:93-103 (PMC7196194), a review: "Elbow, wrist, and
+  hand injuries comprise nearly 14.1% of all hockey-related visits to the ED" (citing Deits et
+  al. 2010 and Mölsä et al. 2003); forearm contusions most often from "a slash from an
+  opponent's stick" (treatment: "can wear Kevlar sleeve"); metacarpal fractures "usually from a
+  slash from an opponents' stick"; after a hook-of-hamate fracture, "early return to play with a
+  protective pad worn in the glove". It finds few studies of these injuries' epidemiology, and
+  says nothing of the gap between the glove and the elbow pad.
+  For a torn ulnar collateral ligament of the thumb, return to play "feasible if the thumb can
+  be immobilized during games/practice".
+- **No standard for lacrosse gloves either.** NOCSAE's lacrosse standards (nocsae.org, standards
+  library, read 2026-11-13): helmets (ND041-044), face protectors (ND045), balls (ND049, ND149),
+  chest protectors for commotio cordis (ND200, ND201), and test methods; none for gloves.
+- **A glove's parts (R).** US 5,488,739 (Itech Sport Products, filed 1994-12-15): "an outer cuff
+  structure 40 formed of substantially rigid padded material" with "an adjustable inner cuff
+  portion 42" inside it; "padded formations 32 disposed over the upper area of the hand portion"
+  (the back of the hand); fingers in "at least two separated padded finger sections" of "protective
+  foam blocks", joined across the joints by "a narrow transverse flexible protective web [...] of
+  wear resistant material, herein leather"; aramid ("Kevlar") over the palm, fingers and thumb.
+- **Today's terms (C, retailers, through search summaries; the pages not read).** Ice
+  Warehouse's guide: four-roll fingers for "enhanced protection and a traditional feel",
+  three-roll for "a more contoured, mobile fit"; backhands "segmented or anatomical". Foams named
+  in product copy: PORON XRD, D3O, "triple-density foam". Palms: Nash, synthetic suede.
+- **Weights (C).** Bauer's Pro Series 4-roll, read on Ice Warehouse's page: "350 grams (14")",
+  not said whether one glove or the pair. Search summaries gave 223-305 g for other 14" models;
+  not checked against the pages.
+- Not looked for yet: whether hockey gloves have a standard (helmets do, 17), and any test of
+  how much a glove's back takes from a slash or a puck.
 
 ## Still to find
 

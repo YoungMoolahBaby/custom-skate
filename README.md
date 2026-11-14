@@ -306,7 +306,8 @@ and a helmet come next, on the same body.
   not fitted, comes out within 1.1% of the median; the hand is 6% thin round the knuckles, so the
   glove's palm wants Jon's own hand. Nothing below the waist moved. The arm bends 90° at the
   elbow and the hand closes on the army's 1¼" test dowel where its men held it, the fingers
-  wrapped evenly; the stick's own section goes in next.
+  wrapped evenly, then on a senior shaft (Bauer's published 19.3 × 29.8 mm). Jon shoots left: the
+  right hand modelled is his top hand.
 
 ![The stand-in body above the waist, arms hung for measuring: what was measured in red and blue](docs/upper/measuring_pose.png)
 

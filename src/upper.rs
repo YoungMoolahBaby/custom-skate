@@ -445,18 +445,65 @@ pub fn fit(b: &Body) -> Result<(Upper, Measured), String> {
 pub struct Bar {
     pub centre: Point3<f64>,
     pub axis: Vector3<f64>,
-    pub radius: f64,
+    /// The section's first direction (across the bar); the second is `axis` x `side`.
+    pub side: Vector3<f64>,
+    pub section: Section,
+}
+
+/// A bar's section: a rectangle `along` x `out` mm (as held: along the hand, out of the palm)
+/// with its corners rounded to `corner` mm. A round bar is a square with its corners rounded to
+/// half its side.
+#[derive(Clone, Copy, Debug)]
+pub struct Section {
+    pub along: f64,
+    pub out: f64,
+    pub corner: f64,
+}
+
+impl Section {
+    pub fn round(diameter: f64) -> Self {
+        Section { along: diameter, out: diameter, corner: 0.5 * diameter }
+    }
+
+    /// Turned a quarter turn in the hand.
+    pub fn turned(self) -> Self {
+        Section { along: self.out, out: self.along, ..self }
+    }
 }
 
 impl Bar {
-    fn dist(&self, p: &Point3<f64>) -> f64 {
+    /// Signed distance from the bar's surface, mm (negative inside).
+    fn sd(&self, p: &Point3<f64>) -> f64 {
         let d = p - self.centre;
-        (d - self.axis * d.dot(&self.axis)).norm()
+        let s = &self.section;
+        let qx = d.dot(&self.side).abs() - (0.5 * s.along - s.corner);
+        let qy = d.dot(&self.axis.cross(&self.side)).abs() - (0.5 * s.out - s.corner);
+        (qx.max(0.0).powi(2) + qy.max(0.0).powi(2)).sqrt() + qx.max(qy).min(0.0) - s.corner
+    }
+
+    /// How far the bar's surface on its palm side lies from its centre, `x` mm along `side`
+    /// from it; None past its edge.
+    fn under(&self, x: f64) -> Option<f64> {
+        let s = &self.section;
+        let (a, b, r) = (0.5 * s.along, 0.5 * s.out, s.corner);
+        let x = x.abs();
+        if x >= a {
+            None
+        } else if x <= a - r {
+            Some(b)
+        } else {
+            Some(b - r + (r * r - (x - (a - r)).powi(2)).sqrt())
+        }
     }
 }
 
 /// ANSUR II's dowel for the forearm-center of grip length: 1-1/4" across (RESEARCH.md 26).
 pub const DOWEL_DIAMETER: f64 = 31.75;
+
+/// Bauer's VAPOR APX senior shaft above its taper: 0.76 x 1.175 in, corners 5.5 mm (LeGault,
+/// CompositesWorld 2012; RESEARCH.md 27). As held: its wide faces (parallel to the blade's) on
+/// the palm, the shaft standing 19.3 mm out of it.
+pub const SHAFT: Section = Section { along: 29.8, out: 19.3, corner: 5.5 };
 
 type Pose = HashMap<String, Rotation3<f64>>;
 
@@ -575,25 +622,28 @@ pub struct Grip {
     pub wrapped: bool,
 }
 
-/// Closes the right hand of `base` (the elbow pose, fingers straight) on a bar of `radius` lying
-/// across the palm, `u` mm from the wrist joint along the hand.
+/// Closes the right hand of `base` (the elbow pose, fingers straight) on a bar of `section` lying
+/// across the palm, its centre `u` mm from the wrist joint along the hand.
 /// - The bar rests on the palm's middle (the skin over the middle and ring fingers' metacarpals).
 ///   The pads either side, which give round a held bar, are let overlap it: rigid skin can't give,
 ///   and resting on them held the bar ~45 mm off the hand's bones, past where the fingers reach
 ///   round.
-/// - Each finger wraps it from the base out, as a hand closes on a bar and as Irwin and Radwin
-///   (2008) posed theirs: its knuckle bends until a link touches the bar, or a middle or end link
-///   the palm behind it, or the joint's limit; then the next joint; each about the bar's
-///   direction.
-/// - The thumb first swings out of the palm (its base turning square to the palm) until it
-///   clears the bar, then its middle and end joints bend toward the bar until they touch it.
-fn close_on(b: &Body, raw: &[Vector3<f64>], base: &Pose, dom: &[usize], radius: f64, u: f64) -> Result<Grip, String> {
+/// - The fingers close from straight, as grasp planners close a hand (GraspIt's auto-grasp): all
+///   three joints at one rate, about the bar's direction; when a link touches the bar, or a middle
+///   or end link the palm behind it, the joints from the knuckle to that link stop and those
+///   beyond keep closing.
+/// - The thumb first swings out of the palm (its base turning square to the palm) until its
+///   phalanges clear the bar, then its middle and end joints bend toward the bar, one after the
+///   other, until they touch it.
+fn close_on(b: &Body, raw: &[Vector3<f64>], base: &Pose, dom: &[usize], section: Section, u: f64) -> Result<Grip, String> {
     let rig = &b.model.rig;
     let mm = |v: Vector3<f64>| body::to_mm(v, b.floor, b.shift);
     let from_mm = |p: Point3<f64>| Vector3::new((p.y - b.shift.1) / 100.0, p.z / 100.0 + b.floor, (p.x - b.shift.0) / 100.0);
     let mo0 = rig.motions(raw, base);
     let p0 = rig.skin(raw, &mo0);
     let h = hand_frame(b, raw, &mo0);
+    let across_mid = (h.knuckles - h.wr).dot(&h.across);
+    let mut bar = Bar { centre: h.wr + h.axis * u + h.across * across_mid, axis: h.across, side: h.axis, section };
     let palm_bones: Vec<usize> = ["metacarpal2.R", "metacarpal3.R"].iter().map(|n| rig.index[*n]).collect();
     let mut lift = f64::MIN;
     for (i, &d) in dom.iter().enumerate() {
@@ -601,17 +651,16 @@ fn close_on(b: &Body, raw: &[Vector3<f64>], base: &Pose, dom: &[usize], radius: 
             continue;
         }
         let q = mm(p0[i]) - h.wr;
-        let s = q.dot(&h.axis) - u;
-        if s.abs() < radius {
-            lift = lift.max(q.dot(&h.palm) + (radius * radius - s * s).sqrt());
+        if let Some(under) = bar.under(q.dot(&h.axis) - u) {
+            lift = lift.max(q.dot(&h.palm) + under);
         }
     }
     if lift == f64::MIN {
         return Err(format!("no palm under a bar {u:.0} mm from the wrist"));
     }
-    let across_mid = (h.knuckles - h.wr).dot(&h.across);
-    let bar = Bar { centre: h.wr + h.axis * u + h.palm * lift + h.across * across_mid, axis: h.across, radius };
-    let palm_at = bar.centre - h.palm * radius;
+    bar.centre += h.palm * lift;
+    let palm_at = bar.centre - h.palm * (0.5 * section.out);
+    let behind = -0.25 * section.along;
     let e = to_mh(bar.axis);
     let c_mh = from_mm(bar.centre);
     let ends = |mo: &[Motion], bi: usize| {
@@ -670,7 +719,7 @@ fn close_on(b: &Body, raw: &[Vector3<f64>], base: &Pose, dom: &[usize], radius: 
     };
     // The thumb out of the bar's way: its two phalanges clear of it (its base, the pad at the
     // root of the thumb, lies under the bar with the palm's other pads).
-    let in_bar = |skin: &[Vector3<f64>], k: usize| (1..3).any(|j| owners[k][j].iter().any(|&i| bar.dist(&mm(skin[i])) < radius));
+    let in_bar = |skin: &[Vector3<f64>], k: usize| (1..3).any(|j| owners[k][j].iter().any(|&i| bar.sd(&mm(skin[i])) < 0.0));
     stops[0][0] = "-";
     loop {
         let (_, skin) = skin_of(&th, &axes);
@@ -699,9 +748,9 @@ fn close_on(b: &Body, raw: &[Vector3<f64>], base: &Pose, dom: &[usize], radius: 
     }
     // A link touching: the bar, or (a finger's middle or end link) the palm behind the bar.
     let touches = |k: usize, p: &Point3<f64>, jj: usize| {
-        if bar.dist(p) < radius {
+        if bar.sd(p) < 0.0 {
             Some("bar")
-        } else if k > 0 && jj > 0 && (p - bar.centre).dot(&h.axis) < -0.5 * radius && (p - palm_at).dot(&h.palm) < 0.0 {
+        } else if k > 0 && jj > 0 && (p - bar.centre).dot(&h.axis) < behind && (p - palm_at).dot(&h.palm) < 0.0 {
             Some("palm")
         } else {
             None
@@ -763,25 +812,53 @@ fn close_on(b: &Body, raw: &[Vector3<f64>], base: &Pose, dom: &[usize], radius: 
     Ok(Grip { pose: pose_of(&th, &axes), bar, angles: th, stops, wrapped })
 }
 
-/// What U2's checks measure on the bent arm (mm): ANSUR's three elbow lengths, and the grip.
+/// A grip, read: the hand closed on a bar, the elbow's back to the bar's centre (mm), how far the
+/// hand's skin lies inside the bar (mm: the palm and its pads, the thumb's phalanges, the
+/// fingers'), and the hand's skin.
+pub struct GripRead {
+    pub u: f64,
+    pub grip: Grip,
+    pub length: f64,
+    pub overlap: [f64; 3],
+    pub hand: IndexedMesh,
+}
+
+/// A finger joint as the hand closes on the shaft: how far the back's skin stands above the
+/// joint's centre with the hand straight (mm), and how far the joint bends (deg). Over it, the
+/// back opens by the bend (rad) times the height: at the skin, and that much more for each mm
+/// above it.
+pub struct Knuckle {
+    pub digit: usize,
+    pub joint: usize,
+    pub height: f64,
+    /// The palm side's skin below the joint's centre, mm.
+    pub palmar: f64,
+    pub angle: f64,
+}
+
+/// What U2's checks measure on the bent arm (mm): ANSUR's three elbow lengths, and the grips.
 pub struct ElbowChecks {
     pub forearm_hand: f64,
     pub shoulder_elbow: f64,
     /// The back of the elbow behind the elbow joint, mm.
     pub elbow_back: f64,
-    /// Per dowel position (mm from the wrist joint: ANSUR's p5, median, p95): the grip, the
-    /// elbow's back to the dowel's centre, and how far the hand's skin overlaps the dowel (mm).
-    pub grips: Vec<(f64, Grip, f64, [f64; 3])>,
-    pub hand: IndexedMesh,
+    /// On ANSUR's dowel, per position (mm from the wrist joint: ANSUR's p5, median, p95).
+    pub dowel: Vec<GripRead>,
+    /// On the shaft (`SHAFT`) at ANSUR's median place: its wide faces on the palm, then turned a
+    /// quarter turn.
+    pub shaft: Vec<GripRead>,
+    /// Over each finger joint (index to little; knuckle, middle, end), on the shaft as held.
+    pub knuckles: Vec<Knuckle>,
+    /// The whole body with the hand on the dowel at the median place.
     pub arm: IndexedMesh,
 }
 
 /// The arm bent 90 deg at the elbow, as ANSUR measured it: the forearm-hand and shoulder-elbow
 /// lengths with the hand straight; then the hand closed on ANSUR's dowel where ANSUR's men held
-/// it (`ansur::STYLION_GRIP`), from straight fingers, and the elbow's back to the dowel's centre
-/// (ANSUR's forearm-center of grip length). The elbow's back ("olecranon, rear": "the rearmost
-/// point of the elbow") is taken within 10 mm of the elbow joint's height: higher up, the back of
-/// the upper arm stands further back.
+/// it (`ansur::STYLION_GRIP_RANGE`), from straight fingers, and the elbow's back to the dowel's
+/// centre (ANSUR's forearm-center of grip length); then on the stick's shaft. The elbow's back
+/// ("olecranon, rear": "the rearmost point of the elbow") is taken within 10 mm of the elbow
+/// joint's height: higher up, the back of the upper arm stands further back.
 pub fn elbow_checks(b: &Body, raw: &[Vector3<f64>], acromion_z: f64) -> Result<ElbowChecks, String> {
     let m = &b.model;
     let rig = &m.rig;
@@ -808,19 +885,17 @@ pub fn elbow_checks(b: &Body, raw: &[Vector3<f64>], acromion_z: f64) -> Result<E
     let elbow_back = el.coords.dot(&af) - rear(&skin);
     let bottom = elbow.iter().map(|&i| mm(skin[i]).z).fold(f64::MAX, f64::min);
     let shoulder_elbow = acromion_z - bottom;
-    // The grip, from straight fingers.
+    // The grips, from straight fingers.
     let mut base = elbow_pose(b, raw, 90.0, true);
     straighten_fingers(b, raw, &mut base);
     let dom = dominant(b);
-    let mut grips = Vec::new();
-    for u in ansur::STYLION_GRIP_RANGE {
-        let g = close_on(b, raw, &base, &dom, 0.5 * DOWEL_DIAMETER, u)?;
-        let (skin, _) = smooth(&g.pose);
-        let len = g.bar.centre.coords.dot(&af) - rear(&skin);
-        // How far into the dowel: the palm (its pads), the thumb's phalanges, the fingers' (the
-        // skin's control points, each by its bone).
-        let thumb: Vec<usize> = ["finger1-2.R", "finger1-3.R"].iter().map(|n| rig.index[*n]).collect();
-        let fingers: Vec<usize> = (2..=5).flat_map(|k| (1..=3).map(move |s| format!("finger{k}-{s}.R"))).map(|n| rig.index[&n]).collect();
+    let thumb: Vec<usize> = ["finger1-2.R", "finger1-3.R"].iter().map(|n| rig.index[*n]).collect();
+    let fingers: Vec<usize> = (2..=5).flat_map(|k| (1..=3).map(move |s| format!("finger{k}-{s}.R"))).map(|n| rig.index[&n]).collect();
+    let read = |section: Section, u: f64| -> Result<(GripRead, Vec<Vector3<f64>>), String> {
+        let grip = close_on(b, raw, &base, &dom, section, u)?;
+        let (skin, _) = smooth(&grip.pose);
+        let length = grip.bar.centre.coords.dot(&af) - rear(&skin);
+        // How far into the bar (the skin's control points, each by its bone).
         let mut overlap = [0.0f64; 3];
         for &i in &hand_set {
             let i = i as usize;
@@ -828,15 +903,43 @@ pub fn elbow_checks(b: &Body, raw: &[Vector3<f64>], acromion_z: f64) -> Result<E
                 continue;
             }
             let c = if thumb.contains(&dom[i]) { 1 } else if fingers.contains(&dom[i]) { 2 } else { 0 };
-            overlap[c] = overlap[c].max(g.bar.radius - g.bar.dist(&mm(skin[i])));
+            overlap[c] = overlap[c].max(-grip.bar.sd(&mm(skin[i])));
         }
-        grips.push((u, g, len, overlap));
+        let hand = body::mesh_of_quads(&skin, b.floor, b.shift, &reg.hand);
+        Ok((GripRead { u, grip, length, overlap, hand }, skin))
+    };
+    let mut dowel = Vec::new();
+    let mut arm = IndexedMesh::default();
+    for (k, u) in ansur::STYLION_GRIP_RANGE.into_iter().enumerate() {
+        let (r, skin) = read(Section::round(DOWEL_DIAMETER), u)?;
+        if k == 1 {
+            arm = body::mesh_of_quads(&skin, b.floor, b.shift, &m.quads);
+        }
+        dowel.push(r);
     }
-    let (_, g, _, _) = &grips[1];
-    let (skin, _) = smooth(&g.pose);
-    let hand = body::mesh_of_quads(&skin, b.floor, b.shift, &reg.hand);
-    let arm = body::mesh_of_quads(&skin, b.floor, b.shift, &m.quads);
-    Ok(ElbowChecks { forearm_hand, shoulder_elbow, elbow_back, grips, hand, arm })
+    let u = ansur::STYLION_GRIP_RANGE[1];
+    let shaft = vec![read(SHAFT, u)?.0, read(SHAFT.turned(), u)?.0];
+    // Over each finger joint, the straight hand: the back's skin above the joint's centre (the
+    // highest skin within 2 mm of the joint along the finger and 4 mm of its middle across it).
+    let (skin, mo) = smooth(&base);
+    let h = hand_frame(b, raw, &mo);
+    let mut knuckles = Vec::new();
+    for k in 1..5 {
+        for j in 0..3 {
+            let bone = format!("finger{}-{}.R", k + 1, j + 1);
+            let (head, tail) = (posed_end(b, raw, &mo, &bone, false), posed_end(b, raw, &mo, &bone, true));
+            let a = (tail - head).normalize();
+            let height = hand_set
+                .iter()
+                .map(|&i| mm(skin[i as usize]) - head)
+                .filter(|d| d.dot(&a).abs() < 2.0 && d.dot(&h.across).abs() < 4.0)
+                .map(|d| -d.dot(&h.palm))
+                .fold(f64::MIN, f64::max);
+            let palmar = hand_set.iter().map(|&i| mm(skin[i as usize]) - head).filter(|d| d.dot(&a).abs() < 2.0 && d.dot(&h.across).abs() < 4.0).map(|d| d.dot(&h.palm)).fold(f64::MIN, f64::max);
+            knuckles.push(Knuckle { digit: k, joint: j, height, palmar, angle: shaft[0].grip.angles[k][j] });
+        }
+    }
+    Ok(ElbowChecks { forearm_hand, shoulder_elbow, elbow_back, dowel, shaft, arm, knuckles })
 }
 
 /// The right hand's four fingers straight: each joint on its parent's line, the first on its
@@ -856,20 +959,29 @@ fn straighten_fingers(b: &Body, raw: &[Vector3<f64>], pose: &mut Pose) {
 
 /// A bar as a mesh, `length` long.
 fn bar_mesh(bar: &Bar, length: f64) -> IndexedMesh {
-    let n = 48;
-    let e1 = bar.axis.cross(&Vector3::x()).try_normalize(1e-9).unwrap_or_else(|| bar.axis.cross(&Vector3::y()).normalize());
-    let e2 = bar.axis.cross(&e1);
-    let mut m = IndexedMesh::default();
-    for end in [-0.5, 0.5] {
-        for k in 0..n {
-            let a = std::f64::consts::TAU * k as f64 / n as f64;
-            m.vertices.push(bar.centre + bar.axis * (end * length) + (e1 * a.cos() + e2 * a.sin()) * bar.radius);
+    let s = &bar.section;
+    let n_side = bar.axis.cross(&bar.side);
+    let (a, c, r) = (0.5 * s.along - s.corner, 0.5 * s.out - s.corner, s.corner);
+    // Round the section: a quarter circle at each corner.
+    let per = 12;
+    let mut ring = Vec::new();
+    for (k, (cx, cy)) in [(a, c), (-a, c), (-a, -c), (a, -c)].into_iter().enumerate() {
+        for i in 0..=per {
+            let t = std::f64::consts::FRAC_PI_2 * (k as f64 + i as f64 / per as f64);
+            ring.push(bar.side * (cx + r * t.cos()) + n_side * (cy + r * t.sin()));
         }
     }
-    for k in 0..n as u32 {
-        let (a, c) = (k, (k + 1) % n as u32);
-        m.faces.push([a, c, n as u32 + a]);
-        m.faces.push([c, n as u32 + c, n as u32 + a]);
+    let n = ring.len() as u32;
+    let mut m = IndexedMesh::default();
+    for end in [-0.5, 0.5] {
+        for v in &ring {
+            m.vertices.push(bar.centre + bar.axis * (end * length) + v);
+        }
+    }
+    for k in 0..n {
+        let (a, c) = (k, (k + 1) % n);
+        m.faces.push([a, c, n + a]);
+        m.faces.push([c, n + c, n + a]);
     }
     m
 }
@@ -910,7 +1022,7 @@ pub fn run(scan: &Path, out: &Path) -> Result<(), String> {
     let after = m.s2.apply(&m.s1.apply(&u.raw[..m.n_body]));
     let moved = b.quads.iter().flatten().map(|&i| 100.0 * (after[i as usize] - before[i as usize]).norm()).fold(0.0, f64::max);
     say(format!("  the body below the waist (G1's mesh, to 1250 mm) moved at most {moved:.4} mm"));
-    // U2: the elbow bent 90 deg, the hand straight and then gripping ANSUR's dowel.
+    // U2: the elbow bent 90 deg, the hand straight and then gripping ANSUR's dowel and the shaft.
     let t0 = Instant::now();
     let ec = elbow_checks(&b, &u.raw, c.acromial_height)?;
     say(format!("the arm bent 90 deg at the elbow, palm in (track U2; {:.0} s), against ANSUR (mm):", t0.elapsed().as_secs_f64()));
@@ -918,38 +1030,68 @@ pub fn run(scan: &Path, out: &Path) -> Result<(), String> {
     say(format!("    shoulder-elbow length  {:>6.1}  (ANSUR {:.0})", ec.shoulder_elbow, ansur::SHOULDER_ELBOW));
     say(format!("    the elbow's back {:.1} mm behind the elbow joint (ANSUR's men: {:.0} behind radiale, median)", ec.elbow_back, ansur::OLECRANON_RADIALE));
     let digit = ["thumb", "index", "middle", "ring", "little"];
-    for (u, g, len, overlap) in &ec.grips {
+    let mut tell = |what: String, r: &GripRead| {
         say(format!(
-            "  the hand closed on a {DOWEL_DIAMETER} mm dowel {u:.0} mm from the wrist joint: forearm-center of grip {len:.1} (ANSUR {:.0}); the middle finger {} it to its tip; into the dowel by up to {:.1} mm (the palm's pads), {:.1} (the thumb), {:.1} (the fingers)",
+            "  the hand closed on {what} {:.0} mm from the wrist joint: the elbow's back to its centre {:.1} (ANSUR's forearm-center of grip {:.0}); the middle finger {} it to its tip; skin inside it by up to {:.1} mm (the palm's pads), {:.1} (the thumb), {:.1} (the fingers)",
+            r.u,
+            r.length,
             ansur::GRIP_LENGTH,
-            if g.wrapped { "wraps" } else { "doesn't wrap" },
-            overlap[0],
-            overlap[1],
-            overlap[2]
+            if r.grip.wrapped { "wraps" } else { "doesn't wrap" },
+            r.overlap[0],
+            r.overlap[1],
+            r.overlap[2]
         ));
         for k in 0..5 {
             say(format!(
                 "    {:<6} bent {} deg (base to tip), stopped by {}",
                 digit[k],
-                g.angles[k].iter().map(|a| format!("{a:.0}")).collect::<Vec<_>>().join(" / "),
-                g.stops[k].join(" / ")
+                r.grip.angles[k].iter().map(|a| format!("{a:.0}")).collect::<Vec<_>>().join(" / "),
+                r.grip.stops[k].join(" / ")
             ));
         }
+    };
+    for r in &ec.dowel {
+        tell(format!("ANSUR's {DOWEL_DIAMETER} mm dowel"), r);
     }
-    let g = &ec.grips[1].1;
+    let shaft_name = |s: &Section| format!("the shaft ({:.1} x {:.1} mm, corners {:.1}; {:.1} along the hand, {:.1} out of the palm)", SHAFT.along, SHAFT.out, s.corner, s.along, s.out);
+    for r in &ec.shaft {
+        tell(shaft_name(&r.grip.bar.section), r);
+    }
+    say("  over each finger joint, the hand from straight to closed on the shaft: the back's skin above the joint's centre (straight), the joint's bend, and how much the back opens over it, at the skin and per mm above it:".into());
+    let joint = ["knuckle", "middle joint", "end joint"];
+    for kn in &ec.knuckles {
+        let rad = kn.angle.to_radians();
+        say(format!(
+            "    {:<6} {:<12} skin {:>4.1} mm above ({:>4.1} below), bends {:>3.0} deg: opens {:>4.1} mm at the skin, +{:.2} mm per mm above",
+            digit[kn.digit],
+            joint[kn.joint],
+            kn.height,
+            kn.palmar,
+            kn.angle,
+            rad * kn.height,
+            rad
+        ));
+    }
     std::fs::write(docs.join("summary.txt"), lines.join("\n") + "\n").map_err(|e| e.to_string())?;
     {
         let skin = [0.85, 0.70, 0.60];
-        let dowel = bar_mesh(&g.bar, 140.0);
         let grey = [0.55, 0.55, 0.6];
-        // From the thumb's side (above), from the front (the fingers), from below, from behind.
+        // From the thumb's side (above), from the front (the fingers), from below, from the palm's
+        // side.
         let views = [
             View::looking(-Vector3::z(), Vector3::x()),
             View::looking(-Vector3::x(), Vector3::z()),
             View::looking(Vector3::z(), Vector3::x()),
             View::looking(Vector3::new(0.3, -1.0, 0.0), Vector3::z()),
         ];
-        render_styled(&[Layer::solid(&ec.hand, skin), Layer::solid(&dowel, grey)], &views, 2.0, &docs.join("grip.png"), Style::pretty()).map_err(|e| e.to_string())?;
+        let draw = |r: &GripRead, name: &str| {
+            let bar = bar_mesh(&r.grip.bar, 140.0);
+            render_styled(&[Layer::solid(&r.hand, skin), Layer::solid(&bar, grey)], &views, 2.0, &docs.join(name), Style::pretty()).map_err(|e| e.to_string())
+        };
+        draw(&ec.dowel[1], "grip.png")?;
+        draw(&ec.shaft[0], "grip_shaft.png")?;
+        draw(&ec.shaft[1], "grip_shaft_turned.png")?;
+        let dowel = bar_mesh(&ec.dowel[1].grip.bar, 140.0);
         render_styled(&[Layer::solid(&ec.arm, skin), Layer::solid(&dowel, grey)], &[View::looking(Vector3::y(), Vector3::z())], 0.35, &docs.join("grip_arm.png"), Style::pretty())
             .map_err(|e| e.to_string())?;
     }

@@ -2051,11 +2051,71 @@ wide and 2.5 cm thick (RESEARCH.md 27). So the grip is built and checked first o
     here, puts a 25-38 mm handle at 40-43° knuckle, 75-95° middle, 37-40° end joint. So the hand's shape is a first one, good enough to start the glove round; Jon's
     own hand on his stick would replace it.
 
-**U2 next:** the stick's section in place of the dowel: Bauer's VAPOR APX upper shaft, 19.3 ×
-29.8 mm with 5.5 mm corners, as published (RESEARCH.md 27), until Jon's own is measured. Jon
-shoots left, so the right hand (the one modelled so far) is the top hand at the knob, the left
-the bottom hand down the shaft. Then the glove's parts round the closed hands, and the elbow pad
-with the gap between them.
+**U2: the hand on the stick (2026-11-13).** Jon: "i shoot left", and on the shaft's size, "is
+the width of a modern senior stick online anywhere?" It is, for one: Bauer's VAPOR APX, 19.3 ×
+29.8 mm above its taper with 5.5 mm corners, from Bauer via CompositesWorld (RESEARCH.md 27).
+Jon shoots left, so his right hand (the one modelled) is the top hand at the knob and the left
+the bottom hand; on the shaft's straight part both close on the same section, so one hand
+closed on it serves both, mirrored. The shaft's wide faces are its sides (a patent's "flat side
+surfaces" ~20 mm apart between curved top and bottom edges), taken as parallel to the blade's
+faces (our reading); a shot pushes and pulls the blade's faces, so the palms take the sides and
+the shaft stands 19.3 mm out of the palm. Closed the same way as on the dowel, at the same place:
+
+| at 62 mm from the wrist joint | dowel (31.75 round) | shaft, sides on the palm | shaft, turned (edge on the palm) |
+|---|---|---|---|
+| fingers, each joint (index / middle / ring / little) | 65 / 69 / 63 / 54° | 67 / 71 / 65 / 55° | index and middle fist into the palm in front of it, ring 66, little 63 |
+| skin inside the bar: palm's pads / thumb / fingers | 13.2 / 12.8 / 0 mm | 8.5 / 7.9 / 0 | 8.4 / 7.3 / 0 |
+
+On the shaft as held, the fingers wrap it evenly to the tips, as on the dowel, and the pads and
+the thumb sit ~5 mm less deep in it (it is thinner out of the palm). Turned edge-on, the index and
+middle fingers curl into the palm in front of it without reaching it, so that isn't how a hand
+holds a shaft, which fits the reading above. The thumb's guards still bind (60° base, 80° end).
+
+  ![The right hand closed on the APX shaft, its sides on the palm: from above (the thumb's side),
+  the fingertips' end, below, the palm's side](upper/grip_shaft.png)
+
+### Gloves: Jon's goals (2026-11-13)
+
+In his words, each with a first engineering take:
+1. **"i like gloves that fit tight but are still really manueverable. almost like a lacrosse
+   glove but safe for hockey."** Lacrosse gloves are the lighter, freer kind (no safety standard
+   for them: NOCSAE's lacrosse list covers helmets, face protectors, balls and chest protectors,
+   none for gloves; RESEARCH.md 28). So: a glove that moves like one, with hockey's protection
+   where slashes land (the back of the hand, the fingers' backs, the thumb, the wrist).
+2. **"just like a custom fit, responseiveness and lack of negative space - ie tight fit"**
+   (asked what no stock glove gives him). The glove built from his hand, closed on his stick,
+   with no air between it and the hand: the foam on the skin and the hard parts on the foam, the
+   way the shin pad sits on the shin.
+
+**What a tight glove has to solve (from the U2 grip).** Over every finger joint the back of the
+hand lengthens as the hand closes. On the shaft the fingers' joints bend 55-71° (above), so over
+each joint the glove's back opens 0.96-1.24 mm for every mm it stands above the joint's centre:
+with ~10 mm of foam and shell on the skin, 10-12 mm per joint more than the skin itself (the
+skin's own share is 2.8-4.4 mm in this model, which is low: MakeHuman puts its finger joints only
+2.4-3.8 mm under the back's skin, where a real joint's centre is in the bone's head, deeper).
+Twelve joints, so a tight glove can't have a back that is one piece, or rolls that butt end to
+end: they'd gap open over every knuckle in a fist, or bind if they don't.
+
+**Recommendation: scales that slide, as the knee does.** Each finger in three short hard
+segments, one per finger bone, each riding its bone, foam under each; each segment's end laps
+under the next far enough to stay closed from a straight hand to a fist (the lap is the opening
+above, at the segment's height). The back of the hand one plate over the knuckle bones, the
+fingers' first segments lapping onto it. The thumb in two segments that bend (lacrosse-like),
+with a stop so it can't bend back (for a torn thumb ligament, the injury review returns players
+to play with the thumb immobilised; RESEARCH.md 28). A short cuff close round the wrist so the
+wrist bends freely; the forearm between the cuff and the elbow pad covered by the compression
+suit's sleeve, where a cut-resistant layer can go (a Kevlar sleeve is the forearm-slash advice in
+the injury review, RESEARCH.md 28). The palm thin and bought (Nash or synthetic suede).
+- Cost: many small parts (about 16 hard pieces a hand) and the sewing round them; foam thickness
+  for a slash still to find (no glove standard, no test found).
+- Fallback: soft foam rolls shaped to his hand (as a stock glove, but custom): simpler and
+  lighter, but rolls that open over each knuckle in a fist.
+- To keep in mind: sweat and washing (gloves aren't usually machine-washed; a liner that comes
+  out), and getting the hand in past laps that close tight.
+
+**U2 next (on Jon's word):** round 1 of the glove: the segments built on the hand closed on the
+shaft, checked from straight to a fist for laps that stay closed and parts that don't bind; then
+the elbow pad and the gap between them.
 
 ## Open questions for Jon
 
