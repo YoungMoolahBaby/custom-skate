@@ -2103,9 +2103,19 @@ above, at the segment's height). The back of the hand one plate over the knuckle
 fingers' first segments lapping onto it. The thumb in two segments that bend (lacrosse-like),
 with a stop so it can't bend back (for a torn thumb ligament, the injury review returns players
 to play with the thumb immobilised; RESEARCH.md 28). A short cuff close round the wrist so the
-wrist bends freely; the forearm between the cuff and the elbow pad covered by the compression
-suit's sleeve, where a cut-resistant layer can go (a Kevlar sleeve is the forearm-slash advice in
-the injury review, RESEARCH.md 28). The palm thin and bought (Nash or synthetic suede).
+wrist bends freely (Jon chose it, 2026-11-14); the forearm between the cuff and the elbow pad
+covered by a slash guard built into the compression suit's sleeve: foam and a hard plate over
+the forearm's back, its ends lapping under the glove's cuff and the elbow pad, in a pocket so it
+comes out for the wash. A cut-resistant layer alone wouldn't do: the review's forearm injuries
+are contusions from slashes, blows not cuts (its "Kevlar sleeve" is for a player going back with
+one; RESEARCH.md 28). The palm thin and bought (Nash or synthetic suede).
+
+**The look (Jon, 2026-11-14): a hockey glove's.** From the glove he showed (a TRUE Catalyst
+5X3): fabric-covered padded blocks; each finger in blocks with breaks at the joints; a raised
+panel over the back of the hand; a padded cuff (ours shorter); a pale suede palm. So the glove
+has two surfaces made separately: the inside from his skin, tight; the outside shaped as those
+blocks, the hard pieces inside them, the fabric over them. The outside's height is the cost:
+each mm the blocks stand off the finger adds 1.0-1.2 mm of lap at every joint, and weight.
 - Cost: many small parts (about 16 hard pieces a hand) and the sewing round them; foam thickness
   for a slash still to find (no glove standard, no test found).
 - Fallback: soft foam rolls shaped to his hand (as a stock glove, but custom): simpler and
@@ -2115,9 +2125,15 @@ the injury review, RESEARCH.md 28). The palm thin and bought (Nash or synthetic 
 
 **U2 next (on Jon's word):** round 1 of the glove: the segments built on the hand closed on the
 shaft, checked from straight to a fist for laps that stay closed and parts that don't bind; then
-the elbow pad and the gap between them.
+the elbow pad and the slash guard between it and the glove; the outside's look last.
 
 ## Open questions for Jon
+
+- Answered 2026-11-14, the glove's cuff (U2): "yeah shorter glove then like a built in slash
+  guard between that and the elbow pad. we should still keep a hockey glove style look though",
+  on a retailer's photo of a TRUE Catalyst 5X3 glove (not kept). So a short cuff, a slash guard
+  built into the suit's sleeve between the glove and the elbow pad, and the outside shaped like a
+  hockey glove (Gloves, above).
 
 - Answered 2026-11-13, the knee's foam (G3, round 4): Jon wants the cup's top "so when its flat
   it just goes like right below the girdle, but still full covers the knee when bent". Built
