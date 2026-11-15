@@ -100,6 +100,7 @@ cargo run --release -- glove <scan>  # the glove's hard pieces (round 3, with th
 cargo run --release -- elbow <scan>  # the elbow pad's first step: the elbow bent, the forearm turned
 cargo run --release -- elbowpad <scan>  # the elbow pad, round 2: shell, scales and cap, stops, the cap's foam, straps
 cargo run --release -- sleeve <scan>  # the padded sleeve, step 1: the skin's stretch, the zones, the main pad, the slash guard's plate
+cargo run --release -- sleeveimpact all  # the padded sleeve, step 2: falls and pucks (ice, roller) on the pad and the slash guard
 ```
 
 The pad, girdle and gap runs take 8-30 minutes; `PAD_THREADS=2` keeps their memory down.
@@ -364,11 +365,24 @@ and a helmet come next, on the same body.
   - **The crease stays plain fabric.**
   - **The slash guard's three lengthwise segments:** the skin under each stays within ~1 mm of
     rigid over the half nearer the elbow as the forearm turns, so hard inserts can go there.
+- **The padded sleeve, step 2: falls and pucks, ice and roller.** The pad's sections were hit on
+  a rigid support, with EN 1621-1 (the European test for motorcyclists' limb protectors) as the
+  yardstick: its 50 J drop for a fall, and a 30 m/s slap shot with the cold ice puck and a
+  125 g roller puck. Foam that stiffens on impact (Poron XRD's data).
+  - **Roller:** 15 mm of foam alone over the elbow's point takes both the fall (13.7 kN) and the
+    roller puck (14.7 kN), under the stricter Level 2's 20 kN. 10 mm took the puck but bottomed
+    out under the fall.
+  - **Ice:** the cold ice puck crushes straight through 15 mm of foam. 20 mm with a 1.5 mm hard
+    insert takes it at 15.8 kN, and a pro's 35 m/s shot at 20.0.
+  - **The slash guard** needs its insert along its whole length in both versions: 12 mm of foam
+    with it for roller (17.6 kN), 15 mm for ice (19.2 kN).
+  - The rigid support and the foam that soaks up nothing make the absolute forces read high; the
+    comparisons hold better than the absolute numbers.
 
 ![The padded sleeve's layout straight, at the stance and at full bend: the main pad riding the elbow's point (orange), bonded tiles round it, the slash guard's three segments along the forearm](docs/elbow/sleeve/layout.png)
 
-Next: the padded sleeve's fall check (the main pad's thickness, whether the elbow's point needs
-a hard insert), then the slash guard against a slash and a puck; the helmet as a design study; the suit (a washable foam, a slick face for the shells to slide on);
+Next: the padded sleeve's open items (the insert's strength under a cold puck, the tiles, a
+slash, the foam's washing); the helmet as a design study; the suit (a washable foam, a slick face for the shells to slide on);
 lighter knee shells; how far a girdle and a shin pad shift in play, which sets the gap; the
 roller pad. Pictures and numbers: `docs/pad/`, `docs/girdle/`, `docs/body/`, `docs/upper/`,
 `docs/glove/`, `docs/elbow/`, and `docs/PLAN.md` (Track D).
@@ -379,7 +393,7 @@ Phase 0 (the science, the pitch model, the mass tool checked), round 1 (the whol
 example foot), round 2's first step (the chassis to weight), the like-for-like FEM sizing of
 step 2 and round 2 of the boot (a hockey boot from the scan) are done. On the gear: the shin
 pad's third round with its impact model, the girdle's first round, posing the body, and the
-knee as two sliding shells on the bent knee (with a kneecap added to the body) and the girdle-to-shin-pad gap round it, the body above the waist for the gloves and the helmet, three rounds of the glove's hard pieces, two rounds of a hard elbow pad and the padded sleeve's first step. See `docs/PLAN.md` for what comes next and `docs/CORTENFORGE.md` for
+knee as two sliding shells on the bent knee (with a kneecap added to the body) and the girdle-to-shin-pad gap round it, the body above the waist for the gloves and the helmet, three rounds of the glove's hard pieces, two rounds of a hard elbow pad and the padded sleeve's first two steps (its layout, its impacts). See `docs/PLAN.md` for what comes next and `docs/CORTENFORGE.md` for
 what CortenForge did well and where it fell short.
 
 ## Patents

@@ -900,6 +900,30 @@ For the elbow pad and the slash guard (U2). **M** measured.
   (Surg Radiol Anat 45:215-224, PMID 36509883, CT of 156 arms: coronoid height 15 mm, 42% of the
   ulna's height) gives how far the olecranon stands behind the elbow's axis.
 
+## 30. EN 1621-1, motorcyclists' limb joint impact protectors (2026-11-14)
+
+For the padded sleeve's impacts (U2). There is no hockey standard for elbow pads; EN 1621-1 is
+the benchmark limb protectors are tested to. Its text (EN 1621-1:2012) is sold, not read here;
+these are secondary sources, which agree where they overlap:
+- **SATRA** ([satra.com/ppe/EN1621.php](https://www.satra.com/ppe/EN1621.php), a test house):
+  "the mean maximum transmitted force must be below 35kN, and no single value should be over
+  50kN"; two performance levels.
+- **PVA** (an industry body's guide, "Part 1, EN 1621-1", pva-ppe.org.uk, PDF): the apparatus a
+  drop tower on a one-tonne block, a load cell under an anvil "representing the various parts of
+  the human body"; "the impact energy is 50 Joules ... and the mean transmitted force should not
+  exceed 35 kiloNewtons"; conditioned at 20 °C and 65% RH, then again after hydrolytic ageing;
+  optional tests at 40 °C and -10 °C.
+- **Wikipedia, "Motorcycle armor"**: "a mass of 5 kg ±10g with a 40 mm x 30 mm striking face"
+  on "a 50 mm radius hemispherical dome", at most 50 J; level 1 a mean of nine under 35 kN with
+  none over 50 kN, level 2 under 20 kN. It cites the 1997 version.
+- **RAD** (a retailer's blog): 5 kg, a 40 x 30 mm contact surface, "a semi-circular anvil with a
+  diameter of 100 mm"; level 1 35 kN, level 2 20 kN.
+- Not read: an EVOC test report a search listed as "flat impactor 40x80mm" at 50 J, with
+  results of ~15-19 kN (its link returned 404).
+- **So:** 5 kg, a flat 40 x 30 mm face, 50 J (4.47 m/s), onto a 50 mm radius anvil (a dome by
+  one source, a half-cylinder by another: the dome, the harsher, is used); level 1 a mean under
+  35 kN, none over 50, level 2 a mean under 20 kN.
+
 ## Still to find
 
 - For the gloves (U2): a senior shaft's section (width, depth, corner radius) from a maker, or

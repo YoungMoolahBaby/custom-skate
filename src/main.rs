@@ -22,6 +22,10 @@
 //!   the suit's foam patch under them; the straps.
 //! - `sleeve <scan>`: the elbow pad as a padded sleeve, step 1 (track U2): the skin's stretch over
 //!   the elbow and forearm, the zones for tiles, the main pad and the slash guard's plate.
+//! - `sleeveimpact [cases|all|report]`: the padded sleeve, step 2 (track U2): EN 1621-1's drop and
+//!   puck shots (ice and roller) on a section of the pad over the elbow's point and on the slash
+//!   guard's plate; cases comma-separated; `report` gathers their lines into
+//!   docs/elbow/sleeve/impact.txt; with none, lists them.
 
 use custom_skate::check;
 use custom_skate::pitch::{FT, Rocker, fixed_alpha, passive_rocking_stiffness, roller_alpha};
@@ -234,8 +238,14 @@ fn main() {
                 std::process::exit(1);
             }
         }
+        "sleeveimpact" => {
+            if let Err(e) = custom_skate::sleeve_impact::run(std::env::args().nth(2).as_deref()) {
+                eprintln!("{e}");
+                std::process::exit(1);
+            }
+        }
         other => {
-            eprintln!("unknown mode {other:?}; modes: check, pitch, scan, round1, chassis, boot, leg, pad, impact, body, girdle, poses, cup, gap, upper, glove, elbow, elbowpad, sleeve");
+            eprintln!("unknown mode {other:?}; modes: check, pitch, scan, round1, chassis, boot, leg, pad, impact, body, girdle, poses, cup, gap, upper, glove, elbow, elbowpad, sleeve, sleeveimpact");
             std::process::exit(2);
         }
     }

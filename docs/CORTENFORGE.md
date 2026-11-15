@@ -306,6 +306,16 @@ type (bug, docs, API, perf, setup, works), date, file:line under
   higher-order element (the implicit solver's Tet10) would help.
 - **works** (2026-11-12, D3): `fixtures::grid::bake` (fixtures/grid.rs:16) bakes an obstacle's
   distance grid from any distance function; a half-space impactor is three lines.
+- **note** (2026-11-14, the padded sleeve): a hit that crushes the foam turns elements inside out
+  (counted in `Monitors::inverted_element_steps`), and within a fraction of a millisecond the run
+  stops: "a monitor read or step estimate ... is not finite". With no crushable-foam law, that is
+  the only "bottomed out" signal. The project reads it as such and reports the force reached by
+  then (`sleeve_impact::Outcome::stopped`).
+- **perf** (2026-11-14, the padded sleeve): a thin stiff layer sets the stable step for the whole
+  body. The same pad section ran in 3-76 s as foam alone and 143-1520 s with a 1.5 mm PA 12
+  insert in three 0.5 mm elements (on 2 threads). Per-element time steps (subcycling) or a shell
+  element for thin layers would help; for now, as few elements through the insert as the bending
+  check allows (Suggestions).
 
 ## Setup
 
@@ -401,3 +411,9 @@ Nice-to-haves for CortenForge, with what this project built instead.
 - **Section properties and interference** (2026-11-10, round 2): `Solid::section(plane)` (area,
   centroid, second moments) for beam checks, and `Solid::overlap_volume(&other)` that ignores the
   partial-cell band, for clash checks. Instead: `strength::section`, `round2::overlap_mm3`.
+- **Thin stiff layers in sim-soft-explicit** (2026-11-14, the padded sleeve): per-element time
+  steps (subcycling) or a shell element, so a 1.5 mm hard insert doesn't set the stable step for
+  a whole foam pad (the drop on 15 mm of foam: 76 s, 954 s with the insert); and a
+  crushable-foam law (a plateau stress, then densification), so a pad bottoming out reads as a
+  force rather than a run that stops. Instead: three elements through the insert; a crushed run
+  reported as such.

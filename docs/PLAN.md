@@ -2630,6 +2630,16 @@ G-Form photo, not measured.
   shorter pieces.
 
 **Open:**
+- **Jon, on the loads:** "just as much as falling, it needs to handle taking hard shots from ice
+  hockey pucks. ice hockey elbow pads will need to be more heavy duty vs roller hockey which has
+  a lighter puck". So the impact check takes both:
+  - **Puck shots** on the elbow's point and on the slash guard's plate:
+    - the ice puck at 156-170 g, cold (RESEARCH.md 19-20);
+    - the roller puck at 120-130 g by Inline Hockey Australia's rule, 102-125 g at retail.
+
+    An ice version and a lighter roller one.
+  - **Falls,** for both versions. A roller fall lands on sport tiles or concrete rather than ice,
+    so the roller version can be lighter against the puck but not against a fall.
 - **The fall check,** which sets the main pad's thickness and whether the point needs an insert.
   A drop onto the pad over the elbow's point, against EN 1621-1, the European standard for
   motorcyclists' limb protectors. It tests by the force a dropped striker sends through the
@@ -2638,6 +2648,107 @@ G-Form photo, not measured.
 - The foam: a rate-dependent one (stiffening on impact) as G-Form's. Its data, and whether the
   sleeve's foam takes a washing machine (Jon's requirement).
 - The slash guard against a slash and a puck.
+
+### The padded sleeve, step 2: falls and pucks, ice and roller (2026-11-14)
+
+Jon: "go". `cargo run --release -- sleeveimpact all` (`src/sleeve_impact.rs`,
+`docs/elbow/sleeve/impact.txt`), on D3's solver: CortenForge's explicit dynamics, the puck a free
+body (Track D3, above).
+
+**The test.** A section of the sleeve's pad on a rigid support, the force through it read on the
+support, as in a load cell:
+- **The elbow's point,** on EN 1621-1's anvil, a 50 mm radius dome. EN 1621-1 is the European
+  test for motorcyclists' limb protectors; there is no hockey standard for elbow pads.
+- **The slash guard's plate,** on the forearm as a 40 mm radius cylinder (an assumption, about
+  the stand-in's mid-forearm).
+
+**The hits:**
+- **A fall:** EN 1621-1's drop, 5 kg on a flat 40 × 30 mm face at 50 J (RESEARCH.md 30).
+- **A hard slap shot,** 30 m/s (varsity players; RESEARCH.md 19), rim first:
+  - the ice puck, cold as in play (D3's fit to measured impacts);
+  - the roller puck, 125 g (Inline Hockey Australia's rule). No data on its stiffness was found,
+    so it is as stiff as the cold ice puck: an assumption.
+- **A pro's slap shot,** 35 m/s (125.2 km/h on radar, pro and semi-pro players), on the ice
+  version.
+
+**The yardstick:** EN 1621-1's limits on the force through the pad, Level 1 a mean under 35 kN
+(none over 50) and Level 2 a mean under 20 kN.
+
+**The materials:**
+- **The foam:** rate-stiffening, as G-Form's, with Poron XRD's measured moduli at 244 kg/m³
+  (RESEARCH.md 20). Each hit is read at its own rate (its speed over the foam's thickness):
+  9.5-11.9 MPa for the drop, 17.6-23.6 for a puck.
+- **The insert:** 1.5 mm of PA 12 outside the foam.
+
+**As in D3, the absolute forces read high:** the support is rigid and the foam elastic, so it
+soaks up nothing. The comparisons between designs hold better than the absolute numbers. EN
+1621-1's anvil is rigid too.
+
+**The insert is 3 elements through.** D3's bending check reads that 36% stiff, so it spreads a
+puck's load a little too well: the unsafe side.
+
+**The elbow's point:**
+
+| hit | foam | insert | through the pad |
+|---|---|---|---|
+| fall (50 J) | 10 mm | none | crushed through: elements turned inside out, the run stopped at 2.1 ms, 17.8 kN by then |
+| fall | 15 mm | none | **13.7 kN** |
+| fall | 15 mm | 1.5 mm | 15.7 kN |
+| fall | 20 mm | 1.5 mm | **12.4 kN** |
+| roller puck, 30 m/s (56 J) | 10 mm | none | 18.7 kN |
+| roller puck | 15 mm | none | **14.7 kN** |
+| ice puck, 30 m/s (74 J) | 15 mm | none | crushed through at 0.54 ms, 18.1 kN by then |
+| ice puck | 15 mm | 1.5 mm | 18.5 kN |
+| ice puck | 20 mm | 1.5 mm | **15.8 kN** |
+| ice puck, a pro's 35 m/s (99 J) | 20 mm | 1.5 mm | 20.0 kN |
+
+**The slash guard's plate:**
+
+| hit | foam | insert | through the pad |
+|---|---|---|---|
+| roller puck, 30 m/s | 8 mm | none | crushed through at 0.23 ms |
+| roller puck | 8 mm | 1.5 mm | 22.5 kN |
+| roller puck | 12 mm | none | crushed through at 0.31 ms |
+| roller puck | 12 mm | 1.5 mm | **17.6 kN** |
+| ice puck, 30 m/s | 8 mm | 1.5 mm | 29.0 kN |
+| ice puck | 12 mm | 1.5 mm | 22.1 kN |
+| ice puck | 15 mm | 1.5 mm | **19.2 kN** |
+
+**What it says.**
+- **Jon is right that ice needs more.** Over the elbow's point, 15 mm of foam alone takes the fall
+  and the roller puck under Level 2's 20 kN. The cold ice puck crushes straight through it. The
+  ice version needs the insert, and 20 mm of foam for a margin.
+- **The fall sets the roller version's floor, not the puck.** 10 mm of foam took the roller puck
+  (18.7 kN) but bottomed out under the fall: a roller fall lands on sport tiles or concrete, so
+  the roller version stays at 15 mm over the point.
+- **An insert helps against a puck's rim, not a fall's flat face.** Against the flat striker it
+  spreads the load over more foam, which stiffens the pad: 15.7 kN with it, 13.7 without, both
+  at 15 mm.
+- **The slash guard's plate needs its insert along its whole length,** in both versions: 12 mm of
+  foam alone was crushed through by the roller puck. The sleeve's step 1 found a segment in one
+  piece strays ~2 mm from moving rigidly as the forearm turns, so nearer the wrist the inserts
+  go in shorter pieces.
+- **A pro's slap shot** (99 J) takes the ice version to 20.0 kN, Level 2's limit.
+
+**So, the two versions** (on this model; the foam's areas from step 1; weights estimated from
+area × thickness × density, Poron XRD 244 kg/m³, PA 12 1.01 g/cm³; the tiles, the sleeve and the
+insert over the point's size not yet set):
+
+| | roller | ice |
+|---|---|---|
+| the main pad over the elbow's point (~141 cm²) | 15 mm, no insert: ~52 g | 20 mm and a 1.5 mm insert over the point: ~69 g, +1.5 g per 10 cm² of insert |
+| the slash guard's plate (~112 cm², 160 mm × ~70 mm round) | 12 mm, inserts its whole length: ~33 + 17 g | 15 mm, inserts its whole length: ~41 + 17 g |
+| the fall / the slap shot (30 m/s), through the pad | 13.7 / 14.7 kN | 12.4 / 15.8 kN (20.0 at 35 m/s) |
+
+**Open:**
+- **The insert's strength.** Whether 1.5 mm of PA 12 cracks under a cold puck: the solver gives
+  no stresses yet (D3). Its size over the elbow's point is not set either.
+- **The foam:** Poron XRD's data stand in for G-Form's own material, and its washing (Jon's
+  requirement) is unchecked.
+- **A real arm:** soft tissue over the olecranon and a forearm that gives would lower the forces;
+  the rigid support and the elastic foam overstate them.
+- **The tiles round the main pad,** sized for nothing yet. Pucks land there too.
+- **A slash** (a stick, not a puck) on the plate.
 
 ## Open questions for Jon
 

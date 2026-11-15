@@ -21,6 +21,7 @@ pub mod leg;
 pub mod pad;
 pub mod skate;
 pub mod sleeve;
+pub mod sleeve_impact;
 pub mod materials;
 pub mod pitch;
 pub mod pose;
