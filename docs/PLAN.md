@@ -2539,7 +2539,105 @@ Round 2 keeps round 1's pieces as they were (103.4 g); `cargo run --release -- e
 - how the straps hold in a fall;
 - Jon's own arm, and his answers on coverage.
 
-**U2 next:** the slash guard, its top under the cap's lower edge and the cap's strap.
+**U2 next:** the slash guard, its top under the cap's lower edge and the cap's strap. (Jon then
+chose a padded sleeve for the elbow and the slash guard; below.)
+
+### The padded sleeve, step 1: what the skin under it does (2026-11-14)
+
+Jon prefers a lacrosse elbow pad, a padded compression sleeve, and a slash guard as a padded plate
+in a sleeve along the forearm, in three lengthwise segments (open questions, below). "go".
+`cargo run --release -- sleeve <scan>` (`src/sleeve.rs`, `docs/elbow/sleeve/`).
+
+**My picks:**
+- The padded section is part of the suit's sleeve, not a separate sleeve: it can't creep (Jon's
+  worry at the knee), and it washes with the suit.
+- The slash guard's plate goes in the same sleeve.
+
+Before the pads, what the skin under the sleeve does on the stand-in arm with its olecranon:
+- each triangle's principal stretches from the arm straight through the elbow's bend (to
+  144.6°);
+- from the stance (90°, palm in) to the forearm's full pronation (76.9°) and supination (85.0°).
+
+A foam tile bonded to the sleeve can't stretch: where the skin under it stretches, the channels
+round it open by the excess times the tile's pitch. MakeHuman's skin stretches where a real arm's
+might fold or slide over the bone. So these numbers say where the sleeve has to give, not
+measured strains.
+
+**The elbow's padded area**: 120 mm up to 100 mm down the arm, round the back to 10 mm past the
+elbow's axis, as the hard pad's. 291 cm² of skin, in three zones:
+
+| zone | where | what goes there |
+|---|---|---|
+| the stretch zone: the skin stretches over 1.15 at some step | 46 cm², over the back of the elbow from 81 mm up to 29 mm down, 61 mm across at the joint's level | the main pad, riding the elbow's point |
+| the rest | 141 cm², round the sides and the edges | bonded tiles: at a 20 mm pitch their channels open 1.1 mm at the stance and 1.7 at full bend (90th percentile), 3.0 at the very most |
+| the crease: the skin squeezes under 0.85 at full bend | the front, from 130 mm up to 48 mm down | plain fabric (the model's skin folds through itself there) |
+
+The 1.15 threshold and the 20 mm pitch are placeholders; the pitch is about the squares on Jon's
+G-Form photo, not measured.
+
+**The main pad** over the stretch zone:
+- **Anchored on the elbow's point.** The skin 11 mm above the joint moves with the forearm (94%:
+  the olecranon's skin). The pad's inside doesn't stretch, so above the anchor it slides over the
+  skin.
+- **Its size.** To cover the stretch zone along the elbow's back (from 72 mm up to 19 mm down) at
+  every step, with 10 mm to spare at the tightest, its inside reaches 132 mm up and 42 mm down
+  from the anchor: 174 mm long, and as drawn the stretch zone's 61 mm across plus 10 mm either
+  side.
+- **Its top slides 55 mm over the back of the upper arm.** It lies 136 mm up the arm straight and
+  81 mm up at full bend, so it sits in a pocket of the sleeve there. Its bottom moves 2 mm.
+- **Grooves across its outside.** The elbow's back turns between the pad's ends from -9° straight
+  to 78° at the stance and 127° at full bend. So the pad's outside lengthens over its inside by
+  1.53 mm per mm of its thickness at the stance, 2.38 at full bend. A 10 mm pad would open its
+  grooves 15 and 24 mm in all: G-Form's grid.
+- **A hard insert over the point,** if the fall check wants one. Within 25 mm of the anchor, even
+  the skin that moves with the forearm strays 3.0 mm RMS (7.3 at the most) from moving rigidly
+  at the stance, 3.8 (8.7) at full bend. So an insert floats in the pad's foam, not bonded to the
+  sleeve.
+
+**The slash guard's plate**: the back of the forearm (the back of the hand's side) from 0.30 to
+0.90 of the way to the wrist, 50° either side, in three lengthwise segments as in Jon's photo.
+- **Bending the elbow** leaves the forearm's skin there as it was: 0.0-0.1 mm off moving rigidly.
+- **Turning the forearm** stretches its skin there 1.04-1.07 at most, and each 40 mm band of a
+  segment strays from moving rigidly:
+
+  | along the forearm | pronated: segments 1 / 2 / 3, RMS (most), mm | supinated |
+  |---|---|---|
+  | 0.30-0.45 | 0.8 (1.4) / 0.6 (1.2) / 0.7 (1.3) | 0.9 (1.8) / 0.8 (1.6) / 0.6 (1.3) |
+  | 0.45-0.60 | 1.1 (2.1) / 1.0 (1.8) / 1.0 (2.0) | 1.4 (2.8) / 1.2 (2.3) / 1.1 (2.1) |
+  | 0.60-0.75 | 1.2 (2.3) / 1.1 (1.8) / 1.4 (2.6) | 1.5 (2.6) / 1.4 (2.5) / 1.4 (2.8) |
+  | 0.75-0.90 | 1.1 (2.2) / 1.0 (2.4) / 1.6 (3.1) | 1.5 (2.7) / 1.8 (3.3) / 1.3 (2.7) |
+
+- **A segment in one piece:**
+  - its whole length strays 1.7-1.9 mm RMS pronated (4.2 at the most) and 2.0-2.1 supinated
+    (5.0);
+  - the half nearer the elbow (0.30-0.60) strays 0.9-1.1 and 1.0-1.4 (2.9).
+- Split lengthwise, each narrow strip can turn a little in its own plane as the forearm twists
+  under it. That is why the segments in Jon's photo run lengthwise.
+
+![The stretch over the bend and the turns, on the arm at the stance: from the side, and from behind either side; darker where the skin stretches more (under 1.05, to 1.15, to 1.3, to 1.6, over), the crease blue](elbow/sleeve/stretch.png)
+
+![The sleeve's layout straight, at the stance and at full bend, from either side: the main pad (orange) where it lies at each step, the tiles in alternate squares, the slash guard's three segments (dark)](elbow/sleeve/layout.png)
+
+![The forearm at the stance, from the back of the hand's side: pronated, palm in (the plate's three segments) and supinated; darker where the turn stretches the skin](elbow/sleeve/twist.png)
+
+**What it says.**
+- **The G-Form layout fits the arm.** One pad rides the elbow's point over the stretch zone,
+  grooved across and sliding over the back of the upper arm. Bonded tiles go round it, and the
+  crease is plain fabric.
+- **The slash guard's segments can take hard inserts over the half nearer the elbow,** where the
+  skin under them stays within ~1 mm of rigid as the forearm turns. A segment in one piece the
+  whole length strays ~2 mm (5 at the most): nearer the wrist foam only, or the inserts in
+  shorter pieces.
+
+**Open:**
+- **The fall check,** which sets the main pad's thickness and whether the point needs an insert.
+  A drop onto the pad over the elbow's point, against EN 1621-1, the European standard for
+  motorcyclists' limb protectors. It tests by the force a dropped striker sends through the
+  protector: under 35 kN on average, none over 50 kN (SATRA's summary). The impact's energy (50 J
+  in other summaries), Level 2 and the rig are still to be confirmed from the standard's text.
+- The foam: a rate-dependent one (stiffening on impact) as G-Form's. Its data, and whether the
+  sleeve's foam takes a washing machine (Jon's requirement).
+- The slash guard against a slash and a puck.
 
 ## Open questions for Jon
 

@@ -99,6 +99,7 @@ cargo run --release -- upper <scan>  # the stand-in body above the waist: arms, 
 cargo run --release -- glove <scan>  # the glove's hard pieces (round 3, with the thumb) on the hand gripping the stick
 cargo run --release -- elbow <scan>  # the elbow pad's first step: the elbow bent, the forearm turned
 cargo run --release -- elbowpad <scan>  # the elbow pad, round 2: shell, scales and cap, stops, the cap's foam, straps
+cargo run --release -- sleeve <scan>  # the padded sleeve, step 1: the skin's stretch, the zones, the main pad, the slash guard's plate
 ```
 
 The pad, girdle and gap runs take 8-30 minutes; `PAD_THREADS=2` keeps their memory down.
@@ -353,11 +354,21 @@ and a helmet come next, on the same body.
     angle. 118.5 g with the straps.
   - **Open:** whether 24-25 mm of air under the scales at the stance matters in a fall, an
     impact question.
+- **The padded sleeve, step 1.** Jon prefers a lacrosse-style padded compression sleeve to the
+  hard pad, and a slash guard as a padded plate along the forearm. Both go in the suit's sleeve.
+  First, what the skin under it does through the elbow's bend and the forearm's turns.
+  - **Over the back of the elbow the skin stretches too much for bonded tiles,** a zone 61 mm
+    across. One pad goes there, riding the elbow's point: 174 mm long, its top sliding 55 mm
+    over the back of the upper arm, grooved across so it can curl round the bend.
+  - **Bonded tiles go round it:** at a 20 mm pitch their channels open under 2 mm.
+  - **The crease stays plain fabric.**
+  - **The slash guard's three lengthwise segments:** the skin under each stays within ~1 mm of
+    rigid over the half nearer the elbow as the forearm turns, so hard inserts can go there.
 
-![Elbow pad round 2: straight, at 90° and fully bent, cut in the plane the arm bends in: the shell, two scales and the cap over the elbow, the suit's foam and the cap's](docs/elbow/pad/pad_section.png)
+![The padded sleeve's layout straight, at the stance and at full bend: the main pad riding the elbow's point (orange), bonded tiles round it, the slash guard's three segments along the forearm](docs/elbow/sleeve/layout.png)
 
-Next: the slash guard between the elbow pad and the glove; a fall on the bent elbow (the elbow
-pad's scales over air); the helmet as a design study; the suit (a washable foam, a slick face for the shells to slide on);
+Next: the padded sleeve's fall check (the main pad's thickness, whether the elbow's point needs
+a hard insert), then the slash guard against a slash and a puck; the helmet as a design study; the suit (a washable foam, a slick face for the shells to slide on);
 lighter knee shells; how far a girdle and a shin pad shift in play, which sets the gap; the
 roller pad. Pictures and numbers: `docs/pad/`, `docs/girdle/`, `docs/body/`, `docs/upper/`,
 `docs/glove/`, `docs/elbow/`, and `docs/PLAN.md` (Track D).
@@ -368,7 +379,7 @@ Phase 0 (the science, the pitch model, the mass tool checked), round 1 (the whol
 example foot), round 2's first step (the chassis to weight), the like-for-like FEM sizing of
 step 2 and round 2 of the boot (a hockey boot from the scan) are done. On the gear: the shin
 pad's third round with its impact model, the girdle's first round, posing the body, and the
-knee as two sliding shells on the bent knee (with a kneecap added to the body) and the girdle-to-shin-pad gap round it, the body above the waist for the gloves and the helmet, three rounds of the glove's hard pieces and two rounds of the elbow pad. See `docs/PLAN.md` for what comes next and `docs/CORTENFORGE.md` for
+knee as two sliding shells on the bent knee (with a kneecap added to the body) and the girdle-to-shin-pad gap round it, the body above the waist for the gloves and the helmet, three rounds of the glove's hard pieces, two rounds of a hard elbow pad and the padded sleeve's first step. See `docs/PLAN.md` for what comes next and `docs/CORTENFORGE.md` for
 what CortenForge did well and where it fell short.
 
 ## Patents
