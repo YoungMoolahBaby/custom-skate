@@ -2313,6 +2313,117 @@ that one direction (within 0.0°).
 
 **U2 next:** the elbow pad and the slash guard between it and the glove, then the outside's look.
 
+### The elbow pad, first step: what the elbow and the forearm do (2026-11-14)
+
+Jon: "commit round 3 then proceed". `cargo run --release -- elbow <scan>` (`src/elbow.rs`,
+`docs/elbow/`). Before a design, what the stand-in's elbow and forearm do under a pad and a
+slash guard, through healthy men's ranges, 20-44 (CDC's Joint Range of Motion Study, RESEARCH.md
+29): elbow flexion 144.6°, pronation 76.9°, supination 85.0°. U2's arm pose now takes a turn of
+the forearm (none gives U2's pose; U1-U2's outputs are unchanged).
+
+| elbow | 0° | 30° | 60° | 90° | 120° | 144.6° |
+|---|---|---|---|---|---|---|
+| skin over the back of the elbow, between marks 80 mm up the upper arm and 80 mm down the forearm | 165.2 mm | 178.0 | 193.1 | 206.7 | 215.8 | 218.7 |
+| the back of the elbow behind the joint's centre | 27.6 mm | 28.7 | 28.5 | 26.6 | 22.8 | 18.6 |
+| with an olecranon (round 1, below): the skin over the back | 165.7 mm | 178.0 | 193.3 | 207.9 | 219.1 | 224.3 |
+| with an olecranon: the back behind the joint's centre | 28.4 mm | 28.4 | 28.9 | 27.6 | 24.6 | 20.9 |
+
+- **The back of the elbow lengthens 53.5 mm** (32%) from straight to full bend, 0.37-0.46 mm per
+  degree. A rigid cap can't cover that and stay put on both sides: as at the knee (G3), it rides
+  one and slides under the other.
+- **In this model the back of the elbow pulls in as it bends**, 10 mm from 30° to full. A real
+  elbow's point, the olecranon (the end of the ulna, so it moves with the forearm), stands out as
+  it bends. MakeHuman has no bone for it: its back is the blended skin's, which U1 found 19 mm too
+  deep at 90° against ANSUR. The knee had the same gap and got a kneecap (G3, round 3); the elbow
+  wants an olecranon before a cap is fitted to it.
+- **The forearm's skin turns mostly near the wrist.** The hand turned 76.9° (pronation, palm
+  down), the skin along the back of the forearm turns 0.0 / 0.7 / 10.4 / 31.6 / 45.5° at 0.1 /
+  0.25 / 0.5 / 0.75 / 0.9 of the way from the elbow to the wrist; turned 85.0° the other way
+  (palm up), 0.0 / 0.7 / 11.3 / 34.9 / 50.3°. So a rigid plate on the half nearer the elbow
+  barely sees the skin turn under it, while nearer the wrist the skin turns up to ~50°. That is
+  MakeHuman's twist, its forearm's lower bone's, blended by skin weights. In a real forearm the
+  radius turns about the ulna, and the skin over the ulna's back edge stays with the ulna: not
+  modelled.
+- At full bend the forearm's skin runs into the upper arm's, as rigid skin does; a real arm's
+  soft parts give.
+
+  ![The right arm bent straight, 90° and full (144.6°), seen along the elbow's axis, cut in the
+  plane it bends in](elbow/elbow_bend.png)
+
+  ![The right forearm palm in, pronated 76.9° and supinated 85.0°, from the back: a band along
+  its back (as it lies palm in), straight near the elbow (below), turning near the wrist
+  (above)](elbow/forearm_twist.png)
+
+**Recommendation (to confirm with Jon): the knee's design, at the elbow.** A cap over the end of
+the forearm (the olecranon), sliding under a short shell over the back of the upper arm as the
+elbow bends, both cylinders about the elbow's axis so they slide without binding (the glove's
+laps); the foam in the compression suit's sleeve, washable as the knee's. The slash guard a
+plate in the sleeve along the back of the forearm, its upper end under the cap's lower edge and
+its lower end under the glove's cuff: rigid over the half nearer the elbow, where the skin barely
+turns, and loose or in two pieces nearer the wrist. First, an olecranon for the model. Open for
+Jon: his elbow pads now and what bugs him about them; how much coverage he wants (a cap and short
+shells, or the full upper-arm and forearm guards). Jon: "lets do the elbow pad now", leaving
+these open, so round 1 is the recommendation.
+
+### The elbow pad, round 1 (2026-11-14)
+
+`cargo run --release -- elbowpad <scan>` (`src/elbow_pad.rs`; `docs/elbow/pad/`).
+- **An olecranon first** (`elbow::add_olecranon`, as G3's kneecap): a bone fixed on the forearm's
+  upper bone, so the end of the ulna moves with the forearm, taking the share of the skin's
+  weight over it: all of it within half the olecranon's size (24.7 mm, its tip to the ulna's
+  proximal edge; Puchwein et al. 2012, RESEARCH.md 29) of the skin straight behind the joint, none
+  past its size, and none more than 10 mm above the joint's level (assumed: above the olecranon's
+  tip the skin lies over the triceps' tendon, which stays with the upper arm). First centred on
+  the skin standing furthest back near the joint, it landed on the triceps 13 mm above it and
+  moved 2 of the skin's control vertices; centred behind the joint, 8 (3 fully). The back of the
+  elbow then keeps 1.8-2.3 mm more of its shape at 120-145° (the table above); MakeHuman's control mesh is
+  coarse there (13 control vertices within 25 mm). Only the elbow runs add it: U1, U2 and the
+  glove are unchanged.
+- **The pad:** a shell over the back of the upper arm (100 mm up from the joint), a cap over the
+  olecranon (80 mm down the forearm), two scales between, round the arm to 10 mm past the
+  elbow's axis. Over the elbow each is a cylinder about its axis, the piece nearer the shoulder
+  over the next (the glove's laps); each of the three laps turns a third of the elbow's bend, a
+  scale a third and two thirds of the way. Their laps stay closed through the elbow's whole range
+  (to 144.6°, the CDC's mean) and a 10° margin, not the stance's bend: the elbow goes through all
+  of it in play. Built at the elbow's 90° (U2's stance), on 9 mm of foam (the knee's liner) with
+  2 mm walls, both placeholders.
+- **Each lap split unevenly** either side of the elbow's back: straight, the back of the upper
+  arm (the triceps) stands further behind the elbow's axis than the olecranon does, so a lap
+  reaching evenly either side had to clear it: an outer radius of 64.6 mm, the stack's outside
+  69.6 mm from the axis. The splits are chosen together, nested (with the arm straight, every
+  piece's back edge within the shell's lap, the shell's front edge within the cap's): each lap
+  reaches 20-23° back up the arm and 35-38° forward over the forearm, radii 56.0 / 53.0 / 50.0
+  mm. Split lap by lap, the scales reached further back than the shell's lap and bound under it,
+  1.0 mm with the arm straight.
+
+| scales | pieces | hard pieces, PA 12 | the stack's outside from the elbow's axis | proud of the pieces either side |
+|---|---|---|---|---|
+| 1 | 3 | 112.1 g | 73.6 mm | 35.7 mm |
+| **2** | 4 | 103.4 g | 61.0 mm | 23.1 mm |
+| 3 | 5 | 101.5 g | 58.3 mm | 20.4 mm |
+
+With two scales (the default; `ELBOW_SCALES` runs others):
+- **Its laps stay closed at every step**, straight to full bend; **nothing binds** (the closest
+  two pieces 0.0-0.2 mm apart).
+- **The shell and the cap sit on the liner**: on average 1.2 and 2.5 mm off it at 90° (the shell
+  pressing 0.2 mm), 0.9-2.8 and 2.2-3.7 mm through the range, pressing up to 2.0 mm (the shell,
+  straight and at full bend) and 0.5 (the cap).
+- **Under the scales, 16-19 mm of space** over the elbow, most of it with the arm straight: the
+  price of laps that clear the triceps and stay closed through the whole bend. The skin behind
+  the joint's centre is 26.9 mm; the stack's outside 61.0 mm from it, ~34 mm off the skin.
+
+![The elbow pad as built, the elbow at 90°: from the side, and from behind either side](elbow/pad/pad_90.png)
+
+![The elbow pad straight, at 90° and at full bend, cut in the plane the arm bends in](elbow/pad/pad_section.png)
+
+**What it says.** The knee's design works at the elbow, the laps closed and free through the
+elbow's whole range, at the cost of bulk over the elbow's point: the triceps sets the outer
+lap's radius. A third scale saves 2.7 mm for a fifth piece, not worth it. **Open:**
+- the space under the scales: foam fixed inside them, or the suit's foam thicker there;
+- how the pieces are held (straps, the sleeve) and what holds the scales at their share;
+- the slash guard between the cap and the glove's cuff, next;
+- Jon's own arm, and his answers on coverage.
+
 ## Open questions for Jon
 
 - Answered 2026-11-14, the glove's joints (U2, round 1): "extra pieces", a short scale over each

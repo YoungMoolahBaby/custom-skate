@@ -230,6 +230,31 @@ impl Rig {
         Ok(bone)
     }
 
+    /// Adds an olecranon to an arm (`side` "R" or "L"): the point of the elbow, the end of the
+    /// ulna, so a bone fixed on the forearm's upper bone, with the share of each skin vertex's
+    /// weight it takes (every bone's weight on that vertex scaled down by the share, the olecranon
+    /// taking the rest). MakeHuman has none: the skin over the back of the elbow is blended
+    /// between the upper arm and the forearm, and pulls in as the elbow bends.
+    pub fn add_olecranon(&mut self, side: &str, share: &[(u32, f64)]) -> Result<usize, String> {
+        let forearm = *self.index.get(&format!("lowerarm01.{side}")).ok_or("no lowerarm01")?;
+        let name = format!("olecranon.{side}");
+        let bone = self.bones.len();
+        self.bones.push(Bone { name: name.clone(), head: String::new(), tail: String::new(), parent: Some(forearm) });
+        self.index.insert(name, bone);
+        let a: HashMap<u32, f64> = share.iter().copied().collect();
+        let mut sum: HashMap<u32, f64> = HashMap::new();
+        for ws in &mut self.weights {
+            for (i, w) in ws.iter_mut() {
+                if let Some(s) = a.get(i) {
+                    *sum.entry(*i).or_default() += *w;
+                    *w *= 1.0 - s;
+                }
+            }
+        }
+        self.weights.push(share.iter().map(|&(i, s)| (i, s * sum.get(&i).copied().unwrap_or(0.0))).collect());
+        Ok(bone)
+    }
+
     /// A joint's position: the mean of its vertices.
     pub fn joint(&self, raw: &[Vector3<f64>], name: &str) -> Option<Vector3<f64>> {
         let idx = self.joints.get(name)?;

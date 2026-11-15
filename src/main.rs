@@ -15,6 +15,10 @@
 //!   fitted to ANSUR II.
 //! - `glove <scan> [out] [fist]`: the glove's hard pieces (track U2, round 3: a scale over every
 //!   joint, the thumb's too) on the hand closed on the shaft, checked from a straight hand to a fist.
+//! - `elbow <scan>`: the elbow pad's first step (track U2): the elbow bent from straight to full
+//!   flexion and the forearm turned, read where a pad and a slash guard would ride.
+//! - `elbowpad <scan>`: the elbow pad, round 1 (track U2): a cap, scales and an upper arm shell,
+//!   checked from a straight arm to the elbow's full bend.
 
 use custom_skate::check;
 use custom_skate::pitch::{FT, Rocker, fixed_alpha, passive_rocking_stiffness, roller_alpha};
@@ -197,8 +201,28 @@ fn main() {
                 std::process::exit(1);
             }
         }
+        "elbow" => {
+            let Some(path) = std::env::args().nth(2) else {
+                eprintln!("usage: elbow <scan>");
+                std::process::exit(2);
+            };
+            if let Err(e) = custom_skate::elbow::run(std::path::Path::new(&path)) {
+                eprintln!("{e}");
+                std::process::exit(1);
+            }
+        }
+        "elbowpad" => {
+            let Some(path) = std::env::args().nth(2) else {
+                eprintln!("usage: elbowpad <scan>");
+                std::process::exit(2);
+            };
+            if let Err(e) = custom_skate::elbow_pad::run(std::path::Path::new(&path)) {
+                eprintln!("{e}");
+                std::process::exit(1);
+            }
+        }
         other => {
-            eprintln!("unknown mode {other:?}; modes: check, pitch, scan, round1, chassis, boot, leg, pad, impact, body, girdle, poses, cup, gap, upper, glove");
+            eprintln!("unknown mode {other:?}; modes: check, pitch, scan, round1, chassis, boot, leg, pad, impact, body, girdle, poses, cup, gap, upper, glove, elbow, elbowpad");
             std::process::exit(2);
         }
     }

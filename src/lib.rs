@@ -8,6 +8,8 @@ pub mod cup;
 pub mod frame;
 pub mod gap;
 pub mod girdle;
+pub mod elbow;
+pub mod elbow_pad;
 pub mod glove;
 pub mod check;
 pub mod fem;

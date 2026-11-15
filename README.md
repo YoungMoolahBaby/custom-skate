@@ -97,6 +97,8 @@ cargo run --release -- cup <scan>    # the shin pad's knee as a cup on the bent 
 cargo run --release -- gap <scan>    # the girdle-to-shin-pad gap through the knee's and hip's bend (run `pad`, `cup` first)
 cargo run --release -- upper <scan>  # the stand-in body above the waist: arms, hands, head
 cargo run --release -- glove <scan>  # the glove's hard pieces (round 3, with the thumb) on the hand gripping the stick
+cargo run --release -- elbow <scan>  # the elbow pad's first step: the elbow bent, the forearm turned
+cargo run --release -- elbowpad <scan>  # the elbow pad, round 1: shell, scales and cap over the elbow
 ```
 
 The pad, girdle and gap runs take 8-30 minutes; `PAD_THREADS=2` keeps their memory down.
@@ -328,11 +330,26 @@ and a helmet come next, on the same body.
 
 ![Glove round 2: the middle finger cut down its middle, straight, gripping the shaft and in a fist; over each joint a scale between the bones' pieces](docs/glove/glove_section.png)
 
-Next: elbow pads and the slash guard between
-them and the glove; the helmet as a design study; the suit (a washable foam, a slick face for the shells to
-slide on); lighter knee shells; how far a girdle and a shin pad shift in play, which sets the
-gap; the roller pad. Pictures and numbers: `docs/pad/`, `docs/girdle/`, `docs/body/`,
-`docs/upper/`, `docs/glove/`, and `docs/PLAN.md` (Track D).
+- **The elbow pad, first step**: what the elbow and the forearm do, through healthy men's ranges
+  (CDC: elbow flexion 144.6°, pronation 76.9°, supination 85.0°). The skin over the back of the
+  elbow lengthens 53.5 mm (32%) from straight to full bend, so a cap has to ride one side and
+  slide under the other, as at the knee. The forearm's skin barely turns over the half nearer
+  the elbow and up to ~50° near the wrist, which says where a rigid slash guard can ride.
+  MakeHuman's elbow has no point (no olecranon), as its knee had no kneecap.
+- **The elbow pad, round 1**: the knee's design at the elbow. An olecranon added to the model
+  (a bone on the forearm carrying the skin over the elbow's point), then a shell over the back
+  of the upper arm, a cap over the olecranon and two scales between, cylinders about the elbow's
+  axis lapping like the glove's. They stay closed and nothing binds from straight to the elbow's
+  full bend: 4 pieces, 103.4 g. The cost is bulk over the elbow's point (the stack's outside
+  ~34 mm off the skin, 16-19 mm of space under the scales), set by the triceps standing behind
+  the elbow.
+
+![Elbow pad round 1: straight, at 90° and fully bent, cut in the plane the arm bends in: the shell, two scales and the cap over the elbow](docs/elbow/pad/pad_section.png)
+
+Next: the slash guard between the elbow pad and the glove; the helmet as a design study; the suit (a washable foam, a slick face for the shells to slide on);
+lighter knee shells; how far a girdle and a shin pad shift in play, which sets the gap; the
+roller pad. Pictures and numbers: `docs/pad/`, `docs/girdle/`, `docs/body/`, `docs/upper/`,
+`docs/glove/`, `docs/elbow/`, and `docs/PLAN.md` (Track D).
 
 ## Status
 
@@ -340,7 +357,7 @@ Phase 0 (the science, the pitch model, the mass tool checked), round 1 (the whol
 example foot), round 2's first step (the chassis to weight), the like-for-like FEM sizing of
 step 2 and round 2 of the boot (a hockey boot from the scan) are done. On the gear: the shin
 pad's third round with its impact model, the girdle's first round, posing the body, and the
-knee as two sliding shells on the bent knee (with a kneecap added to the body) and the girdle-to-shin-pad gap round it, the body above the waist for the gloves and the helmet, and three rounds of the glove's hard pieces. See `docs/PLAN.md` for what comes next and `docs/CORTENFORGE.md` for
+knee as two sliding shells on the bent knee (with a kneecap added to the body) and the girdle-to-shin-pad gap round it, the body above the waist for the gloves and the helmet, three rounds of the glove's hard pieces and the elbow pad's first round. See `docs/PLAN.md` for what comes next and `docs/CORTENFORGE.md` for
 what CortenForge did well and where it fell short.
 
 ## Patents

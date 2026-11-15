@@ -873,6 +873,33 @@ claim.
 - Not looked for yet: whether hockey gloves have a standard (helmets do, 17), and any test of
   how much a glove's back takes from a slash or a puck.
 
+## 29. How far the elbow and forearm move (2026-11-14)
+
+For the elbow pad and the slash guard (U2). **M** measured.
+- **CDC's Joint Range of Motion Study (M).** Soucie JM, Wang C, Forsyth A, Funk S, Denny M, Roach
+  KE, Boone D; Hemophilia Treatment Center Network, "Range of motion measurements: reference
+  values and a database for comparison studies", Haemophilia 2011;17(3):500-7 (PMID 21070485;
+  abstract read through PubMed's E-utilities): 674 healthy subjects aged 2-69; "Nine licensed
+  physical therapists used universal goniometers to determine passive joint motion" of, among
+  others, elbow flexion, extension, supination and pronation; women more mobile in nearly all
+  joints, and the averages fall with age and differ from "most commonly used normative values".
+- **The values used**, from CDC's page for the study (archive.cdc.gov, "Joint Range of Motion
+  Study", table "Reference Values for Normal Joint Range of Motion- ages 20 – 44", read
+  2026-11-14), males, mean (95% CI), deg: elbow flexion **144.6** (143.6-145.6), extension 0.8
+  (0.1-1.5), pronation **76.9** (75.6-78.2), supination **85.0** (83.8-86.2).
+- Also found, not used: Boone DC, Azen SP, "Normal range of motion of joints in male subjects",
+  J Bone Joint Surg Am 1979;61(5):756-9 (PMID 457719): active motion, 109 males aged 18 months to
+  54 years; its values not read (the abstract gives none).
+- **The olecranon's size (M).** Puchwein P, Schildhauer TA, Schöffmann S, Heidari N, Windisch G,
+  Pichler W, "Three-dimensional morphometry of the proximal ulna: a comparison to currently used
+  anatomically preshaped ulna plates", J Shoulder Elbow Surg 2012;21(8):1018-23 (PMID 22014613;
+  abstract read through E-utilities): CT of 40 elbows (mean age 68, 21-98), "a mean distance from
+  the tip of the olecranon to the proximal edge of the ulna of 24.7 ± 2.7 mm (range, 20-30.5 mm)
+  with gender-specific differences". Used as the olecranon's size for the skin that moves with it
+  (`elbow::OLECRANON`), as the kneecap's length set its skin (24). Neither it nor Wang et al. 2023
+  (Surg Radiol Anat 45:215-224, PMID 36509883, CT of 156 arms: coronoid height 15 mm, 42% of the
+  ulna's height) gives how far the olecranon stands behind the elbow's axis.
+
 ## Still to find
 
 - For the gloves (U2): a senior shaft's section (width, depth, corner radius) from a maker, or

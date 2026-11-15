@@ -557,6 +557,12 @@ pub(crate) fn hand_frame(b: &Body, raw: &[Vector3<f64>], mo: &[Motion]) -> HandF
 /// the forearm, the middle finger straight or, if `relaxed`, as MakeHuman holds it. The left arm
 /// hung.
 fn elbow_pose(b: &Body, raw: &[Vector3<f64>], elbow: f64, relaxed: bool) -> Pose {
+    forearm_pose(b, raw, elbow, relaxed, 0.0)
+}
+
+/// `elbow_pose` with the forearm turned `turn` deg from palm in: positive pronates (the palm
+/// toward the floor), negative supinates.
+pub(crate) fn forearm_pose(b: &Body, raw: &[Vector3<f64>], elbow: f64, relaxed: bool, turn: f64) -> Pose {
     let rig = &b.model.rig;
     let mut m = measuring_pose(b, raw);
     if relaxed {
@@ -576,7 +582,11 @@ fn elbow_pose(b: &Body, raw: &[Vector3<f64>], elbow: f64, relaxed: bool) -> Pose
     // The palm in, toward the body's middle (+y for the right hand): the lower forearm's twist
     // bone turned about the forearm's axis (it heads the forearm's middle).
     let flat = |v: Vector3<f64>| (v - af * v.dot(&af)).normalize();
-    let (p, w) = (flat(h.palm), flat(Vector3::y()));
+    let inward = flat(Vector3::y());
+    // Pronation turns the palm from in toward down (-z).
+    let s = if af.cross(&inward).dot(&-Vector3::z()) >= 0.0 { 1.0 } else { -1.0 };
+    let w = Rotation3::from_axis_angle(&nalgebra::Unit::new_normalize(af), s * turn.to_radians()) * inward;
+    let p = flat(h.palm);
     let ang = p.cross(&w).dot(&af).atan2(p.dot(&w));
     let t = Rotation3::from_axis_angle(&nalgebra::Unit::new_normalize(to_mh(af)), ang);
     let g1 = mo[rig.index["lowerarm01.R"]].r;

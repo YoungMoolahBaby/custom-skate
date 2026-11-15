@@ -1,0 +1,21 @@
+the elbow pad's first step (track U2): the stand-in's right elbow and forearm (scans/stand-in/022_fBW_R.ply)
+  ranges: elbow flexion 144.6, pronation 76.9, supination 85 deg (CDC's Joint Range of Motion Study, men 20-44, means)
+  the elbow bent from straight, palm in: how far the back of the elbow stands behind the joint's centre (along the bend's bisector), and the skin's length over the back of the elbow between marks 80 mm up the upper arm and down the forearm, in the plane the arm bends in; MakeHuman's elbow, then with an olecranon (its skin moving with the forearm: 8 of the skin's control vertices, 3 of them fully; OLECRANON 24.7 mm):
+    MakeHuman's:
+        0.0 deg: back  27.6 mm; skin over the back 165.2 mm
+       30.0 deg: back  28.7 mm; skin over the back 178.0 mm (+12.8: 0.43 mm per deg)
+       60.0 deg: back  28.5 mm; skin over the back 193.1 mm (+27.9: 0.46 mm per deg)
+       90.0 deg: back  26.6 mm; skin over the back 206.7 mm (+41.5: 0.46 mm per deg)
+      120.0 deg: back  22.8 mm; skin over the back 215.8 mm (+50.6: 0.42 mm per deg)
+      144.6 deg: back  18.6 mm; skin over the back 218.7 mm (+53.5: 0.37 mm per deg)
+    with the olecranon:
+        0.0 deg: back  28.4 mm; skin over the back 165.7 mm
+       30.0 deg: back  28.4 mm; skin over the back 178.0 mm (+12.3: 0.41 mm per deg)
+       60.0 deg: back  28.9 mm; skin over the back 193.3 mm (+27.5: 0.46 mm per deg)
+       90.0 deg: back  27.6 mm; skin over the back 207.9 mm (+42.2: 0.47 mm per deg)
+      120.0 deg: back  24.6 mm; skin over the back 219.1 mm (+53.4: 0.44 mm per deg)
+      144.6 deg: back  20.9 mm; skin over the back 224.3 mm (+58.6: 0.41 mm per deg)
+    (the shoulder joint to the elbow joint 285.6 mm)
+  the forearm turned, the elbow at 90 deg: the hand's own turn, and the skin's along the back of the forearm (as it lies palm in) about the forearm's axis, at 0.10 / 0.25 / 0.50 / 0.75 / 0.90 of the way from the elbow joint to the wrist joint (266.0 mm):
+    pronated  76.9 deg: the hand turns 76.9 (the palm down); the skin 0.0 / 0.7 / 10.4 / 31.6 / 45.5 deg
+    supinated 85.0 deg: the hand turns 85.0 (the palm up); the skin -0.0 / 0.7 / 11.3 / 34.9 / 50.3 deg

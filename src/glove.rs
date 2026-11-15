@@ -115,7 +115,7 @@ impl Default for GloveParams {
 const TS: [f64; 9] = [0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
 const BUILD: usize = 4;
 /// Each lap's surface runs this far (deg) past where the other piece's edge ever goes.
-const EXT: f64 = 4.0;
+pub(crate) const EXT: f64 = 4.0;
 
 const DIGIT: [&str; 5] = ["thumb", "index", "middle", "ring", "little"];
 /// The fingers' bones and joints; the thumb's (MakeHuman's finger1-1 is its metacarpal, and its
@@ -145,14 +145,14 @@ fn has_lap(k: usize, j: usize) -> bool {
 /// What a piece moves with: a bone, or (a scale over a joint) the bone before the joint (`a`)
 /// turned `frac` of the way to the bone after it (`b`), about the joint's centre `c`.
 #[derive(Clone, Copy, Debug)]
-enum Mover {
+pub(crate) enum Mover {
     Bone(usize),
     Scale { a: usize, b: usize, c: Point3<f64>, frac: f64 },
 }
 
 /// A piece's motion from pose 0 to the hand `h`.
-fn motion_of(h: &HandAt, h0: &HandAt, m: &Mover) -> Motion {
-    let rel = |bone: usize| h.mm[bone].after(&h0.mm[bone].inverse());
+pub(crate) fn motion_of(mm: &[Motion], mm0: &[Motion], m: &Mover) -> Motion {
+    let rel = |bone: usize| mm[bone].after(&mm0[bone].inverse());
     match *m {
         Mover::Bone(i) => rel(i),
         Mover::Scale { a, b, c, frac } => {
@@ -174,19 +174,19 @@ enum Kind {
 
 /// A cylinder about a joint's axis.
 #[derive(Clone, Copy, Debug)]
-struct Rev {
-    c: Point3<f64>,
-    w: Vector3<f64>,
-    r: f64,
+pub(crate) struct Rev {
+    pub(crate) c: Point3<f64>,
+    pub(crate) w: Vector3<f64>,
+    pub(crate) r: f64,
 }
 
 impl Rev {
-    fn radius(c: &Point3<f64>, w: &Vector3<f64>, q: &Point3<f64>) -> f64 {
+    pub(crate) fn radius(c: &Point3<f64>, w: &Vector3<f64>, q: &Point3<f64>) -> f64 {
         let d = q - c;
         (d - w * d.dot(w)).norm()
     }
 
-    fn eval(&self, q: &Point3<f64>) -> f64 {
+    pub(crate) fn eval(&self, q: &Point3<f64>) -> f64 {
         Rev::radius(&self.c, &self.w, q) - self.r
     }
 }
@@ -195,18 +195,18 @@ impl Rev {
 /// tip `ap`, about the axis `rev.w`), its inside is the lap's cylinder exactly, and it spans the
 /// lap's strip across the hand (`x0..x1`, the same for both its pieces).
 #[derive(Clone, Copy, Debug)]
-struct LapZone {
-    rev: Rev,
-    d: Vector3<f64>,
-    ap: Vector3<f64>,
-    lo: f64,
-    hi: f64,
-    x0: f64,
-    x1: f64,
+pub(crate) struct LapZone {
+    pub(crate) rev: Rev,
+    pub(crate) d: Vector3<f64>,
+    pub(crate) ap: Vector3<f64>,
+    pub(crate) lo: f64,
+    pub(crate) hi: f64,
+    pub(crate) x0: f64,
+    pub(crate) x1: f64,
 }
 
 impl LapZone {
-    fn angle(&self, q: &Point3<f64>) -> f64 {
+    pub(crate) fn angle(&self, q: &Point3<f64>) -> f64 {
         let dq = q - self.rev.c;
         dq.dot(&self.ap).atan2(dq.dot(&self.d))
     }
@@ -216,7 +216,7 @@ impl LapZone {
 /// its edge there is that finger's knuckle lap (`lap`, and the half-space `p`, `n`), its sides
 /// down to `down` below that finger's metacarpal (`side_p`, `side_n`).
 #[derive(Clone, Copy, Debug)]
-struct Zone {
+pub(crate) struct Zone {
     x0: f64,
     x1: f64,
     p: Point3<f64>,
@@ -231,31 +231,31 @@ struct Zone {
 
 /// Distance to a patch of the skin, signed by the whole hand (closed off at the forearm): a
 /// patch is open at its edges, and signing by it alone read points deep in a finger as outside.
-type Sdf = Arc<Signed<TriMeshDistance, ParitySign>>;
+pub(crate) type Sdf = Arc<Signed<TriMeshDistance, ParitySign>>;
 
 /// A hard piece, in its pose-0 frame.
 #[derive(Clone)]
-struct Piece {
-    name: String,
+pub(crate) struct Piece {
+    pub(crate) name: String,
     /// The skin it is built on (its finger's, or the back of the hand's, in the build pose).
-    skin: Sdf,
+    pub(crate) skin: Sdf,
     /// Pose 0 to the build pose.
-    to_build: Motion,
+    pub(crate) to_build: Motion,
     /// Half-spaces kept: (q - p).n >= 0.
-    halves: Vec<(Point3<f64>, Vector3<f64>)>,
+    pub(crate) halves: Vec<(Point3<f64>, Vector3<f64>)>,
     /// A finger piece's strip across the hand (along `e`), away from its laps.
-    band: Option<(f64, f64)>,
+    pub(crate) band: Option<(f64, f64)>,
     /// The back plate's strips (none for a finger's piece).
-    zones: Vec<Zone>,
-    e: Vector3<f64>,
+    pub(crate) zones: Vec<Zone>,
+    pub(crate) e: Vector3<f64>,
     /// Where it runs over its joints.
-    laps: Vec<LapZone>,
+    pub(crate) laps: Vec<LapZone>,
     /// How far down the sides it comes: below the nearest lap's joint centre, along its back.
-    down: f64,
-    lo: Point3<f64>,
-    hi: Point3<f64>,
-    foam: f64,
-    wall: f64,
+    pub(crate) down: f64,
+    pub(crate) lo: Point3<f64>,
+    pub(crate) hi: Point3<f64>,
+    pub(crate) foam: f64,
+    pub(crate) wall: f64,
 }
 
 impl Piece {
@@ -284,7 +284,7 @@ impl Piece {
         self.laps.iter().enumerate().filter(move |(i, l)| only.is_none_or(|o| o == *i) && (l.lo..=l.hi).contains(&l.angle(q))).map(|(_, l)| l)
     }
 
-    fn cut(&self, q: &Point3<f64>) -> f64 {
+    pub(crate) fn cut(&self, q: &Point3<f64>) -> f64 {
         let mut c = f64::MIN;
         for (p, n) in &self.halves {
             c = c.max(-(q - p).dot(n));
@@ -306,13 +306,13 @@ impl Piece {
 
     /// The liner side of the piece's inside: negative between it and the skin. In its laps'
     /// zones, their cylinders (united where two meet); elsewhere the liner's outside.
-    fn envelope(&self, q: &Point3<f64>) -> f64 {
+    pub(crate) fn envelope(&self, q: &Point3<f64>) -> f64 {
         let u = self.in_laps(q).map(|l| l.rev.eval(q)).fold(f64::MAX, f64::min);
         if u < f64::MAX { u } else { self.skin.evaluate(Point3::from(self.to_build.apply(q.coords))) - self.foam }
     }
 
     /// Negative inside, at `q` in the piece's pose-0 frame.
-    fn eval(&self, q: Point3<f64>) -> f64 {
+    pub(crate) fn eval(&self, q: Point3<f64>) -> f64 {
         let cut = self.cut(&q);
         if cut > 3.0 {
             return cut;
@@ -321,7 +321,7 @@ impl Piece {
         (-u).max(u - self.wall).max(cut)
     }
 
-    fn inside_box(&self, q: &Point3<f64>) -> bool {
+    pub(crate) fn inside_box(&self, q: &Point3<f64>) -> bool {
         (0..3).all(|i| q[i] >= self.lo[i] && q[i] <= self.hi[i])
     }
 }
@@ -372,7 +372,7 @@ fn hand_at(b: &Body, raw: &[Vector3<f64>], base: &Pose, axes: &[[Vector3<f64>; 3
 }
 
 /// Triangles from some of the smoothed skin's quads.
-fn quad_mesh(pts: &[Point3<f64>], quads: &[[u32; 4]]) -> IndexedMesh {
+pub(crate) fn quad_mesh(pts: &[Point3<f64>], quads: &[[u32; 4]]) -> IndexedMesh {
     let mut map = vec![u32::MAX; pts.len()];
     let mut mesh = IndexedMesh::default();
     for q in quads {
@@ -390,7 +390,7 @@ fn quad_mesh(pts: &[Point3<f64>], quads: &[[u32; 4]]) -> IndexedMesh {
 }
 
 /// Per-vertex normals of the smoothed skin over some quads (area-weighted), zero elsewhere.
-fn normals(pts: &[Point3<f64>], quads: &[[u32; 4]]) -> Vec<Vector3<f64>> {
+pub(crate) fn normals(pts: &[Point3<f64>], quads: &[[u32; 4]]) -> Vec<Vector3<f64>> {
     let mut n = vec![Vector3::zeros(); pts.len()];
     for q in quads {
         let [a, b, c, d] = q.map(|i| pts[i as usize]);
@@ -402,17 +402,17 @@ fn normals(pts: &[Point3<f64>], quads: &[[u32; 4]]) -> Vec<Vector3<f64>> {
     n.iter().map(|v| if v.norm() > 0.0 { v.normalize() } else { *v }).collect()
 }
 
-fn moved(m: &IndexedMesh, by: &Motion) -> IndexedMesh {
+pub(crate) fn moved(m: &IndexedMesh, by: &Motion) -> IndexedMesh {
     IndexedMesh { vertices: m.vertices.iter().map(|v| Point3::from(by.apply(v.coords))).collect(), faces: m.faces.clone() }
 }
 
-fn bbox(pts: &[Point3<f64>]) -> (Point3<f64>, Point3<f64>) {
+pub(crate) fn bbox(pts: &[Point3<f64>]) -> (Point3<f64>, Point3<f64>) {
     let lo = pts.iter().fold(Vector3::repeat(f64::MAX), |a, v| a.inf(&v.coords));
     let hi = pts.iter().fold(Vector3::repeat(f64::MIN), |a, v| a.sup(&v.coords));
     (Point3::from(lo), Point3::from(hi))
 }
 
-fn par_map<T: Sync, R: Send>(items: &[T], threads: usize, f: impl Fn(&T) -> R + Sync) -> Vec<R> {
+pub(crate) fn par_map<T: Sync, R: Send>(items: &[T], threads: usize, f: impl Fn(&T) -> R + Sync) -> Vec<R> {
     let chunk = items.len().div_ceil(threads.max(1)).max(1);
     std::thread::scope(|sc| {
         let hs: Vec<_> = items.chunks(chunk).map(|c| sc.spawn(|| c.iter().map(&f).collect::<Vec<R>>())).collect();
@@ -422,7 +422,7 @@ fn par_map<T: Sync, R: Send>(items: &[T], threads: usize, f: impl Fn(&T) -> R + 
 
 /// A mesh's section by a plane, as strips `width` mm wide lying in the plane (to draw seen along
 /// its normal: a cut mesh's walls lie along the view, edge-on, and draw as nothing).
-fn section_lines(mesh: &IndexedMesh, p: Point3<f64>, n: Vector3<f64>, width: f64) -> IndexedMesh {
+pub(crate) fn section_lines(mesh: &IndexedMesh, p: Point3<f64>, n: Vector3<f64>, width: f64) -> IndexedMesh {
     let n = n.normalize();
     let mut out = IndexedMesh::default();
     for c in crate::scan::section(mesh, p, n).contours {
@@ -661,7 +661,7 @@ pub fn run(scan: &Path, out: &Path, fist: bool) -> Result<(), String> {
         }
     }
     let n_p = names.len();
-    let mo = |h: &HandAt, i: usize| motion_of(h, h0, &movers[i]);
+    let mo = |h: &HandAt, i: usize| motion_of(&h.mm, &h0.mm, &movers[i]);
     // Every joint with laps, the thumb's first.
     let joints: Vec<(usize, usize)> = (0..5).flat_map(|k| (0..3).map(move |j| (k, j))).filter(|&(k, j)| has_lap(k, j)).collect();
     // A scale turns about its joint's centre: the bone after the joint must turn about that point
