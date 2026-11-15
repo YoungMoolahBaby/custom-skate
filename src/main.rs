@@ -17,8 +17,9 @@
 //!   joint, the thumb's too) on the hand closed on the shaft, checked from a straight hand to a fist.
 //! - `elbow <scan>`: the elbow pad's first step (track U2): the elbow bent from straight to full
 //!   flexion and the forearm turned, read where a pad and a slash guard would ride.
-//! - `elbowpad <scan>`: the elbow pad, round 1 (track U2): a cap, scales and an upper arm shell,
-//!   checked from a straight arm to the elbow's full bend.
+//! - `elbowpad <scan>`: the elbow pad, round 2 (track U2): a cap, scales and an upper arm shell,
+//!   checked from a straight arm to the elbow's full bend at every split the scales' stops allow;
+//!   the suit's foam patch under them; the straps.
 
 use custom_skate::check;
 use custom_skate::pitch::{FT, Rocker, fixed_alpha, passive_rocking_stiffness, roller_alpha};

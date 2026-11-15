@@ -2411,10 +2411,13 @@ With two scales (the default; `ELBOW_SCALES` runs others):
 - **Under the scales, 16-19 mm of space** over the elbow, most of it with the arm straight: the
   price of laps that clear the triceps and stay closed through the whole bend. The skin behind
   the joint's centre is 26.9 mm; the stack's outside 61.0 mm from it, ~34 mm off the skin.
+  *Corrected in round 2:* this run looked only 20 mm out from the liner and dropped the points
+  further off. Looking 40 mm out, the scales stand 16-31 mm off the liner on average, growing as
+  the elbow bends (round 2, below).
 
-![The elbow pad as built, the elbow at 90°: from the side, and from behind either side](elbow/pad/pad_90.png)
+![The elbow pad as built, the elbow at 90°: from the side, and from behind either side (as round 2 redrew it, with its straps)](elbow/pad/pad_90.png)
 
-![The elbow pad straight, at 90° and at full bend, cut in the plane the arm bends in](elbow/pad/pad_section.png)
+![The elbow pad straight, at 90° and at full bend, cut in the plane the arm bends in (as round 2 redrew it, with the suit's foam and the cap's)](elbow/pad/pad_section.png)
 
 **What it says.** The knee's design works at the elbow, the laps closed and free through the
 elbow's whole range, at the cost of bulk over the elbow's point: the triceps sets the outer
@@ -2424,8 +2427,130 @@ lap's radius. A third scale saves 2.7 mm for a fifth piece, not worth it. **Open
 - the slash guard between the cap and the glove's cuff, next;
 - Jon's own arm, and his answers on coverage.
 
+### The elbow pad, round 2: the space under the scales, the stops, the straps (2026-11-14)
+
+I put two picks to Jon for round 1's open items:
+- fill the space under the scales from the suit, a thicker patch of the sleeve's foam (foam fixed
+  inside the scales can't: straight, they nest, each in the space under the one before);
+- no hinge: the shell and the cap strapped to the arm, the scales floating between them, kept
+  closed by a stop at both ends of every lap.
+
+Jon: "you are the lead, i respect your choices, let's see how it turns out".
+
+Round 2 keeps round 1's pieces as they were (103.4 g); `cargo run --release -- elbowpad <scan>`
+(`docs/elbow/pad/summary.txt`).
+
+- **The stops instead of exact shares.**
+  - Each lap turns from nested (0) to at most 53.2°: its span less 5° still overlapping (a
+    placeholder).
+  - The three laps take up to 159.6° of bend between them, 15° more than the CDC's mean
+    (144.6°). That leaves room for an elbow that bends further; Jon's own arm sets it.
+  - Laps closed: checked at every step at the even split and at every extreme the stops allow,
+    35 splits in all. Each lap stays closed.
+  - Binding: every two pieces turned through every turn between them the stops allow, every 3°
+    (181 turns). Nothing binds; the closest two pieces come 0.0-1.0 mm apart.
+  - So no hinge is needed: the scales can take any share of the bend.
+- **Round 1 undercounted the space under the scales** (corrected above). Looking 40 mm out from
+  the liner, they stand off it on average (90th percentile):
+
+  | | straight | 90° | full bend |
+  |---|---|---|---|
+  | scale 1 | 16.2 mm (17.0) | 24.2 (33.2) | 30.8 (37.0) |
+  | scale 2 | 22.9 (29.0) | 25.5 (34.7) | 30.3 (39.4) |
+
+  The space grows as the elbow bends. The back of the elbow comes nearer the elbow's axis (20.9
+  mm behind it at full bend, 28.4 straight; the first step's table), while the scales stay on
+  their cylinders.
+- **The suit's patch, my pick, fills little of it.** The patch is made as follows:
+  - at each point of the skin behind the elbow that the pad covers at every step, the least
+    room over it through the bend and every turn of the scales the stops allow, less 1 mm;
+  - then no thicker than any point within 5 mm of it. Point by point it jumped where
+    neighbouring rays met different pieces or edges: 52 cm³ before, 27 after.
+
+  What comes out:
+  - **Size:** 26 cm² of skin, up to 22.9 mm more foam (10.7 on average, 12.5 at the back of the
+    elbow), 27 cm³, 4.1 g (liner foam at an assumed 150 kg/m³).
+  - **The stops cost little:** 31 cm³ with the scales held at even turns.
+  - **Under the scales at the stance it fills about a third:** 24.2 → 15.9 mm (scale 1) and
+    25.5 → 18.2 (scale 2), on average.
+
+  Why so little:
+  - **It can't be thicker than the room with the arm straight.** Then the stack is nested and
+    passes closest over the skin, and that skin later lies under the scales.
+  - **Its skin stretches most.** Along the elbow's back, from straight to full bend, the patch's
+    inside lengthens 51.0 → 103.6 mm (+103%). On the forearm's skin it lengthens 55%, and on the
+    rest 242%. Foam bonded to the suit there would have to be cut in tiles that spread apart, by
+    more than their own length near the joint.
+  - **70% of it (19 cm³) lies on the forearm's skin, under the cap.**
+- **So the foam goes in the cap, and the suit keeps its 9 mm.**
+  - The cap rides the olecranon and nothing slides under it, so foam glued inside it need not
+    stretch. It stays over the elbow's point at every angle.
+  - Sized at each point of the cap's inside as the least room in to the liner through the bend,
+    less 1 mm, then eroded as the patch: 38 cm² of the cap's inside, up to 27.9 mm thick (14.2
+    on average), 54 cm³, 8.1 g. That is nearly three times what the suit's patch put on the
+    forearm's skin (19 cm³), because it is measured from the cap and only has to clear what
+    passes under it.
+  - It rides 4.4-7.4 mm off the liner on average (90th percentile 6.6-11.0) through the bend.
+  - The pad with it and its straps: 118.5 g.
+  - It comes off with the cap, so it isn't held to the suit's washing (Jon's requirement is for
+    the suit and what's in it) and can be chosen as an impact foam.
+- **The scales keep their air:** 24-25 mm at the stance, 16-31 through the range, over the 9 mm
+  of the suit.
+- **The straps** (25 × 1.5 mm elastic with hook-and-loop, 800 kg/m³ assumed), round the arm's
+  front from one side of the piece to the other.
+  - Round 2 first put them 20 mm in from each piece's end. The forearm's (60 mm down) then sat
+    6 mm from the upper arm's skin at the stance, in the elbow's crease.
+  - Scanned along each bone: how near the other part of the arm's skin comes to a strap
+    centred there (mm), at 90 / 110 / 130°:
+
+    | strap's middle from the joint | 60 mm | 70 | 80 | 90 | 100 | 110 | 120 |
+    |---|---|---|---|---|---|---|---|
+    | round the upper arm | 16 / 1 / 1 | 24 / 6 / 1 | 31 / 11 / 1 | 42 / 22 / 1 | 49 / 29 / 3 | 59 / 38 / 12 | 69 / 49 / 21 |
+    | round the forearm | 6 / 1 / 1 | 16 / 2 / 1 | 25 / 7 / 1 | 38 / 19 / 1 | 46 / 27 / 3 | 57 / 38 / 11 | 70 / 51 / 21 |
+
+  - **Moved:**
+    - The shell's strap to its top end, 100 mm up: 121 mm long, 3.6 g, 49 mm clear at the
+      stance.
+    - The cap's to 90 mm down the forearm, just past the cap's end (80 mm), where the slash
+      guard's top will lie under the cap's edge; the cap's lower edge ties to it. 110 mm long,
+      3.3 g, 38 mm clear at the stance.
+  - At 130° no place within 100 mm of the joint stays clear: the forearm meets the upper arm
+    (the model's rigid skin runs through; a real arm's soft parts press there). At full bend
+    the straps sit in that fold, as anywhere near the joint.
+
+![The elbow at 90°, the scales turned as far toward the cap's end as the stops allow (53.2 / 36.8 / 0° a lap from the shell's), evenly (30 / 30 / 30) and as far toward the shell's (0 / 36.8 / 53.2), cut in the plane the arm bends in, with the suit's foam and the cap's](elbow/pad/pad_stops.png)
+
+![The suit's patch as tried, on the arm at 90° with the pieces off: from the side, and from behind either side; darker where thicker (1-5, 5-10, 10-15, over 15 mm)](elbow/pad/patch.png)
+
+**What it says.**
+- The stops work, so the pad needs no hinge at the elbow's sides.
+- The suit can't fill under the scales. Its foam is limited to the room left with the arm
+  straight, while the room under the scales grows as the elbow bends, and the skin there doubles
+  its length. My pick didn't work there.
+- What it could fill is under the cap, and foam glued in the cap fills that better.
+- The scales keep 24-25 mm of air at the stance. Whether that matters is an impact question: a
+  fall on the bent elbow lands on them, and they are carried only at their laps' edges.
+
+**Open:**
+- a fall on the bent elbow, with D3's impact model: does a scale bottom out through its air?
+  It needs a fall's energy from a source;
+- the stops as parts (a lip on the outer piece, a tab on the inner) and the outer cover that
+  spreads the bend;
+- how the straps hold in a fall;
+- Jon's own arm, and his answers on coverage.
+
+**U2 next:** the slash guard, its top under the cap's lower edge and the cap's strap.
+
 ## Open questions for Jon
 
+- Answered 2026-11-14, the elbow pad's goals (U2, after round 2): "so for the elbow pad, i
+  actually prefer lacrosse elbow pads like [a G-Form elbow pad]. its like a padded compression
+  sleeve. then for a slash guard, we can do [a sleeve with a padded plate along the forearm,
+  in three lengthwise segments], something like this" (retailers' photos, not kept). So the hard
+  stack of rounds 1-2 gives way to a padded sleeve: tiles of flexible foam over the elbow, and
+  the slash guard's padded plate along the back of the forearm in the same sleeve. Rounds 1-2
+  stay as the record of what the elbow and forearm do under a pad: where the skin stretches,
+  where the elbow's crease folds, the olecranon.
 - Answered 2026-11-14, the glove's joints (U2, round 1): "extra pieces", a short scale over each
   joint between the bones' pieces (round 2).
 - Answered 2026-11-14, the glove's cuff (U2): "yeah shorter glove then like a built in slash

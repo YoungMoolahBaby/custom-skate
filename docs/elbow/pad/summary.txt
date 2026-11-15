@@ -1,26 +1,40 @@
-the elbow pad, round 1 (track U2): the right arm with an olecranon (8 skin control vertices move with it), built at the elbow's 90 deg (scans/stand-in/022_fBW_R.ply)
-  liner foam 9 mm, wall 2 mm (PA 12), 1 mm between sliding pieces (placeholders); the upper arm's shell 100 mm up the arm, the cap 80 mm down the forearm, round the arm to 10 mm past the elbow's axis; 2 scales between, each lap spanning 58 deg (48.2 deg of bend each and a 10 deg margin), split either side of the elbow's back where its radius comes out least
+the elbow pad, round 2 (track U2): the right arm with an olecranon (8 skin control vertices move with it), built at the elbow's 90 deg (scans/stand-in/022_fBW_R.ply)
+  liner foam 9 mm, wall 2 mm (PA 12), 1 mm between sliding pieces and between a piece and the patch (placeholders); the upper arm's shell 100 mm up the arm, the cap 80 mm down the forearm, round the arm to 10 mm past the elbow's axis; 2 scales between, each lap spanning 58 deg (48.2 deg of bend each and a 10 deg margin), split either side of the elbow's back where its radius comes out least
   the sweep, the elbow's bend: 0 / 20 / 40 / 60 / 90 / 110 / 130 / 145 deg (built at 90)
-  4 hard pieces, 103.4 g together (PA 12):
+  4 hard pieces, 103.4 g together (PA 12); with the straps 110.4 g:
     upper arm shell   47.9 g
     scale 1           12.8 g
     scale 2           11.6 g
     cap               31.1 g
   over the elbow, each lap (from the upper arm's shell): its reach back up the arm / forward over the forearm (deg), its under piece's inside radius (clear of the liner; split evenly it would need 64.6 / 47.1 / 46.4): 20 / 38: 56.0 mm; 20 / 38: 53.0 mm (raised from 50.0 to nest); 23 / 35: 50.0 mm; the skin 26.9 mm behind the joint's centre straight; the stack's top 61.0 mm from the axis, 23.1 mm proud of the pieces either side (the liner and a wall over the skin)
-  check 1, laps closed: the widest gap seen over the elbow's back (deg), at each step:
-    0: 0, 20: 0, 40: 0, 60: 0, 90: 0, 110: 0, 130: 0, 145: 0
-  check 2, binding: at each step, the deepest any piece runs into another (mm), or how close the closest two come:
-      0.0 deg: none; closest 0.0 mm (cap by upper arm shell)
-     20.0 deg: none; closest 0.1 mm (cap by scale 2)
-     40.0 deg: none; closest 0.1 mm (cap by scale 2)
-     60.0 deg: none; closest 0.2 mm (cap by scale 2)
-     90.0 deg: none; closest 0.1 mm (cap by upper arm shell)
-    110.0 deg: none; closest 0.1 mm (cap by scale 1)
-    130.0 deg: none; closest 0.1 mm (cap by upper arm shell)
-    144.6 deg: none; closest 0.0 mm (cap by upper arm shell)
-  check 3, the fit on the liner: how far each piece stands off it, mean / 90th percentile, and the most it presses in (mm), at each step:
-                                   0             20             40             60             90            110            130            145
-    upper arm shell     2.8/8.2 +2.0   2.4/6.2 +1.8   1.8/3.8 +1.5   1.4/1.8 +1.0   1.2/0.2 +0.2   1.1/0.2 +1.0   1.0/0.8 +1.5   0.9/1.2 +2.0
-    scale 1           16.3/17.2 +0.0 16.7/18.8 +0.0 16.7/19.8 +0.0 16.5/18.2 +0.0 17.9/19.2 +0.0 18.7/19.2 +0.0   0.0/0.0 +0.0   0.0/0.0 +0.0
-    scale 2           15.8/18.8 +0.0 16.9/19.2 +0.0 16.8/19.2 +0.0 16.8/18.8 +0.0 17.3/18.2 +0.0 18.4/19.2 +0.0 18.9/19.2 +0.0 19.1/19.2 +0.0
-    cap                3.7/16.2 +0.2  3.7/15.8 +0.5  3.2/14.8 +0.5  2.8/13.8 +0.2  2.5/13.8 +0.2  2.3/13.2 +0.2  2.2/12.8 +0.5  2.2/12.8 +0.5
+  the stops: each lap turns from nested (0) to at most 53.2 deg (its span less 5 deg still overlapping), so the 3 laps take up to 159.6 deg of bend between them, the elbow's 144.6 and 15.0 to spare; the scales at any split of the bend within that
+  check 1, laps closed: the widest gap seen over the elbow's back (deg) at each step, over the splits the stops allow (how many: the even one and the extremes):
+    0: 0 (1), 20: 0 (4), 40: 0 (4), 60: 0 (7), 90: 0 (7), 110: 0 (4), 130: 0 (4), 145: 0 (4)
+  check 2, binding: each two pieces turned from nested to the most the stops allow between them, every 3 deg: the deepest one runs into the other (mm), or how close they come, and at what turn:
+    upper arm shell / scale 1 (0-53 deg): none; closest 0.1 mm at 0 deg
+    upper arm shell / scale 2 (0-106 deg): none; closest 0.1 mm at 0 deg
+    upper arm shell / cap (0-145 deg): none; closest 0.0 mm at 145 deg
+    scale 1 / scale 2 (0-53 deg): none; closest 1.0 mm at 30 deg
+    scale 1 / cap (0-106 deg): none; closest 0.0 mm at 63 deg
+    scale 2 / cap (0-53 deg): none; closest 0.1 mm at 0 deg
+  the patch, the suit's foam thicker behind the elbow: at each point the least room over it through the bend and every turn of the scales the stops allow, less 1 mm, then no thicker than any point within 5 mm of it (point by point, 52 cm3); where at least 1 mm: 26 cm2 of the skin, up to 22.9 mm more foam, 10.7 on average, 12.5 at the back of the elbow; 27 cm3, 4.1 g (liner foam, 150 kg/m3 assumed); with the scales held at even turns instead, 31 cm3
+    of it on the forearm's skin (which moves with the cap): 15 cm2, 19 cm3
+  the cap's own foam instead (glued in it: the cap rides the olecranon and nothing slides under it, so its foam need not stretch): at each point of the cap's inside the least room in to the liner through the bend, less 1 mm, eroded as the patch; where at least 1 mm: 38 cm2 of its inside, up to 27.9 mm, 14.2 on average; 54 cm3, 8.1 g (liner foam, assumed); the pad with it and the straps, 118.5 g
+    the cap's foam off the liner, mean / 90th percentile (mm), at each step: 0: 4.9/6.9, 20: 4.6/6.6, 40: 4.4/6.6, 60: 4.6/6.9, 90: 5.3/7.8, 110: 6.0/8.8, 130: 6.8/10.0, 145: 7.4/11.0
+    along the elbow's back (the plane it bends in), the patch's inside on the liner / its outside (mm), straight, at 90 and at full bend: all of it 51.0 / 58.6, 91.6 / 105.1, 103.6 / 123.3, its inside lengthening 52.6 mm (103%), its outside 64.6 (110%); on the forearm's skin 38.0 / 40.9, 54.8 / 65.0, 59.0 / 74.7, its inside lengthening 21.1 mm (55%), its outside 33.8 (83%); the rest 13.0 / 17.7, 36.9 / 40.1, 44.6 / 48.6, its inside lengthening 31.6 mm (242%), its outside 30.9 (174%)
+  check 3, the fit (the scales at their even turn): how far each piece stands off the liner (and off the patch), mean / 90th percentile, and the most it presses in (mm), looking out 40 mm, at each step:
+                                             0             20             40             60             90            110            130            145
+    upper arm shell off the liner    2.7/8.0 +2.0   2.4/6.4 +1.8   2.1/4.2 +1.5   1.8/1.9 +1.0   1.8/4.9 +0.2   2.1/9.7 +1.0  2.7/14.3 +1.5  3.2/17.2 +2.0
+    scale 1 off the liner       16.2/17.0 +0.0 21.0/26.6 +0.0 21.4/29.4 +0.0 22.1/31.4 +0.0 24.2/33.2 +0.0 25.9/34.7 +0.0 28.7/36.2 +0.0 30.8/37.0 +0.0
+    scale 2 off the liner       22.9/29.0 +0.0 21.8/31.4 +0.0 22.4/30.2 +0.0 23.9/33.4 +0.0 25.5/34.7 +0.0 27.9/36.1 +0.0 29.9/38.1 +0.0 30.3/39.4 +0.0
+    cap off the liner            7.8/24.9 +0.2  7.2/24.0 +0.5  6.1/22.4 +0.5  5.6/21.8 +0.2  5.4/21.8 +0.2  5.4/22.0 +0.2  5.5/22.8 +0.5  5.5/22.7 +0.5
+    upper arm shell off the patch    2.7/8.0 +2.0   2.3/6.4 +1.8   1.8/4.0 +1.5   1.6/1.9 +1.0   1.5/4.9 +0.2   1.9/9.7 +1.0  2.6/14.3 +1.5  3.0/17.2 +2.0
+    scale 1 off the patch       14.3/16.2 +0.0 14.6/23.6 +0.0 13.2/29.4 +0.0 13.5/31.4 +0.0 15.9/33.2 +0.0 17.6/33.7 +0.0 20.3/36.2 +0.0 22.4/37.0 +0.0
+    scale 2 off the patch       17.2/29.0 +0.0 14.1/31.4 +0.0 13.5/30.2 +0.0 16.3/33.4 +0.0 18.2/34.7 +0.0 21.2/36.1 +0.0 23.2/38.1 +0.0 22.4/39.4 +0.0
+    cap off the patch            4.7/23.0 +0.2  4.2/20.7 +0.5  3.6/17.5 +0.5   3.2/6.3 +0.2   3.0/6.8 +0.2   3.0/7.8 +0.2   3.1/9.0 +0.5   3.1/9.3 +0.5
+  the straps, 25 mm wide, 1.5 mm thick (elastic with hook-and-loop, 800 kg/m3 assumed), round the arm's front from one side of the piece to the other:
+    upper arm (the shell's) strap, 100 mm from the joint: 121 mm long on the skin, 3.6 g; the other part of the arm's skin comes within (mm), at each step: 0: 77, 20: 75, 40: 68, 60: 62, 90: 49, 110: 29, 130: 3, 145: 1
+    forearm (the cap's) strap, 90 mm from the joint: 110 mm long on the skin, 3.3 g; the other part of the arm's skin comes within (mm), at each step: 0: 71, 20: 64, 40: 56, 60: 49, 90: 38, 110: 19, 130: 1, 145: 1
+    a strap round the upper arm (the shell's) at other places, its middle from the joint: the other part's skin within (mm) at 90 / 110 / 130 deg: 40: 3/1/1, 50: 9/1/1, 60: 16/1/1, 70: 24/6/1, 80: 31/11/1, 90: 42/22/1, 100: 49/29/3, 110: 59/38/12, 120: 69/49/21, 130: 77/57/27, 140: 85/65/34
+    a strap round the forearm (the cap's) at other places, its middle from the joint: the other part's skin within (mm) at 90 / 110 / 130 deg: 40: 1/1/1, 50: 2/1/1, 60: 6/1/1, 70: 16/2/1, 80: 25/7/1, 90: 38/19/1, 100: 46/27/3, 110: 57/38/11, 120: 70/51/21, 130: 80/59/28, 140: 89/68/36
+  pad_stops.png, the elbow at 90, each lap's turn (deg, from the shell's): 53.2 / 36.8 / 0.0; 30.0 / 30.0 / 30.0; 0.0 / 36.8 / 53.2

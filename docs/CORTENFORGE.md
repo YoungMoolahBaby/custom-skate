@@ -161,6 +161,11 @@ type (bug, docs, API, perf, setup, works), date, file:line under
   (sdf.rs:445), so this was outside its contract. `Signed<D, S>` takes any pair, so the fix was
   one line: the patch's `TriMeshDistance` with `ParitySign::new` on the whole hand, closed by
   `auto_cap_open_boundaries`.
+- **works** (2026-11-14, the elbow pad round 2): `UnsignedDistance::distance` on an *open* mesh
+  (the liner's outside over the back of the elbow, moved into the cap's frame, one
+  `TriMeshDistance` per step, sdf.rs:422) as a step length for sphere tracing: rays in from every
+  vertex of the cap's inside to the liner, 8 steps, all within the elbow pad's ~250 s run. With no sign
+  needed, an open patch is fine here, unlike the glove's `PseudoNormalSign` (above).
 
 ## mesh (measure, io, repair)
 
